@@ -1,0 +1,38 @@
+<div class="p-6">
+  <div class="flex justify-between items-start mb-6">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-800 m-0">{{ data.nome }}</h2>
+      <p class="text-sm font-semibold text-blue-600 uppercase mt-1">{{ data.foco }} • {{ data.nivel }}</p>
+    </div>
+    <button mat-icon-button mat-dialog-close class="text-gray-400 hover:text-gray-600">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content class="!p-0 !max-h-[60vh]">
+    <!-- Verifica se existem exercícios cadastrados -->
+    @if (data.exercicios && data.exercicios.length > 0) {
+      <div class="border border-gray-200 bg-white">
+        @for (exercicio of data.exercicios; track exercicio.id; let isLast = $last) {
+          <div class="p-4 hover:bg-gray-50 transition-colors flex items-start gap-4" [class.border-b]="!isLast">
+            <div class="mt-1 p-2 bg-blue-50 text-blue-600 flex items-center justify-center">
+              <mat-icon>fitness_center</mat-icon>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-lg font-bold text-gray-800 m-0">{{ exercicio.nome }}</h3>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs font-bold">{{ exercicio.repeticoes }}</span>
+                <span class="text-sm text-gray-500 italic">{{ exercicio.observacoes }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="p-8 text-center text-gray-500 border border-dashed border-gray-300">
+        <mat-icon class="!w-12 !h-12 text-4xl mb-2 text-gray-300">inventory_2</mat-icon>
+        <p>Nenhum exercício cadastrado nesta ficha ainda.</p>
+      </div>
+    }
+  </mat-dialog-content>
+</div>

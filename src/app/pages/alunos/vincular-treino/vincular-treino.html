@@ -1,0 +1,27 @@
+<div class="p-6">
+  <h2 mat-dialog-title class="!p-0 !mb-2 text-2xl font-bold text-gray-800">Gerenciar Treinos</h2>
+  <p class="text-gray-500 mb-6">Selecione as fichas para o(a) aluno(a) <strong>{{ data.aluno.nome }}</strong>.</p>
+  
+  <mat-dialog-content class="!p-0">
+    <form [formGroup]="formVinculo" class="mt-2">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Fichas de Treino</mat-label>
+        <!-- MULTIPLE ADICIONADO AQUI -->
+        <mat-select formControlName="treinosIds" multiple>
+          @for (treino of treinosDisponiveis(); track treino.id) {
+            <mat-option [value]="treino.id">
+              {{ treino.nome }} - {{ treino.foco }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="!p-0 !mt-8">
+    <button mat-button mat-dialog-close class="!rounded-none text-gray-500">Cancelar</button>
+    <button mat-flat-button color="primary" class="!rounded-none" (click)="salvar()">
+      Salvar Fichas
+    </button>
+  </mat-dialog-actions>
+</div>

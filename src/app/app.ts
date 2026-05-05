@@ -1,12 +1,14 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
+import { RouterOutlet } from "@angular/router"; // <-- Import do botão
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  standalone: true,
+  imports: [MatButtonModule, RouterOutlet], // <-- Adicionado no array
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
-export class App {
-  protected title = 'heracles-web';
+export class AppComponent {
+  title = 'heracles-web';
 }

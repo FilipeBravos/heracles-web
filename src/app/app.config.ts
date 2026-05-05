@@ -1,12 +1,14 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
+import { ApplicationConfig, provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
-
+import { provideHttpClient } from '@angular/common/http'; // <-- Adicione este
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideBrowserGlobalErrorListeners(),
-    provideZonelessChangeDetection(),
-    provideRouter(routes)
+    provideZonelessChangeDetection(), 
+    provideRouter(routes), 
+    provideHttpClient(), // <-- E este aqui
+    provideAnimationsAsync()
   ]
 };

@@ -1,0 +1,124 @@
+<div class="p-8">
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-800">Alunos</h1>
+      <p class="text-gray-500">Gerencie os membros da sua unidade Heracles.</p>
+    </div>
+    <button
+      mat-flat-button
+      color="primary"
+      class="!rounded-none !py-6"
+      (click)="abrirModalNovoAluno()"
+    >
+      <mat-icon>add</mat-icon> Novo Aluno
+    </button>
+  </div>
+
+  <div
+    class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+  >
+    <table mat-table [dataSource]="dataSource()" class="w-full">
+      <!-- Coluna ID -->
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef class="!font-bold text-gray-700">
+          ID
+        </th>
+        <td mat-cell *matCellDef="let aluno">#{{aluno.id}}</td>
+      </ng-container>
+
+      <!-- Coluna Nome -->
+      <ng-container matColumnDef="nome">
+        <th mat-header-cell *matHeaderCellDef class="!font-bold text-gray-700">
+          Nome
+        </th>
+        <td mat-cell *matCellDef="let aluno" class="font-medium">
+          {{aluno.nome}}
+        </td>
+      </ng-container>
+
+      <!-- Coluna CPF -->
+      <ng-container matColumnDef="cpf">
+        <th mat-header-cell *matHeaderCellDef class="!font-bold text-gray-700">
+          CPF
+        </th>
+        <td mat-cell *matCellDef="let aluno">{{aluno.cpf}}</td>
+      </ng-container>
+
+      <!-- Coluna E-mail -->
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef class="!font-bold text-gray-700">
+          E-mail
+        </th>
+        <td mat-cell *matCellDef="let aluno">{{aluno.email}}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="treino">
+        <th mat-header-cell *matHeaderCellDef class="!font-bold text-gray-700">
+          Fichas Atuais
+        </th>
+        <td
+          mat-cell
+          *matCellDef="let aluno"
+          class="text-blue-600 font-semibold text-sm"
+        >
+          <!-- Se a lista de treinos existir e não estiver vazia -->
+          @if (aluno.treinos && aluno.treinos.length > 0) { @for (t of
+          aluno.treinos; track t.id; let isLast = $last) { {{ t.nome }}{{
+          !isLast ? ', ' : '' }} } } @else {
+          <span class="text-gray-400 font-normal italic">Nenhuma ficha</span>
+          }
+        </td>
+      </ng-container>
+
+      <!-- Coluna Status -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef class="!font-bold text-gray-700">
+          Status
+        </th>
+        <td mat-cell *matCellDef="let aluno">
+          <!-- Tag verde se ativo, tag vermelha se inativo -->
+          <span
+            class="px-3 py-1 text-xs font-bold border !rounded-none"
+            [ngClass]="aluno.status === 'ATIVO' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'"
+          >
+            {{ aluno.status }}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Coluna Ações -->
+      <ng-container matColumnDef="acoes">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let aluno" class="text-right">
+          
+          <!-- Botão de Vincular Ficha -->
+          <button mat-icon-button color="primary" (click)="abrirModalVinculo(aluno)" title="Vincular Ficha">
+            <mat-icon>fitness_center</mat-icon>
+          </button>
+          
+          <!-- Botão de Editar Dados -->
+          <button mat-icon-button color="accent" title="Editar Dados" (click)="abrirModalEditarAluno(aluno)">
+            <mat-icon>edit</mat-icon>
+          </button>
+
+          <!-- [NOVO] Botão de Inativar/Ativar -->
+          <!-- Se for ATIVO, mostra botão vermelho de bloquear. Se INATIVO, mostra botão verde de check -->
+          <button mat-icon-button 
+                  [color]="aluno.status === 'ATIVO' ? 'warn' : 'primary'" 
+                  (click)="alternarStatus(aluno)" 
+                  [title]="aluno.status === 'ATIVO' ? 'Inativar Aluno' : 'Reativar Aluno'">
+            <mat-icon>{{ aluno.status === 'ATIVO' ? 'block' : 'check_circle' }}</mat-icon>
+          </button>
+
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns;"
+        class="hover:bg-gray-50 transition-colors"
+      ></tr>
+    </table>
+  </div>
+</div>

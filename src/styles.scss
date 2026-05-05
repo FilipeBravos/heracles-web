@@ -1,1 +1,32 @@
-/* You can add global styles to this file, and also import other style files */
+@use '@angular/material' as mat;
+
+// 1. Definição do Tema do Material Design 3
+html {
+  @include mat.theme((
+    color: (
+      primary: mat.$azure-palette,
+      tertiary: mat.$blue-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+}
+
+// 2. Importação do Tailwind v4 (Sempre após as definições de tema)
+@import "tailwindcss";
+
+// 3. Resets Globais e Variáveis de Sistema
+html, body { 
+  height: 100%; 
+}
+
+body {
+  margin: 0; 
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  color-scheme: light;
+
+  // Usa as variáveis geradas pelo @include mat.theme acima
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+}

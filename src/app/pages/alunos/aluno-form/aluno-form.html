@@ -1,0 +1,46 @@
+<div class="p-6">
+  <h2 mat-dialog-title class="!p-0 !mb-6 text-2xl font-bold text-gray-800">
+  {{ isEditMode ? 'Editar Aluno' : 'Novo Aluno' }}
+</h2>
+  
+  <mat-dialog-content class="!p-0">
+    <form [formGroup]="alunoForm" class="flex flex-col gap-4 mt-2">
+      
+      <!-- Nome completo -->
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Nome Completo</mat-label>
+        <input matInput formControlName="nome" placeholder="Ex: Maria Silva">
+      </mat-form-field>
+
+      <div class="grid grid-cols-2 gap-4">
+        <!-- E-mail -->
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>E-mail</mat-label>
+          <input matInput type="email" formControlName="email" placeholder="maria@email.com">
+        </mat-form-field>
+
+        <!-- Telefone -->
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Telefone / WhatsApp</mat-label>
+          <input matInput formControlName="telefone" placeholder="(11) 99999-9999">
+        </mat-form-field>
+      </div>
+
+      <!-- CPF -->
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>CPF</mat-label>
+        <input matInput formControlName="cpf" placeholder="000.000.000-00">
+      </mat-form-field>
+
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="!p-0 !mt-8">
+    <button mat-button mat-dialog-close class="!rounded-none text-gray-500">Cancelar</button>
+   <button mat-flat-button color="primary" class="!rounded-none" 
+        [disabled]="alunoForm.invalid" 
+        (click)="salvar()">
+  {{ isEditMode ? 'Salvar Alterações' : 'Cadastrar Aluno' }}
+  </button>
+  </mat-dialog-actions>
+</div>
