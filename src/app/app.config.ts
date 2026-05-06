@@ -1,14 +1,18 @@
 import { ApplicationConfig, provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideHttpClient } from '@angular/common/http'; // <-- Adicione este
+import { provideHttpClient, withInterceptors } from '@angular/common/http'; // Adicione o withInterceptors
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { routes } from './app.routes';
+import { authInterceptor } from './core/interceptors/auth.interceptor'; // Importe o seu interceptor
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZonelessChangeDetection(), 
     provideRouter(routes), 
-    provideHttpClient(), // <-- E este aqui
+    // Modifique esta linha para incluir o interceptor
+    provideHttpClient(
+      withInterceptors([authInterceptor])
+    ), 
     provideAnimationsAsync()
   ]
 };
