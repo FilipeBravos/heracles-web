@@ -1,12 +1,14 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TreinoFormComponent } from './treino-form/treino-form';
 import { TreinoDetalhesComponent } from './treino-detalhes/treino-detalhes';
+
+// 1. Importe o TreinoService (ajuste o caminho se necessário)
+import { TreinoService } from '../../core/services/treino.service'; 
 
 @Component({
   selector: 'app-treinos',
@@ -15,7 +17,7 @@ import { TreinoDetalhesComponent } from './treino-detalhes/treino-detalhes';
   templateUrl: './treinos.html'
 })
 export class TreinosComponent implements OnInit {
-  private http = inject(HttpClient);
+  private treinoService = inject(TreinoService); 
   private dialog = inject(MatDialog);
   
   displayedColumns: string[] = ['id', 'nome', 'foco', 'nivel', 'acoes'];
@@ -26,21 +28,20 @@ export class TreinosComponent implements OnInit {
   }
 
   listarTreinos() {
-    this.http.get<any[]>('http://localhost:8080/api/treinos')
-      .subscribe(dados => this.dataSource.set(dados));
+    this.treinoService.listar().subscribe({
+      next: (dados) => this.dataSource.set(dados),
+      error: (err) => console.error('Erro ao buscar treinos:', err)
+    });
   }
 
-  // Função nova para abrir o modal
   abrirModalNovoTreino() {
     const dialogRef = this.dialog.open(TreinoFormComponent, {
       width: '500px',
-      panelClass: '!rounded-none' // Garante que a caixa do modal siga o design pattern
+      panelClass: '!rounded-none'
     });
 
-    // Quando o modal fechar, ele avisa aqui
     dialogRef.afterClosed().subscribe(salvouComSucesso => {
       if (salvouComSucesso) {
-        // Se salvou no banco, nós disparamos a busca na API novamente para atualizar a tabela!
         this.listarTreinos();
       }
     });
@@ -48,14 +49,14 @@ export class TreinosComponent implements OnInit {
 
   abrirDetalhes(treino: any) {
     this.dialog.open(TreinoDetalhesComponent, {
-      data: treino, // Passa o treino clicado para o modal
+      data: treino,
       width: '600px',
       panelClass: '!rounded-none'
     });
   }
 
   abrirModalEditar(treino: any, event: Event) {
-    event.stopPropagation(); // Evita abrir os detalhes do treino
+    event.stopPropagation();
     const dialogRef = this.dialog.open(TreinoFormComponent, {
       width: '500px',
       panelClass: '!rounded-none',
@@ -68,13 +69,14 @@ export class TreinosComponent implements OnInit {
   }
 
   deletarTreino(treino: any, event: Event) {
-    event.stopPropagation(); // Evita abrir os detalhes do treino
+    event.stopPropagation(); 
     if (confirm(`Atenção: Deletar a "${treino.nome}" vai removê-la de todos os alunos que a possuem. Deseja continuar?`)) {
-      this.http.delete(`http://localhost:8080/api/treinos/${treino.id}`)
-        .subscribe({
-          next: () => this.listarTreinos(),
-          error: (err) => console.error('Erro ao deletar', err)
-        });
+      
+      this.treinoService.excluir(treino.id).subscribe({
+        next: () => this.listarTreinos(),
+        error: (err) => console.error('Erro ao deletar', err)
+      });
+      
     }
   }
 }

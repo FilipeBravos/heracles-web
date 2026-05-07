@@ -1,12 +1,13 @@
-import { Component, OnInit, inject, signal } from '@angular/core'; // <-- Importe o 'signal'
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDialog } from '@angular/material/dialog';
 import { AlunoForm } from './aluno-form/aluno-form';
 import { VincularTreino } from './vincular-treino/vincular-treino';
+// Importe o seu serviço aqui (ajuste o caminho se necessário)
+import { AlunoService } from '../../core/services/aluno.service'; 
 
 @Component({
   selector: 'app-alunos',
@@ -15,12 +16,12 @@ import { VincularTreino } from './vincular-treino/vincular-treino';
   templateUrl: './alunos.html'
 })
 export class AlunosComponent implements OnInit {
-  private http = inject(HttpClient);
+  // Injetamos o serviço ao invés do HttpClient direto
+  private alunoService = inject(AlunoService);
   private dialog = inject(MatDialog);
   
   displayedColumns: string[] = ['id', 'nome', 'cpf', 'email', 'treino', 'status', 'acoes'];
   
-  // 1. Transforme o array comum em um Signal
   dataSource = signal<any[]>([]);
 
   ngOnInit(): void {
@@ -28,10 +29,10 @@ export class AlunosComponent implements OnInit {
   }
 
   listarAlunos() {
-    this.http.get<any[]>('http://localhost:8080/api/usuarios')
+    // Usando o serviço para buscar os dados
+    this.alunoService.listarAlunos()
       .subscribe({
         next: (dados) => {
-          // 2. Use o .set() para avisar o Angular que os dados chegaram
           this.dataSource.set(dados);
         },
         error: (err) => {
@@ -39,6 +40,7 @@ export class AlunosComponent implements OnInit {
         }
       });
   }
+
   abrirModalNovoAluno() {
     const dialogRef = this.dialog.open(AlunoForm, {
       width: '600px',
@@ -46,10 +48,7 @@ export class AlunosComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(salvouComSucesso => {
-      if (salvouComSucesso) {
-        // Atualiza a tabela chamando a API novamente se salvou com sucesso
-        this.listarAlunos();
-      }
+      if (salvouComSucesso) this.listarAlunos();
     });
   }
 
@@ -57,11 +56,11 @@ export class AlunosComponent implements OnInit {
     const dialogRef = this.dialog.open(AlunoForm, {
       width: '600px',
       panelClass: '!rounded-none',
-      data: { aluno: aluno } // Manda os dados do aluno para o modal
+      data: { aluno: aluno }
     });
 
     dialogRef.afterClosed().subscribe(salvouComSucesso => {
-      if (salvouComSucesso) this.listarAlunos(); // Recarrega a tabela se houve edição
+      if (salvouComSucesso) this.listarAlunos();
     });
   }
 
@@ -69,23 +68,23 @@ export class AlunosComponent implements OnInit {
     const dialogRef = this.dialog.open(VincularTreino, {
       width: '500px',
       panelClass: '!rounded-none',
-      data: { aluno: aluno } // Manda o aluno para o modal saber quem é
+      data: { aluno: aluno }
     });
 
     dialogRef.afterClosed().subscribe(salvou => {
-      if (salvou) this.listarAlunos(); // Recarrega a tabela para mostrar o treino atualizado
+      if (salvou) this.listarAlunos();
     });
   }
 
   alternarStatus(aluno: any) {
     const acao = aluno.status === 'ATIVO' ? 'inativar' : 'reativar';
     
-    // Pede uma confirmação rápida antes de mudar o status
     if (confirm(`Deseja realmente ${acao} o(a) aluno(a) ${aluno.nome}?`)) {
-      this.http.put(`http://localhost:8080/api/usuarios/${aluno.id}/status`, {})
+      // Usando o serviço para alterar o status
+      this.alunoService.alternarStatusAluno(aluno.id)
         .subscribe({
           next: () => {
-            this.listarAlunos(); // Recarrega a tabela para atualizar a tela
+            this.listarAlunos();
           },
           error: (err) => console.error('Erro ao alterar status', err)
         });
