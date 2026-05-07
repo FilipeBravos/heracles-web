@@ -36,7 +36,12 @@
         <mat-icon matListItemIcon>groups</mat-icon>
         <span matListItemTitle>Alunos</span>
       </a>
-      <a mat-list-item routerLink="/dashboard/treinos" routerLinkActive="bg-blue-50 text-blue-600" class="rounded-none mb-1 text-gray-600">
+      <a
+        mat-list-item
+        routerLink="/dashboard/treinos"
+        routerLinkActive="bg-blue-50 text-blue-600"
+        class="rounded-none mb-1 text-gray-600"
+      >
         <mat-icon matListItemIcon>fitness_center</mat-icon>
         <span matListItemTitle>Treinos</span>
       </a>
@@ -57,8 +62,12 @@
       <button mat-icon-button>
         <mat-icon class="text-gray-500">account_circle</mat-icon>
       </button>
+
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>exit_to_app</mat-icon>
+        <span>Sair</span></button
+      >
     </mat-toolbar>
     <router-outlet></router-outlet>
-   
   </mat-sidenav-content>
 </mat-sidenav-container>

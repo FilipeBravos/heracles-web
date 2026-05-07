@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router'; // <-- Importe o RouterModule
+import { RouterModule } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
@@ -24,10 +25,17 @@ import { MatCardModule } from '@angular/material/card';
   templateUrl: './dashboard.html'
 })
 export class DashboardComponent {
+private router = inject(Router);
+
  estatisticas = [
     { titulo: 'Alunos Ativos', valor: '128', icon: 'groups', cor: 'text-blue-600' },
     { titulo: 'Treinos Hoje', valor: '42', icon: 'fitness_center', cor: 'text-green-600' },
     { titulo: 'Novas Matrículas', valor: '12', icon: 'person_add', cor: 'text-purple-600' },
     { titulo: 'Pendências', valor: '5', icon: 'warning', cor: 'text-red-600' }
   ];
+
+  logout() {
+  localStorage.removeItem('heracles_token');
+  this.router.navigate(['/login']);
+}
 }
