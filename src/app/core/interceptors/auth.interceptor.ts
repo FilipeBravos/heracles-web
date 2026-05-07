@@ -1,19 +1,28 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { catchError, throwError } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  // Busca o token que salvamos no login
+  const router = inject(Router); // Injetamos o router para o redirecionamento
   const token = localStorage.getItem('heracles_token');
 
-  // Se o token existir, clona a requisição e adiciona o Header de Autorização
+  let authReq = req;
   if (token) {
-    const authReq = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
+    authReq = req.clone({
+      setHeaders: { Authorization: `Bearer ${token}` }
     });
-    return next(authReq);
   }
 
-  // Se não houver token (ex: tela de login), segue a requisição normal
-  return next(req);
+  return next(authReq).pipe(
+    catchError((error: HttpErrorResponse) => {
+      // Se o erro for 401, o token provavelmente expirou ou é inválido
+      if (error.status === 401) {
+        console.warn('Sessão expirada ou inválida. Deslogando...');
+        localStorage.removeItem('heracles_token');
+        router.navigate(['/login']);
+      }
+      return throwError(() => error);
+    })
+  );
 };

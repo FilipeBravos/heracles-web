@@ -34,8 +34,13 @@ private router = inject(Router);
     { titulo: 'Pendências', valor: '5', icon: 'warning', cor: 'text-red-600' }
   ];
 
-  logout() {
-  localStorage.removeItem('heracles_token');
-  this.router.navigate(['/login']);
-}
+logout() {
+    // 1. Remove o token para o AuthGuard barrar acessos futuros
+    localStorage.removeItem('heracles_token');
+    
+    // 2. Manda o usuário de volta para o início
+    this.router.navigate(['/login']);
+    
+    console.log('Usuário deslogado com sucesso.');
+  }
 }
