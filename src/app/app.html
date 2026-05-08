@@ -1,1 +1,26 @@
-<router-outlet></router-outlet>
+<aside class="sidebar">
+  <div class="logo">HERACLES</div>
+
+  <ng-container *ngIf="perfilUsuario === 'PROFESSOR'">
+    <a routerLink="/alunos">
+      <mat-icon>group</mat-icon> Alunos
+    </a>
+    <a routerLink="/treinos">
+      <mat-icon>fitness_center</mat-icon> Treinos
+    </a>
+  </ng-container>
+
+  <ng-container *ngIf="perfilUsuario === 'ALUNO'">
+    <a routerLink="/meu-treino">
+      <mat-icon>list_alt</mat-icon> Minha Ficha
+    </a>
+  </ng-container>
+
+  <button (click)="logout()">
+    <mat-icon>logout</mat-icon> Sair
+  </button>
+</aside>
+
+<main>
+  <router-outlet></router-outlet>
+</main>
