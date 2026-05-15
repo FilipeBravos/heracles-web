@@ -29,13 +29,27 @@ export class AppComponent implements OnInit {
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
       this.isLoginPage = event.urlAfterRedirects.includes('/login');
-      
-      this.perfilUsuario = localStorage.getItem('tipoPerfil');
+      this.carregarPerfil(); // Chama a função que limpa o perfil
     });
   }
 
   ngOnInit() {
-    this.perfilUsuario = localStorage.getItem('tipoPerfil');
+    this.carregarPerfil();
+  }
+
+  // 👇 NOVA FUNÇÃO PARA BLINDAR O PERFIL 👇
+carregarPerfil() {
+    const perfilSalvo = localStorage.getItem('tipoPerfil'); // <-- Verifique se a chave é essa mesma no Application!
+    
+    console.log('O que o banco mandou (Local Storage):', perfilSalvo);
+
+    if (perfilSalvo) {
+      this.perfilUsuario = perfilSalvo.replace('ROLE_', '').toUpperCase();
+      console.log('O que o menu vai usar:', this.perfilUsuario);
+    } else {
+      this.perfilUsuario = null;
+      console.log('Nenhum perfil encontrado!');
+    }
   }
 
   logout() {

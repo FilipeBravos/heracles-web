@@ -39,13 +39,12 @@ export const routes: Routes = [
     data: { roles: ['ALUNO', 'PROFESSOR', 'ADMIN'] } 
   },
 
-  // 3. Área em Desenvolvimento (Comentada para não quebrar)
-  /* {
+  {
     path: 'meu-treino',
-    component: MeuTreinoComponent,
+    loadComponent: () => import('./pages/meu-treino/meu-treino').then(m => m.MeuTreinoComponent),
     canActivate: [authGuard, roleGuard],
     data: { roles: ['ALUNO', 'PROFESSOR', 'ADMIN'] } 
-  }, */
+  },
 
   { 
     path: '', 

@@ -16,70 +16,35 @@
       </p>
     </div>
 
-    <mat-nav-list class="px-3">
-      <a
-        mat-list-item
-        routerLink="/dashboard"
-        routerLinkActive="bg-blue-50 text-blue-600"
-        [routerLinkActiveOptions]="{exact: true}"
-        class="!rounded-lg mb-1 text-gray-600"
-      >
-        <mat-icon matListItemIcon>dashboard</mat-icon>
-        <span matListItemTitle>Dashboard</span>
-      </a>
+   <mat-nav-list>
+  <a mat-list-item routerLink="/dashboard">
+    <mat-icon matListItemIcon>dashboard</mat-icon>
+    <div matListItemTitle>Dashboard</div>
+  </a>
 
-      @if (perfilUsuario === 'PROFESSOR' || perfilUsuario === 'ADMIN') {
-      <a
-        mat-list-item
-        routerLink="/alunos"
-        routerLinkActive="bg-blue-50 text-blue-600"
-        class="!rounded-lg mb-1 text-gray-600"
-      >
-        <mat-icon matListItemIcon>groups</mat-icon>
-        <span matListItemTitle>Alunos</span>
-      </a>
+  @if (perfilUsuario === 'PROFESSOR' || perfilUsuario === 'ADMIN') {
+    <a mat-list-item routerLink="/alunos">
+      <mat-icon matListItemIcon>people</mat-icon>
+      <div matListItemTitle>Alunos</div>
+    </a>
+    <a mat-list-item routerLink="/treinos">
+      <mat-icon matListItemIcon>fitness_center</mat-icon>
+      <div matListItemTitle>Treinos</div>
+    </a>
+  }
 
-      <a
-        mat-list-item
-        routerLink="/treinos"
-        routerLinkActive="bg-blue-50 text-blue-600"
-        class="!rounded-lg mb-1 text-gray-600"
-      >
-        <mat-icon matListItemIcon>fitness_center</mat-icon>
-        <span matListItemTitle>Treinos</span>
-      </a>
+  @if (perfilUsuario === 'ALUNO') {
+    <a mat-list-item routerLink="/meu-treino">
+      <mat-icon matListItemIcon>assignment</mat-icon>
+      <div matListItemTitle>Minha Ficha</div>
+    </a>
+  }
 
-      <a
-        mat-list-item
-        routerLink="/agenda"
-        routerLinkActive="bg-blue-50 text-blue-600"
-        class="!rounded-lg mb-1 text-gray-600"
-      >
-        <mat-icon matListItemIcon>calendar_month</mat-icon>
-        <span matListItemTitle>Agenda de Aulas</span>
-      </a>
-      } @if (perfilUsuario === 'ALUNO') {
-      <a
-        mat-list-item
-        routerLink="/meu-treino"
-        routerLinkActive="bg-blue-50 text-blue-600"
-        class="!rounded-lg mb-1 text-gray-600"
-      >
-        <mat-icon matListItemIcon>list_alt</mat-icon>
-        <span matListItemTitle>Minha Ficha</span>
-      </a>
-
-      <a
-        mat-list-item
-        routerLink="/agenda"
-        routerLinkActive="bg-blue-50 text-blue-600"
-        class="!rounded-lg mb-1 text-gray-600"
-      >
-        <mat-icon matListItemIcon>calendar_month</mat-icon>
-        <span matListItemTitle>Agendar Aula</span>
-      </a>
-      }
-    </mat-nav-list>
+  <a mat-list-item routerLink="/agenda">
+    <mat-icon matListItemIcon>calendar_today</mat-icon>
+    <div matListItemTitle>Agenda de Aulas</div>
+  </a>
+</mat-nav-list>
   </mat-sidenav>
 
   <mat-sidenav-content class="bg-gray-50 flex flex-col">

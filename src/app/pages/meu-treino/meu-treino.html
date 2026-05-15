@@ -1,0 +1,67 @@
+<div class="p-6 max-w-4xl mx-auto">
+  <h2 class="text-3xl font-bold mb-6 text-gray-800">Minha Ficha</h2>
+
+  @if (treinos().length === 0) {
+    <div class="text-center py-16 bg-white rounded-2xl shadow-sm border border-gray-100">
+      <mat-icon class="text-gray-300 text-6xl h-16 w-16 mb-4">assignment_late</mat-icon>
+      <h3 class="text-xl text-gray-600 font-medium">Nenhum treino atribuído</h3>
+      <p class="text-gray-500 mt-2">Fale com seu professor para ele montar sua ficha!</p>
+    </div>
+  } @else {
+    <mat-tab-group backgroundColor="primary" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      
+      @for (treino of treinos(); track treino.id) {
+        <mat-tab [label]="treino.nome + ' (' + treino.foco + ')'">
+          <div class="p-6 md:p-8 bg-gray-50 min-h-[500px]">
+            
+            <h3 class="text-xl font-bold text-gray-700 mb-6 flex items-center gap-2">
+              <mat-icon class="text-blue-600">fitness_center</mat-icon> 
+              Lista de Exercícios
+            </h3>
+
+            @if (!treino.exercicios || treino.exercicios.length === 0) {
+              <div class="p-8 text-center text-gray-500 border border-dashed border-gray-300 bg-white rounded-xl">
+                <mat-icon class="!w-12 !h-12 text-4xl mb-2 text-gray-300">inventory_2</mat-icon>
+                <p>O professor não detalhou os exercícios desta ficha.</p>
+              </div>
+            } @else {
+              <div class="flex flex-col gap-3">
+                
+                @for (exercicio of treino.exercicios; track exercicio.id) {
+                  
+                  <mat-card class="!shadow-sm border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer bg-white">
+                    <mat-card-content class="!p-1">
+                      
+                      <mat-checkbox color="primary" class="w-full p-3 font-medium text-gray-700">
+                        <div class="flex flex-col ml-2">
+                          <span class="text-lg font-bold text-gray-800 leading-tight">
+                            {{ exercicio.nome }}
+                          </span>
+                          
+                          <div class="flex items-center gap-2 mt-1">
+                            <span class="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded">
+                              {{ exercicio.repeticoes }}
+                            </span>
+                            @if (exercicio.observacoes) {
+                              <span class="text-sm text-gray-500 italic">
+                                — {{ exercicio.observacoes }}
+                              </span>
+                            }
+                          </div>
+                        </div>
+                      </mat-checkbox>
+
+                    </mat-card-content>
+                  </mat-card>
+
+                }
+              </div>
+            }
+
+          </div>
+        </mat-tab>
+      }
+
+    </mat-tab-group>
+  }
+</div>

@@ -36,14 +36,13 @@ export class LoginComponent {
 
             if (token) {
               localStorage.setItem('heracles_token', token);
-              localStorage.setItem(
-                'tipoPerfil',
-                resposta.tipoPerfil || 'PROFESSOR',
+
+              // 👇 AJUSTADO: Agora salvamos exatamente o que veio do Java, sem valor fixo!
+              localStorage.setItem('tipoPerfil', resposta.tipoPerfil);
+
+              console.log(
+                'Token e Perfil reais salvos! Entrando no sistema...',
               );
-
-              console.log('Token e Perfil salvos! Entrando no sistema...');
-
-              // Aqui estava o erro do loop! Agora vai direto pro dashboard:
               this.router.navigate(['/dashboard']);
             }
           },
