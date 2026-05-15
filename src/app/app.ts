@@ -1,34 +1,46 @@
-import { Component, OnInit, inject } from '@angular/core'; // Adicionado inject
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router'; // Adicionado Router
+import { Router, NavigationEnd, RouterModule } from '@angular/router';
+import { filter } from 'rxjs/operators'; // Importante para filtrar os eventos da rota
 import { MatIconModule } from '@angular/material/icon';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatListModule } from '@angular/material/list';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatIconModule],
+  imports: [
+    CommonModule, RouterModule, MatIconModule,
+    MatSidenavModule, MatListModule, MatToolbarModule, MatButtonModule
+  ],
   templateUrl: './app.html',
   styleUrls: ['./app.scss']
 })
 export class AppComponent implements OnInit {
-  // Injetamos o Router para poder navegar programaticamente
   private router = inject(Router);
   
   perfilUsuario: string | null = '';
+  isLoginPage = false;
+
+  constructor() {
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: any) => {
+      this.isLoginPage = event.urlAfterRedirects.includes('/login');
+      
+      this.perfilUsuario = localStorage.getItem('tipoPerfil');
+    });
+  }
 
   ngOnInit() {
     this.perfilUsuario = localStorage.getItem('tipoPerfil');
   }
 
-  // A função que estava faltando!
   logout() {
-    // 1. Limpamos tudo que está salvo no navegador (Token, Perfil, etc)
     localStorage.clear();
-    
-    // 2. Redirecionamos o usuário para a tela de login
+    this.perfilUsuario = null;
     this.router.navigate(['/login']);
-    
-    // 3. Opcional: Forçar um reload para limpar estados residuais
-    //window.location.reload(); 
   }
 }

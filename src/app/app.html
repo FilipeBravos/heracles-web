@@ -1,26 +1,106 @@
-<aside class="sidebar">
-  <div class="logo">HERACLES</div>
+@if (isLoginPage) {
+<router-outlet></router-outlet>
+} @else {
+<mat-sidenav-container class="h-screen">
+  <mat-sidenav
+    mode="side"
+    opened
+    class="w-64 border-r border-gray-200 bg-white"
+  >
+    <div class="p-6">
+      <h2 class="text-2xl font-bold text-blue-600 tracking-tighter">
+        HERÁCLES
+      </h2>
+      <p class="text-xs text-gray-400 uppercase font-semibold mt-1">
+        Gestão de Gym
+      </p>
+    </div>
 
-  <ng-container *ngIf="perfilUsuario === 'PROFESSOR'">
-    <a routerLink="/alunos">
-      <mat-icon>group</mat-icon> Alunos
-    </a>
-    <a routerLink="/treinos">
-      <mat-icon>fitness_center</mat-icon> Treinos
-    </a>
-  </ng-container>
+    <mat-nav-list class="px-3">
+      <a
+        mat-list-item
+        routerLink="/dashboard"
+        routerLinkActive="bg-blue-50 text-blue-600"
+        [routerLinkActiveOptions]="{exact: true}"
+        class="!rounded-lg mb-1 text-gray-600"
+      >
+        <mat-icon matListItemIcon>dashboard</mat-icon>
+        <span matListItemTitle>Dashboard</span>
+      </a>
 
-  <ng-container *ngIf="perfilUsuario === 'ALUNO'">
-    <a routerLink="/meu-treino">
-      <mat-icon>list_alt</mat-icon> Minha Ficha
-    </a>
-  </ng-container>
+      @if (perfilUsuario === 'PROFESSOR' || perfilUsuario === 'ADMIN') {
+      <a
+        mat-list-item
+        routerLink="/alunos"
+        routerLinkActive="bg-blue-50 text-blue-600"
+        class="!rounded-lg mb-1 text-gray-600"
+      >
+        <mat-icon matListItemIcon>groups</mat-icon>
+        <span matListItemTitle>Alunos</span>
+      </a>
 
-  <button (click)="logout()">
-    <mat-icon>logout</mat-icon> Sair
-  </button>
-</aside>
+      <a
+        mat-list-item
+        routerLink="/treinos"
+        routerLinkActive="bg-blue-50 text-blue-600"
+        class="!rounded-lg mb-1 text-gray-600"
+      >
+        <mat-icon matListItemIcon>fitness_center</mat-icon>
+        <span matListItemTitle>Treinos</span>
+      </a>
 
-<main>
-  <router-outlet></router-outlet>
-</main>
+      <a
+        mat-list-item
+        routerLink="/agenda"
+        routerLinkActive="bg-blue-50 text-blue-600"
+        class="!rounded-lg mb-1 text-gray-600"
+      >
+        <mat-icon matListItemIcon>calendar_month</mat-icon>
+        <span matListItemTitle>Agenda de Aulas</span>
+      </a>
+      } @if (perfilUsuario === 'ALUNO') {
+      <a
+        mat-list-item
+        routerLink="/meu-treino"
+        routerLinkActive="bg-blue-50 text-blue-600"
+        class="!rounded-lg mb-1 text-gray-600"
+      >
+        <mat-icon matListItemIcon>list_alt</mat-icon>
+        <span matListItemTitle>Minha Ficha</span>
+      </a>
+
+      <a
+        mat-list-item
+        routerLink="/agenda"
+        routerLinkActive="bg-blue-50 text-blue-600"
+        class="!rounded-lg mb-1 text-gray-600"
+      >
+        <mat-icon matListItemIcon>calendar_month</mat-icon>
+        <span matListItemTitle>Agendar Aula</span>
+      </a>
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="bg-gray-50 flex flex-col">
+    <mat-toolbar
+      class="!bg-white !border-b !border-gray-200 !h-16 flex justify-between px-8 shrink-0"
+    >
+      <span class="text-gray-700 font-medium">Bem-vindo(a) ao Heracles</span>
+
+      <div class="flex items-center gap-2">
+        <mat-icon class="text-gray-400">account_circle</mat-icon>
+
+        <button mat-button color="warn" (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          Sair
+        </button>
+      </div>
+    </mat-toolbar>
+
+    <div class="p-6 flex-1 overflow-auto">
+      <router-outlet></router-outlet>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+}

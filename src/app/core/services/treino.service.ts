@@ -2,9 +2,18 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+export interface Treino {
+  id?: number;
+  nome: string;
+  foco: string;
+  nivel: string;
+  status?: string;
+  exercicios?: any[]; 
+}
 @Injectable({
   providedIn: 'root'
 })
+
 export class TreinoService {
   
   private http = inject(HttpClient);

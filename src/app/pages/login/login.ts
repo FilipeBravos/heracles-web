@@ -12,7 +12,7 @@ import { HttpClient } from '@angular/common/http';
   selector: 'app-login',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './login.html'
+  templateUrl: './login.html',
 })
 export class LoginComponent {
   private fb = inject(FormBuilder);
@@ -21,32 +21,37 @@ export class LoginComponent {
 
   loginForm = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
-    senha: ['', Validators.required]
+    senha: ['', Validators.required],
   });
 
   erroLogin = false;
 
- fazerLogin() {
+  fazerLogin() {
     if (this.loginForm.valid) {
-      this.http.post<any>('http://localhost:8080/api/auth/login', this.loginForm.value)
+      this.http
+        .post<any>('http://localhost:8080/api/auth/login', this.loginForm.value)
         .subscribe({
           next: (resposta) => {
-            // Ajuste o nome da propriedade aqui para tokenJWT
-            const token = resposta.tokenJWT || resposta.token; 
-            
+            const token = resposta.tokenJWT || resposta.token;
+
             if (token) {
               localStorage.setItem('heracles_token', token);
-              console.log('Token salvo! Navegando...');
-              this.router.navigate(['/dashboard/alunos']);
-            } else {
-              console.error('O backend não enviou o token com o nome esperado.');
+              localStorage.setItem(
+                'tipoPerfil',
+                resposta.tipoPerfil || 'PROFESSOR',
+              );
+
+              console.log('Token e Perfil salvos! Entrando no sistema...');
+
+              // Aqui estava o erro do loop! Agora vai direto pro dashboard:
+              this.router.navigate(['/dashboard']);
             }
           },
           error: (err) => {
             console.error('Erro na requisição:', err);
             this.erroLogin = true;
-          }
+          },
         });
     }
-  } 
+  }
 }

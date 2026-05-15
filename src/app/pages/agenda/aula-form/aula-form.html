@@ -1,0 +1,35 @@
+<div class="p-6">
+  <h2 class="text-2xl font-bold text-gray-800 mb-6">Criar Nova Aula</h2>
+
+  <form [formGroup]="aulaForm" (ngSubmit)="salvar()" class="flex flex-col gap-4">
+    
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Título da Aula (Ex: Crossfit WOD, Jump)</mat-label>
+      <input matInput formControlName="titulo" placeholder="Digite o título">
+    </mat-form-field>
+
+    <div class="grid grid-cols-2 gap-4">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Data e Hora</mat-label>
+        <input matInput type="datetime-local" formControlName="dataHora">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Limite de Vagas</mat-label>
+        <input matInput type="number" formControlName="limiteVagas" min="1">
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Lista de Exercícios / Descrição da Aula</mat-label>
+      <textarea matInput formControlName="descricao" rows="4" placeholder="Ex: 3 rounds de:&#10;15 Flexões&#10;20 Agachamentos"></textarea>
+    </mat-form-field>
+
+    <div class="flex justify-end gap-3 mt-4">
+      <button mat-button type="button" (click)="cancelar()">Cancelar</button>
+      <button mat-flat-button color="primary" type="submit" [disabled]="aulaForm.invalid">
+        Salvar Aula
+      </button>
+    </div>
+  </form>
+</div>

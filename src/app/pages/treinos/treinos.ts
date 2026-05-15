@@ -6,8 +6,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TreinoFormComponent } from './treino-form/treino-form';
 import { TreinoDetalhesComponent } from './treino-detalhes/treino-detalhes';
-
-// 1. Importe o TreinoService (ajuste o caminho se necessário)
 import { TreinoService } from '../../core/services/treino.service'; 
 
 @Component({
@@ -69,14 +67,15 @@ export class TreinosComponent implements OnInit {
   }
 
   deletarTreino(treino: any, event: Event) {
-    event.stopPropagation(); 
-    if (confirm(`Atenção: Deletar a "${treino.nome}" vai removê-la de todos os alunos que a possuem. Deseja continuar?`)) {
-      
+    event.stopPropagation();
+    
+    if (confirm('Deseja realmente remover este treino?')) {
       this.treinoService.excluir(treino.id).subscribe({
-        next: () => this.listarTreinos(),
-        error: (err) => console.error('Erro ao deletar', err)
+        next: () => {
+          this.listarTreinos(); 
+        },
+        error: (err) => console.error('Erro ao remover treino', err)
       });
-      
     }
   }
 }
