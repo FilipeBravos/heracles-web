@@ -49,4 +49,8 @@ export class TreinoService {
   listarMeusTreinos(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/meus-treinos`);
   }
+
+  toggleExercicioConcluido(exercicioId: number): Observable<boolean> {
+    return this.http.post<boolean>(`${this.apiUrl}/exercicios/${exercicioId}/toggle`, {});
+  }
 }
