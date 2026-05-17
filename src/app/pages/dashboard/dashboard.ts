@@ -1,25 +1,25 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core'; 
 import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { HttpErrorResponse } from '@angular/common/http';
-import { DashboardService, DadosDashboardAluno } from '../../core/services/dashboard.service';
+import { DashboardAlunoComponent } from './dashboard-aluno/dashboard-aluno'; 
+import { DashboardProfessorComponent } from './dashboard-professor/dashboard-professor'; 
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatIconModule],
+  imports: [CommonModule, DashboardAlunoComponent, DashboardProfessorComponent],
   templateUrl: './dashboard.html'
 })
 export class DashboardComponent implements OnInit {
-  private dashboardService = inject(DashboardService);
-  
-  public dados = signal<DadosDashboardAluno | null>(null);
+  // Signal que vai guardar 'ALUNO', 'PROFESSOR' ou null
+  public perfilUsuario = signal<string | null>(null);
 
-  ngOnInit() {
-    this.dashboardService.getDadosAluno().subscribe({
-      next: (res) => this.dados.set(res),
-      error: (err: HttpErrorResponse) => console.error('Erro ao carregar dashboard', err)
-    });
+ ngOnInit() {
+    const perfilSalvo = localStorage.getItem('tipoPerfil'); 
+    
+    if (perfilSalvo) {
+      this.perfilUsuario.set(perfilSalvo.toUpperCase());
+    } else {
+      console.warn('Nenhum perfil encontrado no Local Storage para o Dashboard wrapper.');
+    }
   }
 }

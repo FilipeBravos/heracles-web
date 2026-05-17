@@ -1,0 +1,58 @@
+<div class="p-6 max-w-5xl mx-auto">
+  <h2 class="text-3xl font-bold mb-2 text-gray-800">Seu Progresso</h2>
+  <p class="text-gray-500 mb-8">Acompanhe seus checks e mantenha a consistência nos treinos.</p>
+
+  @if (dados(); as dadosVal) {
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+        <div>
+          <p class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Feitos Hoje</p>
+          <h3 class="text-4xl font-extrabold text-gray-800 mt-1">{{ dadosVal.exerciciosHoje }}</h3>
+          <p class="text-xs text-gray-500 mt-2">exercícios concluídos</p>
+        </div>
+        <div class="p-4 bg-green-50 text-green-600 rounded-2xl">
+          <mat-icon class="!w-8 !h-8 text-3xl">check_circle</mat-icon>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+        <div>
+          <p class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Volume Semanal</p>
+          <h3 class="text-4xl font-extrabold text-blue-600 mt-1">{{ dadosVal.exerciciosSemana }}</h3>
+          <p class="text-xs text-gray-500 mt-2">movimentos acumulados nos últimos 7 dias</p>
+        </div>
+        <div class="p-4 bg-blue-50 text-blue-600 rounded-2xl">
+          <mat-icon class="!w-8 !h-8 text-3xl">bolt</mat-icon>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+      <h3 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+        <mat-icon class="text-gray-400">calendar_month</mat-icon>
+        Histórico de Atividade Recente
+      </h3>
+
+      @if (dadosVal.historicoSeteDias.length === 0) {
+        <p class="text-gray-400 italic py-4 text-center">Nenhum exercício registrado nos últimos dias. Hora de começar!</p>
+      } @else {
+        <div class="flex flex-col gap-2">
+          @for (item of dadosVal.historicoSeteDias; track item.data) {
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+              <span class="text-sm font-medium text-gray-600">
+                {{ item.data | date:'dd/MM (EEEE)':undefined:'pt-BR' }}
+              </span>
+              <span class="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-full">
+                {{ item.quantidade }} {{ item.quantidade === 1 ? 'exercício' : 'exercícios' }}
+              </span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="text-center py-12 text-gray-400">Carregando métricas do seu painel...</div>
+  }
+</div>

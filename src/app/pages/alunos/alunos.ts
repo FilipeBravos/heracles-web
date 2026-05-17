@@ -3,42 +3,72 @@ import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatTabsModule } from '@angular/material/tabs'; 
+import { HttpErrorResponse } from '@angular/common/http';
+
 import { AlunoForm } from './aluno-form/aluno-form';
 import { VincularTreino } from './vincular-treino/vincular-treino';
-// Importe o seu serviço aqui (ajuste o caminho se necessário)
+// 👇 1. IMPORTE O MODAL QUE CRIAMOS PARA ATRIBUIR (Ajuste o caminho se necessário)
+import { AtribuirAlunoModal } from './atribuir-aluno/atribuir-aluno'; 
+
 import { AlunoService } from '../../core/services/aluno.service'; 
+import { AlunosPorProfessor, ProfessorService, AlunoSimples } from '../../core/services/professor.service';
 
 @Component({
   selector: 'app-alunos',
   standalone: true,
-  imports: [CommonModule, MatTableModule, MatButtonModule, MatIconModule],
+  imports: [
+    CommonModule, 
+    MatTableModule, 
+    MatButtonModule, 
+    MatIconModule,
+    MatTabsModule, 
+    MatDialogModule
+  ],
   templateUrl: './alunos.html'
 })
 export class AlunosComponent implements OnInit {
-  // Injetamos o serviço ao invés do HttpClient direto
-  private alunoService = inject(AlunoService);
+  private professorService = inject(ProfessorService);
   private dialog = inject(MatDialog);
-  
-  displayedColumns: string[] = ['id', 'nome', 'cpf', 'email', 'treino', 'status', 'acoes'];
-  
-  dataSource = signal<any[]>([]);
+  private alunoService = inject(AlunoService);
 
-  ngOnInit(): void {
-    this.listarAlunos();
+  public listasAlunos = signal<AlunosPorProfessor | null>(null);
+  public displayedColumns: string[] = ['id', 'nome', 'cpf', 'email', 'treino', 'status', 'acoes'];
+
+  ngOnInit() {
+    this.carregarAlunos();
   }
 
-  listarAlunos() {
-    // Usando o serviço para buscar os dados
-    this.alunoService.listarAlunos()
-      .subscribe({
-        next: (dados) => {
-          this.dataSource.set(dados);
+  carregarAlunos() {
+    this.professorService.getAlunosPainel().subscribe({
+      next: (res) => this.listasAlunos.set(res),
+      error: (err: HttpErrorResponse) => console.error('Erro ao carregar dashboard de alunos', err)
+    });
+  }
+
+  abrirModalAtribuir(aluno: AlunoSimples) {
+    const dialogRef = this.dialog.open(AtribuirAlunoModal, {
+      width: '450px',
+      panelClass: '!rounded-none',
+      data: { aluno: aluno }
+    });
+
+    dialogRef.afterClosed().subscribe((vinculouComSucesso: boolean) => {
+      if (vinculouComSucesso) this.carregarAlunos();
+    });
+  }
+
+  desvincularAluno(aluno: AlunoSimples) {
+    if (confirm(`Deseja realmente remover o(a) aluno(a) ${aluno.nome} da sua lista de particulares?`)) {
+      this.professorService.desvincularAluno(aluno.id).subscribe({
+        next: () => {
+          // Recarrega as listas do Signal e move o aluno de aba em tempo real
+          this.carregarAlunos(); 
         },
-        error: (err) => {
-          console.error('Erro ao buscar usuários:', err);
-        }
+        error: (err: HttpErrorResponse) => console.error('Erro ao desvincular aluno', err)
       });
+    }
   }
 
   abrirModalNovoAluno() {
@@ -47,8 +77,8 @@ export class AlunosComponent implements OnInit {
       panelClass: '!rounded-none'
     });
 
-    dialogRef.afterClosed().subscribe(salvouComSucesso => {
-      if (salvouComSucesso) this.listarAlunos();
+    dialogRef.afterClosed().subscribe((salvouComSucesso: boolean) => {
+      if (salvouComSucesso) this.carregarAlunos();
     });
   }
 
@@ -59,8 +89,8 @@ export class AlunosComponent implements OnInit {
       data: { aluno: aluno }
     });
 
-    dialogRef.afterClosed().subscribe(salvouComSucesso => {
-      if (salvouComSucesso) this.listarAlunos();
+    dialogRef.afterClosed().subscribe((salvouComSucesso: boolean) => {
+      if (salvouComSucesso) this.carregarAlunos();
     });
   }
 
@@ -71,8 +101,8 @@ export class AlunosComponent implements OnInit {
       data: { aluno: aluno }
     });
 
-    dialogRef.afterClosed().subscribe(salvou => {
-      if (salvou) this.listarAlunos();
+    dialogRef.afterClosed().subscribe((salvou: boolean) => {
+      if (salvou) this.carregarAlunos();
     });
   }
 
@@ -80,13 +110,12 @@ export class AlunosComponent implements OnInit {
     const acao = aluno.status === 'ATIVO' ? 'inativar' : 'reativar';
     
     if (confirm(`Deseja realmente ${acao} o(a) aluno(a) ${aluno.nome}?`)) {
-      // Usando o serviço para alterar o status
       this.alunoService.alternarStatusAluno(aluno.id)
         .subscribe({
           next: () => {
-            this.listarAlunos();
+            this.carregarAlunos();
           },
-          error: (err) => console.error('Erro ao alterar status', err)
+          error: (err: HttpErrorResponse) => console.error('Erro ao alterar status', err)
         });
     }
   }

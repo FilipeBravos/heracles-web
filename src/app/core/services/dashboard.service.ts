@@ -14,6 +14,25 @@ export interface DadosDashboardAluno {
   historicoSeteDias: HistoricoItem[];
 }
 
+export interface AlunoDashboardResumo {
+  id: number;
+  nome: string;
+}
+
+export interface DadosDashboardProfessor {
+  alunosPersonal: AlunoDashboardResumo[];
+  totalAulasMinistradas: number;
+  proximasAulas: AulaResumo[];
+  historicoAulas: AulaResumo[];
+}
+
+export interface AulaResumo {
+  id: number;
+  titulo: string;
+  dataHora: string;
+  totalAlunos: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -21,8 +40,11 @@ export class DashboardService {
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:8080/api/dashboard';
 
-  // Tipamos o retorno do Observable aqui 
   getDadosAluno(): Observable<DadosDashboardAluno> {
     return this.http.get<DadosDashboardAluno>(`${this.apiUrl}/aluno`);
+  }
+
+  getDadosProfessor(): Observable<DadosDashboardProfessor> {
+    return this.http.get<DadosDashboardProfessor>(`${this.apiUrl}/professor`);
   }
 }
