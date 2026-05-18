@@ -1,6 +1,7 @@
 <div class="p-6 max-w-7xl mx-auto">
+  
   <div class="flex justify-between items-center mb-8">
-    <h2 class="text-3xl font-bold text-gray-800">Próximas Aulas</h2>
+    <h2 class="text-3xl font-bold text-gray-800">Cronograma de Aulas</h2>
 
     @if (perfilUsuario === 'PROFESSOR' || perfilUsuario === 'ADMIN') {
     <button mat-flat-button color="primary" (click)="abrirModalNovaAula()">
@@ -9,94 +10,134 @@
     }
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-    @for (aula of aulas(); track aula.id) {
-    <mat-card
-      class="shadow-lg border border-gray-100 rounded-xl overflow-hidden"
-    >
-<mat-card-header class="bg-blue-50 p-4 border-b border-blue-100 flex justify-between items-start">
-  <div>
-    <mat-card-title class="text-xl font-bold text-blue-800">{{ aula.titulo }}</mat-card-title>
-    <mat-card-subtitle class="mt-2 text-gray-600 flex items-center gap-1">
-      <mat-icon class="scale-75">calendar_today</mat-icon>
-      {{ aula.dataHora | date:'dd/MM/yyyy HH:mm' }}
-    </mat-card-subtitle>
-  </div>
-  
-  @if (perfilUsuario === 'PROFESSOR' || perfilUsuario === 'ADMIN') {
-    <button mat-icon-button color="primary" (click)="abrirListaAlunos(aula)" matTooltip="Lista de Presença">
-      <mat-icon>group</mat-icon>
-    </button>
-  } @else {
-    <button mat-icon-button color="primary" (click)="abrirDetalhes(aula)" matTooltip="Ver exercícios">
-      <mat-icon>visibility</mat-icon>
-    </button>
-  }
-</mat-card-header>
+  <mat-tab-group backgroundColor="primary" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    
+    <mat-tab [label]="'Próximas Aulas (' + proximasAulas().length + ')'">
+      <div class="p-6 bg-gray-50/50 min-h-[400px]">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          @for (aula of proximasAulas(); track aula.id) {
+            <mat-card class="shadow-lg border border-gray-100 rounded-xl overflow-hidden bg-white">
+              <mat-card-header class="bg-blue-50 p-4 border-b border-blue-100 flex justify-between items-start">
+                <div>
+                  <mat-card-title class="text-xl font-bold text-blue-800">{{ aula.titulo }}</mat-card-title>
+                  <mat-card-subtitle class="mt-2 text-gray-600 flex items-center gap-1">
+                    <mat-icon class="scale-75">calendar_today</mat-icon>
+                    {{ aula.dataHora | date:'dd/MM/yyyy HH:mm' }}
+                  </mat-card-subtitle>
+                </div>
+                
+                @if (perfilUsuario === 'PROFESSOR' || perfilUsuario === 'ADMIN') {
+                  <button mat-icon-button color="primary" (click)="abrirListaAlunos(aula)" title="Lista de Presença">
+                    <mat-icon>group</mat-icon>
+                  </button>
+                } @else {
+                  <button mat-icon-button color="primary" (click)="abrirDetalhes(aula)" title="Ver exercícios">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                }
+              </mat-card-header>
 
-      <mat-card-content class="p-4 pt-6">
-        <p class="text-gray-700 flex items-center gap-2 font-medium mb-4">
-          <mat-icon class="text-gray-500">fitness_center</mat-icon>
-          Prof: {{ aula.professor?.nome || 'A definir' }}
-        </p>
+              <mat-card-content class="p-4 pt-6">
+                <p class="text-gray-700 flex items-center gap-2 font-medium mb-4">
+                  <mat-icon class="text-gray-500">fitness_center</mat-icon>
+                  Prof: {{ aula.professor?.nome || 'A definir' }}
+                </p>
 
-        <div class="mt-2">
-          <div class="flex justify-between text-sm mb-1 text-gray-600">
-            <span>Ocupação da turma</span>
-            <span class="font-bold"
-              >{{ aula.vagasOcupadas }} / {{ aula.limiteVagas }} vagas</span
-            >
-          </div>
-          <div class="w-full bg-gray-200 rounded-full h-3">
-            <div
-              class="bg-blue-600 h-3 rounded-full transition-all duration-500"
-              [style.width.%]="(aula.vagasOcupadas / aula.limiteVagas) * 100"
-            ></div>
-          </div>
+                <div class="mt-2">
+                  <div class="flex justify-between text-sm mb-1 text-gray-600">
+                    <span>Ocupação da turma</span>
+                    <span class="font-bold">{{ aula.vagasOcupadas }} / {{ aula.limiteVagas }} vagas</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div class="bg-blue-600 h-3 rounded-full transition-all duration-500" [style.width.%]="(aula.vagasOcupadas / aula.limiteVagas) * 100"></div>
+                  </div>
+                </div>
+              </mat-card-content>
+
+              <mat-card-actions class="p-4 bg-gray-50 flex justify-end gap-2">
+                @if (aula.reservadaPeloAluno) {
+                  <button mat-flat-button disabled class="w-full py-2 !bg-green-100 !text-green-700">
+                    <mat-icon>check_circle</mat-icon> VOCÊ ESTÁ INSCRITO
+                  </button>
+                } @else if (aula.vagasOcupadas >= aula.limiteVagas) {
+                  <button mat-flat-button disabled color="warn" class="w-full py-2">TURMA LOTADA</button>
+                } @else {
+                  <button mat-flat-button color="primary" (click)="reservarVaga(aula)" class="w-full py-2">RESERVAR MINHA VAGA</button>
+                }
+                <button mat-icon-button color="primary" (click)="abrirDetalhes(aula)">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          } @empty {
+            <div class="col-span-full text-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
+              <mat-icon class="text-gray-400 text-6xl mb-4 h-16 w-16">event_busy</mat-icon>
+              <h3 class="text-xl text-gray-600 font-medium">Nenhuma aula disponível</h3>
+              <p class="text-gray-500 mt-2">Fique de olho, novas turmas serão abertas em breve!</p>
+            </div>
+          }
         </div>
-      </mat-card-content>
 
-      <mat-card-actions class="p-4 bg-gray-50 flex justify-end">
-        @if (aula.reservadaPeloAluno) {
-        <button
-          mat-flat-button
-          disabled
-          class="w-full py-2 !bg-green-100 !text-green-700"
-        >
-          <mat-icon>check_circle</mat-icon> VOCÊ ESTÁ INSCRITO
-        </button>
-        } @else if (aula.vagasOcupadas >= aula.limiteVagas) {
-        <button mat-flat-button disabled color="warn" class="w-full py-2">
-          TURMA LOTADA
-        </button>
-        } @else {
-        <button
-          mat-flat-button
-          color="primary"
-          (click)="reservarVaga(aula)"
-          class="w-full py-2"
-        >
-          RESERVAR MINHA VAGA
-        </button>
-        }
-        <button mat-icon-button color="primary" (click)="abrirDetalhes(aula)">
-  <mat-icon>visibility</mat-icon>
-</button>
-      </mat-card-actions>
-    </mat-card>
+      </div>
+    </mat-tab>
 
-    } @empty {
-    <div
-      class="col-span-full text-center py-20 bg-gray-50 rounded-xl border border-dashed border-gray-300 mt-6"
-    >
-      <mat-icon class="text-gray-400 text-6xl mb-4 h-16 w-16"
-        >event_busy</mat-icon
-      >
-      <h3 class="text-xl text-gray-600 font-medium">Nenhuma aula disponível</h3>
-      <p class="text-gray-500 mt-2">
-        Fique de olho, o professor abrirá novas turmas em breve!
-      </p>
-    </div>
-    }
-  </div>
+    <mat-tab [label]="'Histórico de Aulas (' + historicoAulas().length + ')'">
+      <div class="p-4 bg-gray-50/50 min-h-[400px]">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          @for (aula of historicoAulas(); track aula.id) {
+            <mat-card class="shadow-lg border border-gray-100 rounded-xl overflow-hidden bg-white opacity-85">
+              <mat-card-header class="bg-gray-100 p-4 border-b border-gray-200 flex justify-between items-start">
+                <div>
+                  <mat-card-title class="text-xl font-bold text-gray-700 line-through decoration-gray-400">{{ aula.titulo }}</mat-card-title>
+                  <mat-card-subtitle class="mt-2 text-gray-500 flex items-center gap-1">
+                    <mat-icon class="scale-75">history</mat-icon>
+                    {{ aula.dataHora | date:'dd/MM/yyyy HH:mm' }}
+                  </mat-card-subtitle>
+                </div>
+                
+                @if (perfilUsuario === 'PROFESSOR' || perfilUsuario === 'ADMIN') {
+                  <button mat-icon-button color="primary" (click)="abrirListaAlunos(aula)" title="Ver quem participou">
+                    <mat-icon>group</mat-icon>
+                  </button>
+                }
+              </mat-card-header>
+
+              <mat-card-content class="p-4 pt-6">
+                <p class="text-gray-600 flex items-center gap-2 font-medium mb-4">
+                  <mat-icon class="text-gray-400">fitness_center</mat-icon>
+                  Prof: {{ aula.professor?.nome || 'Definido' }}
+                </p>
+
+                <div class="mt-2">
+                  <div class="flex justify-between text-sm mb-1 text-gray-500">
+                    <span>Participação total</span>
+                    <span class="font-bold text-gray-700">{{ aula.vagasOcupadas }} alunos presentes</span>
+                  </div>
+                </div>
+              </mat-card-content>
+
+              <mat-card-actions class="p-4 bg-gray-100 flex justify-end gap-2">
+                <button mat-flat-button disabled class="w-full py-2 !bg-gray-200 !text-gray-500">
+                  AULA CONCLUÍDA
+                </button>
+                <button mat-icon-button color="primary" (click)="abrirDetalhes(aula)" title="Ver o que foi passado">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          } @empty {
+            <div class="col-span-full text-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
+              <mat-icon class="text-gray-300 text-6xl mb-4 h-16 w-16">history_toggle_off</mat-icon>
+              <h3 class="text-xl text-gray-500 font-medium">Histórico vazio</h3>
+              <p class="text-gray-400 mt-2">Nenhuma aula antiga foi encontrada no registro.</p>
+            </div>
+          }
+        </div>
+
+      </div>
+    </mat-tab>
+
+  </mat-tab-group>
 </div>

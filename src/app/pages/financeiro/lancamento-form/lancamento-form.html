@@ -1,0 +1,123 @@
+<h2
+  mat-dialog-title
+  class="!text-2xl !font-bold text-gray-800 border-b pb-3 flex items-center gap-2"
+>
+  <mat-icon class="text-blue-600">currency_exchange</mat-icon> Novo Lançamento
+  Financeiro
+</h2>
+
+<mat-dialog-content class="!pt-6 min-w-[450px]">
+  <form #formFinanceiro="ngForm" class="flex flex-col gap-4">
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-semibold text-gray-600"
+        >Descrição do Lançamento *</label
+      >
+      <input
+        type="text"
+        [(ngModel)]="transacao.descricao"
+        name="descricao"
+        placeholder="Ex: Compra de materiais de limpeza para o mês"
+        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        required
+      />
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold text-gray-600">Tipo de Fluxo</label>
+        <select
+          [(ngModel)]="transacao.tipo"
+          name="tipo"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="RECEITA">RECEITA (Entrada)</option>
+          <option value="DESPESA">DESPESA (Saída)</option>
+        </select>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold text-gray-600">Status</label>
+        <select
+          [(ngModel)]="transacao.status"
+          name="status"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="PENDENTE">PENDENTE</option>
+          <option value="PAGO">PAGO / RECEBIDO</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-semibold text-gray-600"
+        >Categoria Contábil</label
+      >
+      <select
+        [(ngModel)]="transacao.categoria"
+        name="categoria"
+        class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        @for (cat of categorias; track cat.value) {
+        <option [value]="cat.value">{{ cat.label }}</option>
+        }
+      </select>
+    </div>
+
+    <div
+      class="grid gap-4"
+      [ngClass]="isEdicao() ? 'grid-cols-2' : 'grid-cols-3'"
+    >
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold text-gray-600">Valor (R$) *</label>
+        <input
+          type="number"
+          [(ngModel)]="transacao.valor"
+          name="valor"
+          min="0.01"
+          step="0.01"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+          required
+        />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold text-gray-600">Vencimento *</label>
+        <input
+          type="date"
+          [(ngModel)]="transacao.dataVencimento"
+          name="dataVencimento"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          required
+        />
+      </div>
+
+      @if (!isEdicao()) {
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold text-gray-600">Parcelas</label>
+        <input
+          type="number"
+          [ngModel]="quantidadeParcelas()"
+          (ngModelChange)="quantidadeParcelas.set($event)"
+          name="quantidadeParcelas"
+          min="1"
+          max="72"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      }
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="!pb-4 !pr-6 gap-2 border-t pt-3 mt-4">
+  <button mat-button class="!rounded-lg" (click)="fechar()">Cancelar</button>
+  <button
+    mat-flat-button
+    color="primary"
+    class="!rounded-lg !px-6"
+    (click)="salvar()"
+    [disabled]="!formFinanceiro.valid"
+  >
+    Confirmar Lançamento
+  </button>
+</mat-dialog-actions>

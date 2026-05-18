@@ -16,35 +16,43 @@
       </p>
     </div>
 
-   <mat-nav-list>
-  <a mat-list-item routerLink="/dashboard">
-    <mat-icon matListItemIcon>dashboard</mat-icon>
-    <div matListItemTitle>Dashboard</div>
-  </a>
+    <mat-nav-list>
+      <a mat-list-item routerLink="/dashboard">
+        <mat-icon matListItemIcon>dashboard</mat-icon>
+        <div matListItemTitle>Dashboard</div>
+      </a>
 
-  @if (perfilUsuario === 'PROFESSOR' || perfilUsuario === 'ADMIN') {
-    <a mat-list-item routerLink="/alunos">
-      <mat-icon matListItemIcon>people</mat-icon>
-      <div matListItemTitle>Alunos</div>
-    </a>
-    <a mat-list-item routerLink="/treinos">
-      <mat-icon matListItemIcon>fitness_center</mat-icon>
-      <div matListItemTitle>Treinos</div>
-    </a>
-  }
+      @if (perfilUsuario === 'PROFESSOR' || perfilUsuario === 'ADMIN') {
+      <a mat-list-item routerLink="/alunos">
+        <mat-icon matListItemIcon>people</mat-icon>
+        <div matListItemTitle>Alunos</div>
+      </a>
+      <a mat-list-item routerLink="/treinos">
+        <mat-icon matListItemIcon>fitness_center</mat-icon>
+        <div matListItemTitle>Treinos</div>
+      </a>
 
-  @if (perfilUsuario === 'ALUNO') {
-    <a mat-list-item routerLink="/meu-treino">
-      <mat-icon matListItemIcon>assignment</mat-icon>
-      <div matListItemTitle>Minha Ficha</div>
-    </a>
-  }
+      <a
+        routerLink="/financeiro"
+        routerLinkActive="bg-blue-50 text-blue-700 font-semibold"
+        class="flex items-center gap-3 px-4 py-3 text-gray-600 rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-colors"
+      >
+        <mat-icon class="text-gray-400">account_balance_wallet</mat-icon>
+        <span class="font-medium">Fluxo de Caixa</span>
+      </a>
+      } 
+      @if (perfilUsuario === 'ALUNO') {
+      <a mat-list-item routerLink="/meu-treino">
+        <mat-icon matListItemIcon>assignment</mat-icon>
+        <div matListItemTitle>Minha Ficha</div>
+      </a>
+      }
 
-  <a mat-list-item routerLink="/agenda">
-    <mat-icon matListItemIcon>calendar_today</mat-icon>
-    <div matListItemTitle>Agenda de Aulas</div>
-  </a>
-</mat-nav-list>
+      <a mat-list-item routerLink="/agenda">
+        <mat-icon matListItemIcon>calendar_today</mat-icon>
+        <div matListItemTitle>Agenda de Aulas</div>
+      </a>
+    </mat-nav-list>
   </mat-sidenav>
 
   <mat-sidenav-content class="bg-gray-50 flex flex-col">

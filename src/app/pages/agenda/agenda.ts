@@ -1,10 +1,11 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core'; // 🌟 Importado o computed
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatTabsModule } from '@angular/material/tabs'; // 🌟 Adicionado para organizar em abas
 import { AulaService, Aula } from '../../core/services/aula.service';
 import { AulaFormComponent } from './aula-form/aula-form';
 import { AulaDetalhesComponent } from './aula-detalhes/aula-detalhes';
@@ -20,13 +21,25 @@ import { AulaAlunosComponent } from './aula-alunos/aula-alunos';
     MatIconModule,
     MatSnackBarModule,
     MatDialogModule,
-    MatDialogModule
-],
+    MatTabsModule // 🌟 Registrado aqui
+  ],
   templateUrl: './agenda.html',
 })
 export class AgendaComponent implements OnInit {
-  // 1. Transformamos o array em um Signal reativo!
+  // Signal principal que armazena a lista bruta vinda da API
   aulas = signal<Aula[]>([]);
+
+  // 🌟 SEPARAÇÃO REATIVA: Filtra automaticamente as aulas que são de hoje/futuro
+  proximasAulas = computed(() => {
+    const agora = new Date();
+    return this.aulas().filter(aula => new Date(aula.dataHora) >= agora);
+  });
+
+  // 🌟 SEPARAÇÃO REATIVA: Filtra automaticamente as aulas que já passaram
+  historicoAulas = computed(() => {
+    const agora = new Date();
+    return this.aulas().filter(aula => new Date(aula.dataHora) < agora);
+  });
 
   perfilUsuario: string | null = '';
 
@@ -41,7 +54,6 @@ export class AgendaComponent implements OnInit {
 
   carregarAulas() {
     this.aulaService.listarDisponiveis().subscribe({
-      // 2. Usamos o .set() para atualizar o valor do Signal de forma segura
       next: (dados) => this.aulas.set(dados),
       error: (err) => console.error('Erro ao carregar aulas', err),
     });
@@ -82,10 +94,10 @@ export class AgendaComponent implements OnInit {
   }
 
   abrirListaAlunos(aula: Aula) {
-  this.dialog.open(AulaAlunosComponent, {
-    data: aula,
-    width: '450px',
-    panelClass: '!rounded-2xl'
-  });
-}
+    this.dialog.open(AulaAlunosComponent, {
+      data: aula,
+      width: '450px',
+      panelClass: '!rounded-2xl'
+    });
+  }
 }
