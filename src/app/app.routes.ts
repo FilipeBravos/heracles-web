@@ -7,6 +7,7 @@ import { AgendaComponent } from './pages/agenda/agenda';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role-guard';
 import { Financeiro } from './pages/financeiro/financeiro';
+import { EquipamentoComponent } from './pages/equipamento/equipamento';
 
 export const routes: Routes = [
   // 1. Área Pública
@@ -47,9 +48,16 @@ export const routes: Routes = [
     data: { roles: ['ALUNO', 'PROFESSOR', 'ADMIN'] } 
   },
 
-    {
+  {
     path: 'financeiro',
     component: Financeiro,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['PROFESSOR', 'ADMIN'] } 
+  },
+
+  {
+    path: 'equipamento',
+    component: EquipamentoComponent,
     canActivate: [authGuard, roleGuard],
     data: { roles: ['PROFESSOR', 'ADMIN'] } 
   },

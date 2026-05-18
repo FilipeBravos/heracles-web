@@ -40,6 +40,15 @@
         <mat-icon class="text-gray-400">account_balance_wallet</mat-icon>
         <span class="font-medium">Fluxo de Caixa</span>
       </a>
+
+      <a
+        routerLink="/equipamento"
+        routerLinkActive="bg-blue-50 text-blue-700 font-semibold"
+        class="flex items-center gap-3 px-4 py-3 text-gray-600 rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-colors"
+      >
+        <mat-icon class="text-gray-400">inventory</mat-icon>
+        <span class="font-medium">Gestão de Ativos</span>
+      </a>
       } 
       @if (perfilUsuario === 'ALUNO') {
       <a mat-list-item routerLink="/meu-treino">
