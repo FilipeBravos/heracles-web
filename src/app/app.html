@@ -22,6 +22,15 @@
         <div matListItemTitle>Dashboard</div>
       </a>
 
+      <a
+        routerLink="/suplementos"
+        routerLinkActive="bg-blue-50 text-blue-700 font-semibold"
+        class="flex items-center gap-3 px-4 py-3 text-gray-600 rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-colors"
+      >
+        <mat-icon class="text-gray-400">storefront</mat-icon>
+        <span class="font-medium">Loja & Suplementos</span>
+      </a>
+
       @if (perfilUsuario === 'PROFESSOR' || perfilUsuario === 'ADMIN') {
       <a mat-list-item routerLink="/alunos">
         <mat-icon matListItemIcon>people</mat-icon>
@@ -49,8 +58,7 @@
         <mat-icon class="text-gray-400">inventory</mat-icon>
         <span class="font-medium">Gestão de Ativos</span>
       </a>
-      } 
-      @if (perfilUsuario === 'ALUNO') {
+      } @if (perfilUsuario === 'ALUNO') {
       <a mat-list-item routerLink="/meu-treino">
         <mat-icon matListItemIcon>assignment</mat-icon>
         <div matListItemTitle>Minha Ficha</div>

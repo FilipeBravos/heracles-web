@@ -1,0 +1,70 @@
+<div class="p-8 max-w-7xl mx-auto">
+  
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-800">Loja de Suplementos</h1>
+      <p class="text-gray-500">Vitrine oficial de produtos e suplementação da academia.</p>
+    </div>
+    <button mat-flat-button color="primary" class="!rounded-none !py-6" (click)="abrirModalNovoSuplemento()">
+      <mat-icon>add_shopping_cart</mat-icon> Gerenciar Estoque
+    </button>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    @for (prod of suplementos(); track prod.id) {
+      <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden flex flex-col justify-between p-5 hover:shadow-md transition-shadow relative">
+        
+        <span class="absolute top-4 right-4 text-xs font-bold px-2 py-0.5 rounded-full"
+          [ngClass]="prod.quantidadeEstoque > 5 ? 'bg-green-50 text-green-700' : prod.quantidadeEstoque > 0 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'">
+          @if (prod.quantidadeEstoque > 0) {
+            {{ prod.quantidadeEstoque }} un. em estoque
+          } @else {
+            Esgotado
+          }
+        </span>
+
+        <div class="mt-4">
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">{{ prod.marca }}</p>
+          <h3 class="text-lg font-bold text-gray-800 mt-0.5 min-h-[56px] line-clamp-2">{{ prod.nome }}</h3>
+        </div>
+
+      <div class="mt-6 border-t pt-4 flex flex-col gap-3">
+          
+          <div class="flex items-center justify-between">
+            <div class="flex flex-col">
+              <span class="text-xs text-gray-400 font-medium">Preço à vista</span>
+              <span class="text-xl font-black text-gray-900">{{ prod.preco | currency:'BRL' }}</span>
+            </div>
+
+            <button 
+              mat-flat-button 
+              color="primary" 
+              class="!rounded-xl !text-xs !px-4"
+              [disabled]="prod.quantidadeEstoque <= 0"
+              (click)="abrirModalPedido(prod)"
+            >
+              <mat-icon class="scale-75">shopping_bag</mat-icon> Comprar
+            </button>
+          </div>
+
+          <div class="flex justify-end gap-1 border-t pt-2 mt-1">
+            <button mat-icon-button class="!w-8 !h-8 !line-height-[32px] text-gray-400 hover:text-amber-500 transition-colors" (click)="abrirModalEditar(prod)" title="Editar Produto">
+              <mat-icon class="scale-75">edit</mat-icon>
+            </button>
+            <button mat-icon-button class="!w-8 !h-8 !line-height-[32px] text-gray-400 hover:text-red-500 transition-colors" (click)="deletarProduto(prod)" title="Excluir Produto">
+              <mat-icon class="scale-75">delete</mat-icon>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    }
+  </div>
+
+  @if (suplementos().length === 0) {
+    <div class="text-center py-16 bg-gray-50 rounded-2xl border border-dashed text-gray-400 italic">
+      Nenhum suplemento cadastrado na vitrine da loja.
+    </div>
+  }
+</div>

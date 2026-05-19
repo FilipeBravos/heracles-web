@@ -8,6 +8,7 @@ import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role-guard';
 import { Financeiro } from './pages/financeiro/financeiro';
 import { EquipamentoComponent } from './pages/equipamento/equipamento';
+import { SuplementosComponent } from './pages/suplementos/suplementos';
 
 export const routes: Routes = [
   // 1. Área Pública
@@ -60,6 +61,12 @@ export const routes: Routes = [
     component: EquipamentoComponent,
     canActivate: [authGuard, roleGuard],
     data: { roles: ['PROFESSOR', 'ADMIN'] } 
+  },
+    {
+    path: 'suplementos',
+    component: SuplementosComponent,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ALUNO', 'PROFESSOR', 'ADMIN'] } 
   },
 
 ];

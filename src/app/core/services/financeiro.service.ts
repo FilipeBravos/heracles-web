@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface LancamentoFinanceiro {
@@ -29,12 +29,20 @@ export class FinanceiroService {
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:8080/api/financeiro';
 
-  listarTransacoes(): Observable<LancamentoFinanceiro[]> {
-    return this.http.get<LancamentoFinanceiro[]>(this.apiUrl);
+listarTransacoes(mes?: number, ano?: number): Observable<LancamentoFinanceiro[]> {
+    let params = new HttpParams();
+    if (mes) params = params.set('mes', mes.toString());
+    if (ano) params = params.set('ano', ano.toString());
+
+    return this.http.get<LancamentoFinanceiro[]>(this.apiUrl, { params });
   }
 
-  getResumo(): Observable<ResumoFinanceiro> {
-    return this.http.get<ResumoFinanceiro>(`${this.apiUrl}/resumo`);
+  getResumo(mes?: number, ano?: number): Observable<ResumoFinanceiro> {
+    let params = new HttpParams();
+    if (mes) params = params.set('mes', mes.toString());
+    if (ano) params = params.set('ano', ano.toString());
+
+    return this.http.get<ResumoFinanceiro>(`${this.apiUrl}/resumo`, { params });
   }
 
   salvarLancamento(
