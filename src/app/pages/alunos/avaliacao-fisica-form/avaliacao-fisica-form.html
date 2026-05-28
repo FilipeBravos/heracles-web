@@ -1,0 +1,266 @@
+<div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-white sticky top-0 z-20 rounded-t-2xl">
+  <h2 mat-dialog-title class="!m-0 !p-0 text-2xl font-bold text-gray-800 flex items-center gap-2">
+    <mat-icon class="text-blue-600">straighten</mat-icon> 
+    {{ isEdicao() ? 'Atualizar Avaliação Física' : 'Nova Avaliação Física' }}
+  </h2>
+  
+  <div class="bg-blue-50 px-4 py-2 rounded-full border border-blue-100 flex items-center gap-2">
+    <mat-icon class="text-blue-500 scale-75">person</mat-icon>
+    <span class="text-sm font-bold text-blue-900">{{ data.aluno.nome }}</span>
+  </div>
+</div>
+
+<mat-dialog-content class="!p-0 min-w-[900px] min-h-[650px] bg-gray-50/50">
+  
+  <mat-tab-group animationDuration="200ms" class="px-2">
+    
+    <mat-tab label="1. Antropometria">
+      <div class="p-6 flex flex-col gap-6">
+        
+        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+          <div class="p-3 bg-blue-50 rounded-full text-blue-500"><mat-icon>badge</mat-icon></div>
+          <div class="flex flex-col gap-1 w-full">
+            <label class="text-sm font-semibold text-gray-600">Avaliador(a) Técnico Responsável</label>
+            <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+              <input matInput [(ngModel)]="avaliacao.avaliador" placeholder="Ex: Prof. Anderson Silva">
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <mat-icon class="text-amber-500 scale-90">monitor_weight</mat-icon> Massas e Índices Corporais
+          </h4>
+          
+          <div class="grid grid-cols-3 gap-5">
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Peso Corporal (kg)</label>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <input matInput type="number" [(ngModel)]="avaliacao.peso" placeholder="00.0">
+              </mat-form-field>
+            </div>
+
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Altura (cm)</label>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <input matInput type="number" [(ngModel)]="avaliacao.altura" placeholder="Ex: 175">
+              </mat-form-field>
+            </div>
+
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-blue-600">IMC Calculado (kg/m²)</label>
+              <div class="h-[48px] bg-blue-50/50 border border-blue-200 rounded-lg px-3 flex items-center font-bold text-blue-700">
+                {{ imc }}
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-5 mt-4 border-t pt-4 border-gray-100">
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Protocolo de Gordura Usado</label>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <input matInput [(ngModel)]="avaliacao.protocoloPercentual" placeholder="Ex: Pollock 7 Dobras">
+              </mat-form-field>
+            </div>
+
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">% de Gordura Real</label>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <input matInput type="number" [(ngModel)]="avaliacao.percentualGordura" placeholder="Ex: 14.5">
+              </mat-form-field>
+            </div>
+
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Relação Cintura-Quadril (RCQ)</label>
+              <div class="h-[48px] bg-amber-50/50 border border-amber-200 rounded-lg px-3 flex items-center font-bold text-amber-700">
+                {{ rcq }}
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-5 mt-4">
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Total Peso Gordo (kg)</label>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <input matInput type="number" [(ngModel)]="avaliacao.pesoGordo" placeholder="0.00">
+              </mat-form-field>
+            </div>
+
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Total Peso Magro / Massa Livre de Gordura (kg)</label>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <input matInput type="number" [(ngModel)]="avaliacao.pesoMagro" placeholder="0.00">
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </mat-tab>
+
+    <mat-tab label="2. Perimetria">
+      <div class="p-6">
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <mat-icon class="text-purple-500 scale-90">architecture</mat-icon> Medidas de Perímetro (cm)
+          </h4>
+
+          <div class="flex flex-col gap-4">
+            
+            <div class="grid grid-cols-3 gap-4 font-bold text-xs uppercase tracking-wider text-gray-400 pb-2 border-b">
+              <span>Segmento Corporal</span>
+              <span>Lado Direito</span>
+              <span>Lado Esquerdo</span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 items-center border-b border-gray-50 pb-2">
+              <span class="text-sm font-medium text-gray-700">Braço Relaxado</span>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.bracoRelaxadoD"></mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.bracoRelaxadoE"></mat-form-field>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 items-center border-b border-gray-50 pb-2">
+              <span class="text-sm font-medium text-gray-700">Braço Contraído</span>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.bracoContraidoD"></mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.bracoContraidoE"></mat-form-field>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 items-center border-b border-gray-50 pb-2">
+              <span class="text-sm font-medium text-gray-700">Antebraço</span>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.antebracoD"></mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.antebracoE"></mat-form-field>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 items-center border-b border-gray-50 pb-2 bg-gray-50/50 p-2 rounded-xl">
+              <div class="flex flex-col">
+                <span class="text-sm font-bold text-gray-800">Tronco Central</span>
+                <span class="text-xs text-gray-400">Tórax, Cintura, Abdômen, Quadril</span>
+              </div>
+              <div class="flex flex-col gap-3 col-span-2">
+                <div class="grid grid-cols-2 gap-2">
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-full"><mat-label>Tórax</mat-label><input matInput type="number" [(ngModel)]="avaliacao.torax"></mat-form-field>
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-full"><mat-label>Cintura</mat-label><input matInput type="number" [(ngModel)]="avaliacao.cintura"></mat-form-field>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-full"><mat-label>Abdômen</mat-label><input matInput type="number" [(ngModel)]="avaliacao.abdomen"></mat-form-field>
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-full"><mat-label>Quadril</mat-label><input matInput type="number" [(ngModel)]="avaliacao.quadril"></mat-form-field>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 items-center border-b border-gray-50 pb-2">
+              <span class="text-sm font-medium text-gray-700">Coxa Proximal</span>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.coxaProximalD"></mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.coxaProximalE"></mat-form-field>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 items-center border-b border-gray-50 pb-2">
+              <span class="text-sm font-medium text-gray-700">Coxa Medial</span>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.coxaMedialD"></mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.coxaMedialE"></mat-form-field>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 items-center">
+              <span class="text-sm font-medium text-gray-700">Panturrilha</span>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.panturrilhaD"></mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.panturrilhaE"></mat-form-field>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="3. Dobras Cutâneas">
+      <div class="p-6 flex flex-col gap-4">
+        
+        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+          <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+            <mat-label>Protocolo Utilizado para Dobras Cutâneas</mat-label>
+            <input matInput [(ngModel)]="avaliacao.protocoloDobras" placeholder="Ex: Guedes 3 dobras, Jackson & Pollock 7 dobras">
+          </mat-form-field>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div class="flex flex-col gap-3">
+            
+            <div class="grid grid-cols-5 gap-2 font-bold text-xs uppercase tracking-wider text-gray-400 pb-2 border-b">
+              <span>Dobra (mm)</span>
+              <span>1ª Medida</span>
+              <span>2ª Medida</span>
+              <span>3ª Medida</span>
+              <span class="text-blue-600">Média Final</span>
+            </div>
+
+            <div class="grid grid-cols-5 gap-2 items-center border-b border-gray-50 pb-1">
+              <span class="text-sm font-medium text-gray-700">Tríceps</span>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.triceps1"></mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.triceps2"></mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.triceps3"></mat-form-field>
+              <div class="font-bold text-blue-600 px-2">{{ calcularMediaDobra(avaliacao.triceps1, avaliacao.triceps2, avaliacao.triceps3) }} mm</div>
+            </div>
+
+            <div class="grid grid-cols-5 gap-2 items-center border-b border-gray-50 pb-1">
+              <span class="text-sm font-medium text-gray-700">Subescapular</span>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.subescapular1"></mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.subescapular2"></mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.subescapular3"></mat-form-field>
+              <div class="font-bold text-blue-600 px-2">{{ calcularMediaDobra(avaliacao.subescapular1, avaliacao.subescapular2, avaliacao.subescapular3) }} mm</div>
+            </div>
+
+            <div class="grid grid-cols-5 gap-2 items-center border-b border-gray-50 pb-1">
+              <span class="text-sm font-medium text-gray-700">Peitoral</span>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.peitoral1"></mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.peitoral2"></mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.peitoral3"></mat-form-field>
+              <div class="font-bold text-blue-600 px-2">{{ calcularMediaDobra(avaliacao.peitoral1, avaliacao.peitoral2, avaliacao.peitoral3) }} mm</div>
+            </div>
+
+            <div class="grid grid-cols-5 gap-2 items-center border-b border-gray-50 pb-1">
+              <span class="text-sm font-medium text-gray-700">Axilar Média</span>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.axilar1"></mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.axilar2"></mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.axilar3"></mat-form-field>
+              <div class="font-bold text-blue-600 px-2">{{ calcularMediaDobra(avaliacao.axilar1, avaliacao.axilar2, avaliacao.axilar3) }} mm</div>
+            </div>
+
+            <div class="grid grid-cols-5 gap-2 items-center border-b border-gray-50 pb-1">
+              <span class="text-sm font-medium text-gray-700">Supra-ilíaca</span>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.supraIliaca1"></mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.supraIliaca2"></mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.supraIliaca3"></mat-form-field>
+              <div class="font-bold text-blue-600 px-2">{{ calcularMediaDobra(avaliacao.supraIliaca1, avaliacao.supraIliaca2, avaliacao.supraIliaca3) }} mm</div>
+            </div>
+
+            <div class="grid grid-cols-5 gap-2 items-center border-b border-gray-50 pb-1">
+              <span class="text-sm font-medium text-gray-700">Abdominal</span>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.abdominal1"></mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.abdominal2"></mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.abdominal3"></mat-form-field>
+              <div class="font-bold text-blue-600 px-2">{{ calcularMediaDobra(avaliacao.abdominal1, avaliacao.abdominal2, avaliacao.abdominal3) }} mm</div>
+            </div>
+
+            <div class="grid grid-cols-5 gap-2 items-center">
+              <span class="text-sm font-medium text-gray-700">Coxa</span>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.coxa1"></mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.coxa2"></mat-form-field>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic"><input matInput type="number" [(ngModel)]="avaliacao.coxa3"></mat-form-field>
+              <div class="font-bold text-blue-600 px-2">{{ calcularMediaDobra(avaliacao.coxa1, avaliacao.coxa2, avaliacao.coxa3) }} mm</div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </mat-tab>
+
+  </mat-tab-group>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="px-6 py-4 bg-white border-t border-gray-100 rounded-b-2xl">
+  <button mat-button class="!rounded-lg text-gray-500 hover:bg-gray-50" (click)="fechar()">Cancelar Avaliação</button>
+  <button mat-flat-button color="primary" class="!rounded-lg !px-8 !py-5 shadow-md" (click)="salvar()">
+    <mat-icon>check_circle</mat-icon>
+    {{ isEdicao() ? 'Salvar Modificações' : 'Salvar Avaliação' }}
+  </button>
+</mat-dialog-actions>

@@ -126,42 +126,88 @@
 
             <ng-container matColumnDef="acoes">
               <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let aluno" class="text-right">
-                <button
-                  mat-icon-button
-                  (click)="desvincularAluno(aluno)"
-                  title="Desvincular Aluno (Remover da sua lista)"
+              <td mat-cell *matCellDef="let aluno">
+                <div
+                  class="flex items-center justify-end gap-1 flex-nowrap w-max ml-auto"
                 >
-                  <mat-icon class="text-red-500">person_remove</mat-icon>
-                </button>
-
-                <button
-                  mat-icon-button
-                  color="primary"
-                  (click)="abrirModalVinculo(aluno)"
-                  title="Vincular Ficha"
-                >
-                  <mat-icon>fitness_center</mat-icon>
-                </button>
-                <button
-                  mat-icon-button
-                  color="accent"
-                  title="Editar Dados"
-                  (click)="abrirModalEditarAluno(aluno)"
-                >
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button
-                  mat-icon-button
-                  [color]="aluno.status === 'ATIVO' ? 'warn' : 'primary'"
-                  (click)="alternarStatus(aluno)"
-                  [title]="aluno.status === 'ATIVO' ? 'Inativar Aluno' : 'Reativar Aluno'"
-                >
-                  <mat-icon
-                    >{{ aluno.status === 'ATIVO' ? 'block' : 'check_circle'
-                    }}</mat-icon
+                  <button
+                    mat-icon-button
+                    (click)="abrirModalAnamnese(aluno)"
+                    title="Ficha de Anamnese / Avaliação"
                   >
-                </button>
+                    <mat-icon
+                      class="text-purple-600 hover:scale-110 transition-transform"
+                      >assignment</mat-icon
+                    >
+                  </button>
+
+                  <button
+                    mat-icon-button
+                    (click)="abrirModalAvaliacaoFisica(aluno)"
+                    title="Avaliação Antropométrica e Física"
+                  >
+                    <mat-icon
+                      class="text-teal-600 hover:scale-110 transition-transform"
+                      >analytics</mat-icon
+                    >
+                  </button>
+
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    (click)="abrirModalMatriculaPeloAluno(aluno)"
+                    title="Vender Plano / Renovar"
+                  >
+                    <mat-icon class="text-blue-600">shopping_cart</mat-icon>
+                  </button>
+
+                  @if (dados.meusAlunos.includes(aluno)) {
+                  <button
+                    mat-icon-button
+                    (click)="desvincularAluno(aluno)"
+                    title="Desvincular Aluno (Remover da sua lista)"
+                  >
+                    <mat-icon class="text-red-500">person_remove</mat-icon>
+                  </button>
+                  } @if (dados.alunosSemPersonal.includes(aluno)) {
+                  <button
+                    mat-icon-button
+                    (click)="abrirModalAtribuir(aluno)"
+                    title="Assumir Aluno (Tornar-se Personal)"
+                  >
+                    <mat-icon class="text-green-600">person_add</mat-icon>
+                  </button>
+                  }
+
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    (click)="abrirModalVinculo(aluno)"
+                    title="Vincular Ficha"
+                  >
+                    <mat-icon>fitness_center</mat-icon>
+                  </button>
+
+                  <button
+                    mat-icon-button
+                    color="accent"
+                    title="Editar Dados"
+                    (click)="abrirModalEditarAluno(aluno)"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
+
+                  <button
+                    mat-icon-button
+                    [color]="aluno.status === 'ATIVO' ? 'warn' : 'primary'"
+                    (click)="alternarStatus(aluno)"
+                    [title]="aluno.status === 'ATIVO' ? 'Inativar Aluno' : 'Reativar Aluno'"
+                  >
+                    <mat-icon>
+                      {{ aluno.status === 'ATIVO' ? 'block' : 'check_circle' }}
+                    </mat-icon>
+                  </button>
+                </div>
               </td>
             </ng-container>
 
@@ -287,42 +333,88 @@
 
             <ng-container matColumnDef="acoes">
               <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let aluno" class="text-right">
-                <button
-                  mat-icon-button
-                  (click)="abrirModalAtribuir(aluno)"
-                  title="Assumir Aluno (Tornar-se Personal)"
+              <td mat-cell *matCellDef="let aluno">
+                <div
+                  class="flex items-center justify-end gap-1 flex-nowrap w-max ml-auto"
                 >
-                  <mat-icon class="text-green-600">person_add</mat-icon>
-                </button>
-
-                <button
-                  mat-icon-button
-                  color="primary"
-                  (click)="abrirModalVinculo(aluno)"
-                  title="Vincular Ficha"
-                >
-                  <mat-icon>fitness_center</mat-icon>
-                </button>
-                <button
-                  mat-icon-button
-                  color="accent"
-                  title="Editar Dados"
-                  (click)="abrirModalEditarAluno(aluno)"
-                >
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button
-                  mat-icon-button
-                  [color]="aluno.status === 'ATIVO' ? 'warn' : 'primary'"
-                  (click)="alternarStatus(aluno)"
-                  [title]="aluno.status === 'ATIVO' ? 'Inativar Aluno' : 'Reativar Aluno'"
-                >
-                  <mat-icon
-                    >{{ aluno.status === 'ATIVO' ? 'block' : 'check_circle'
-                    }}</mat-icon
+                  <button
+                    mat-icon-button
+                    (click)="abrirModalAnamnese(aluno)"
+                    title="Ficha de Anamnese / Avaliação"
                   >
-                </button>
+                    <mat-icon
+                      class="text-purple-600 hover:scale-110 transition-transform"
+                      >assignment</mat-icon
+                    >
+                  </button>
+
+                  <button
+                    mat-icon-button
+                    (click)="abrirModalAvaliacaoFisica(aluno)"
+                    title="Avaliação Antropométrica e Física"
+                  >
+                    <mat-icon
+                      class="text-teal-600 hover:scale-110 transition-transform"
+                      >analytics</mat-icon
+                    >
+                  </button>
+
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    (click)="abrirModalMatriculaPeloAluno(aluno)"
+                    title="Vender Plano / Renovar"
+                  >
+                    <mat-icon class="text-blue-600">shopping_cart</mat-icon>
+                  </button>
+
+                  @if (dados.meusAlunos.includes(aluno)) {
+                  <button
+                    mat-icon-button
+                    (click)="desvincularAluno(aluno)"
+                    title="Desvincular Aluno (Remover da sua lista)"
+                  >
+                    <mat-icon class="text-red-500">person_remove</mat-icon>
+                  </button>
+                  } @if (dados.alunosSemPersonal.includes(aluno)) {
+                  <button
+                    mat-icon-button
+                    (click)="abrirModalAtribuir(aluno)"
+                    title="Assumir Aluno (Tornar-se Personal)"
+                  >
+                    <mat-icon class="text-green-600">person_add</mat-icon>
+                  </button>
+                  }
+
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    (click)="abrirModalVinculo(aluno)"
+                    title="Vincular Ficha"
+                  >
+                    <mat-icon>fitness_center</mat-icon>
+                  </button>
+
+                  <button
+                    mat-icon-button
+                    color="accent"
+                    title="Editar Dados"
+                    (click)="abrirModalEditarAluno(aluno)"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
+
+                  <button
+                    mat-icon-button
+                    [color]="aluno.status === 'ATIVO' ? 'warn' : 'primary'"
+                    (click)="alternarStatus(aluno)"
+                    [title]="aluno.status === 'ATIVO' ? 'Inativar Aluno' : 'Reativar Aluno'"
+                  >
+                    <mat-icon>
+                      {{ aluno.status === 'ATIVO' ? 'block' : 'check_circle' }}
+                    </mat-icon>
+                  </button>
+                </div>
               </td>
             </ng-container>
 

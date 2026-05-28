@@ -1,0 +1,62 @@
+<h2 mat-dialog-title class="!text-2xl !font-bold text-gray-800 border-b pb-3 flex items-center gap-2">
+  <mat-icon class="text-blue-600">shopping_cart</mat-icon> Vender / Renovar Plano
+</h2>
+
+<mat-dialog-content class="!pt-6 min-w-[420px]">
+  
+  <div class="mb-6 bg-gray-50 p-4 rounded-2xl border border-gray-100 flex items-center gap-4">
+    <div class="p-3 bg-white rounded-full shadow-sm border border-gray-100">
+      <mat-icon class="text-gray-400">person</mat-icon>
+    </div>
+    <div>
+      <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Aluno(a) Selecionado</p>
+      <h3 class="text-base font-bold text-gray-800 mt-0.5">{{ data.alunoFixo.nome }}</h3>
+      <p class="text-xs text-gray-500">CPF: {{ data.alunoFixo.cpf }}</p>
+    </div>
+  </div>
+
+  <form class="flex flex-col gap-5">
+    
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-semibold text-gray-600">Escolha o Pacote *</label>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-select [ngModel]="selectedPlanoId()" (ngModelChange)="selectedPlanoId.set($event)" name="plano" placeholder="Nenhum plano selecionado">
+          @for (plano of planos(); track plano.id) {
+            <mat-option [value]="plano.id">
+              <div class="flex justify-between items-center w-full">
+                <span class="font-medium">{{ plano.nome }}</span>
+                <span class="text-blue-600 font-bold ml-4">{{ plano.valor | currency:'BRL' }}</span>
+              </div>
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="flex flex-col gap-1 mt-[-10px]">
+      <label class="text-sm font-semibold text-gray-600">Data de Início *</label>
+      <input 
+        type="date" 
+        [ngModel]="dataInicio()" 
+        (ngModelChange)="dataInicio.set($event)"
+        name="dataInicio" 
+        class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700"
+      />
+    </div>
+
+  </form>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="!pb-4 !pr-6 gap-2 border-t pt-3 mt-4">
+  <button mat-button class="!rounded-lg text-gray-500" (click)="fechar()">Cancelar Venda</button>
+  <button 
+    mat-flat-button 
+    color="primary" 
+    class="!rounded-lg !px-8 !py-5" 
+    (click)="confirmarVenda()"
+    [disabled]="!selectedPlanoId()"
+  >
+    Confirmar Fatura
+  </button>
+</mat-dialog-actions>

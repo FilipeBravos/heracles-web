@@ -1,0 +1,307 @@
+<div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-white sticky top-0 z-20 rounded-t-2xl">
+  <h2 mat-dialog-title class="!m-0 !p-0 text-2xl font-bold text-gray-800 flex items-center gap-2">
+    <mat-icon class="text-blue-600">health_and_safety</mat-icon> 
+    {{ isEdicao() ? 'Atualizar Avaliação Física' : 'Nova Avaliação Física' }}
+  </h2>
+  
+  <div class="bg-blue-50 px-4 py-2 rounded-full border border-blue-100 flex items-center gap-2">
+    <mat-icon class="text-blue-500 scale-75">person</mat-icon>
+    <span class="text-sm font-bold text-blue-900">{{ data.aluno.nome }}</span>
+  </div>
+</div>
+
+<mat-dialog-content class="!p-0 min-w-[900px] min-h-[650px] bg-gray-50/50">
+  
+  <mat-tab-group animationDuration="200ms" class="px-2">
+    
+    <mat-tab label="1. Objetivos">
+      <div class="p-6 flex flex-col gap-6">
+        
+        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+          <div class="p-3 bg-blue-50 rounded-full text-blue-500">
+            <mat-icon>badge</mat-icon>
+          </div>
+          <div class="flex flex-col gap-1 w-full">
+            <label class="text-sm font-semibold text-gray-600">Avaliador(a) Responsável</label>
+            <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+              <input matInput [(ngModel)]="anamnese.avaliador" name="avaliador" placeholder="Ex: Prof. Marcos Paulo">
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <mat-icon class="text-amber-500 scale-90">flag</mat-icon> Metas do Aluno
+          </h4>
+          <div class="grid grid-cols-2 gap-5">
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Objetivo Principal</label>
+              <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+                <mat-select [(ngModel)]="anamnese.objetivos" name="objetivos" placeholder="Selecione...">
+                  <mat-option value="Emagrecimento">Emagrecimento / Redução de gordura</mat-option>
+                  <mat-option value="Hipertrofia">Ganho de massa / Hipertrofia</mat-option>
+                  <mat-option value="Condicionamento">Condicionamento Físico</mat-option>
+                  <mat-option value="Reabilitação">Reabilitação de Lesão</mat-option>
+                  <mat-option value="Saúde">Saúde e Qualidade de Vida</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Prazo Esperado</label>
+              <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+                <input matInput [(ngModel)]="anamnese.prazoObjetivo" name="prazo" placeholder="Ex: 3 meses, Para o verão...">
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <mat-icon class="text-blue-500 scale-90">fitness_center</mat-icon> Histórico de Treino
+          </h4>
+          <div class="grid grid-cols-3 gap-5">
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Nível de Experiência</label>
+              <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+                <mat-select [(ngModel)]="anamnese.experienciaMusculacao" name="experiencia" placeholder="Selecione...">
+                  <mat-option value="Nenhuma">Nenhuma</mat-option>
+                  <mat-option value="Básica">Básica</mat-option>
+                  <mat-option value="Intermediária">Intermediária</mat-option>
+                  <mat-option value="Avançada">Avançada</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Tempo Parado</label>
+              <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+                <input matInput [(ngModel)]="anamnese.tempoParado" name="tempoParado" placeholder="Ex: 6 meses">
+              </mat-form-field>
+            </div>
+
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Disponibilidade Semanal</label>
+              <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+                <mat-select [(ngModel)]="anamnese.frequenciaSemanal" name="frequencia" placeholder="Selecione...">
+                  <mat-option value="2x">2x na semana</mat-option>
+                  <mat-option value="3x">3x na semana</mat-option>
+                  <mat-option value="4x">4x na semana</mat-option>
+                  <mat-option value="5x ou mais">5x ou mais</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </mat-tab>
+
+    <mat-tab label="2. Histórico Médico">
+      <div class="p-6 flex flex-col gap-6">
+        
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <mat-icon class="text-red-500 scale-90">favorite</mat-icon> Condições e Patologias
+          </h4>
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Doenças Crônicas (Diabetes, Hipertensão, Asma...)</label>
+              <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+                <input matInput [(ngModel)]="anamnese.doencasCronicas" name="doencas" placeholder="Descreva se houver. Ex: Asma controlada.">
+              </mat-form-field>
+            </div>
+
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Problemas Cardíacos ou Tonturas</label>
+              <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+                <input matInput [(ngModel)]="anamnese.problemasCardiacos" name="cardiacos" placeholder="Descreva casos de arritmia, sopro, etc.">
+              </mat-form-field>
+            </div>
+
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Dores Crônicas, Lesões ou Hérnias</label>
+              <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+                <input matInput [(ngModel)]="anamnese.doresLesoes" name="dores" placeholder="Ex: Dor constante na lombar, condromalácia patelar.">
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <mat-icon class="text-purple-500 scale-90">medication</mat-icon> Intervenções e Medicação
+          </h4>
+          <div class="grid grid-cols-2 gap-5">
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Cirurgias ou Fraturas Anteriores</label>
+              <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+                <input matInput [(ngModel)]="anamnese.cirurgias" name="cirurgias" placeholder="Qual e quando ocorreu?">
+              </mat-form-field>
+            </div>
+
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Medicamentos de Uso Contínuo</label>
+              <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+                <input matInput [(ngModel)]="anamnese.medicamentos" name="medicamentos" placeholder="Ex: Losartana, Omeprazol...">
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </mat-tab>
+
+    <mat-tab label="3. Postural">
+      <div class="p-6">
+        
+        <div class="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
+          <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-6 flex items-center gap-2">
+            <mat-icon class="text-teal-500 scale-90">accessibility_new</mat-icon> Análise Estrutural Visível
+          </h4>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-6">
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Cabeça</label>
+              <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+                <mat-select [(ngModel)]="anamnese.posturaCabeca" name="cabeca" placeholder="Selecione...">
+                  <mat-option value="Alinhada">Alinhada</mat-option>
+                  <mat-option value="Anteriorizada">Anteriorizada</mat-option>
+                  <mat-option value="Inclinada">Inclinada</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Ombros</label>
+              <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+                <mat-select [(ngModel)]="anamnese.posturaOmbros" name="ombros" placeholder="Selecione...">
+                  <mat-option value="Alinhados">Alinhados</mat-option>
+                  <mat-option value="Protusos">Protusos</mat-option>
+                  <mat-option value="Elevados">Elevados</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Coluna</label>
+              <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+                <mat-select [(ngModel)]="anamnese.posturaColuna" name="coluna" placeholder="Selecione...">
+                  <mat-option value="Normal">Normal</mat-option>
+                  <mat-option value="Hipercifose">Hipercifose</mat-option>
+                  <mat-option value="Hiperlordose">Hiperlordose</mat-option>
+                  <mat-option value="Escoliose">Escoliose</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Quadril</label>
+              <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+                <mat-select [(ngModel)]="anamnese.posturaQuadril" name="quadril" placeholder="Selecione...">
+                  <mat-option value="Alinhado">Alinhado</mat-option>
+                  <mat-option value="Desnivelado">Desnivelado</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Joelhos</label>
+              <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+                <mat-select [(ngModel)]="anamnese.posturaJoelhos" name="joelhos" placeholder="Selecione...">
+                  <mat-option value="Normal">Normal</mat-option>
+                  <mat-option value="Valgo">Valgo (Para dentro)</mat-option>
+                  <mat-option value="Varo">Varo (Para fora)</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Pés</label>
+              <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+                <mat-select [(ngModel)]="anamnese.posturaPes" name="pes" placeholder="Selecione...">
+                  <mat-option value="Normal">Normal</mat-option>
+                  <mat-option value="Plano">Plano (Chato)</mat-option>
+                  <mat-option value="Cavo">Cavo</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </mat-tab>
+
+    <mat-tab label="4. Finalização">
+      <div class="p-6 flex flex-col gap-6">
+        
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <mat-icon class="text-green-500 scale-90">eco</mat-icon> Estilo de Vida
+          </h4>
+          <div class="grid grid-cols-3 gap-5">
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Qualidade do Sono</label>
+              <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+                <mat-select [(ngModel)]="anamnese.qualidadeSono" name="sono" placeholder="Selecione...">
+                  <mat-option value="Boa">Boa</mat-option>
+                  <mat-option value="Regular">Regular</mat-option>
+                  <mat-option value="Ruim">Ruim</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Nível de Estresse</label>
+              <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+                <mat-select [(ngModel)]="anamnese.nivelEstresse" name="estresse" placeholder="Selecione...">
+                  <mat-option value="Baixo">Baixo</mat-option>
+                  <mat-option value="Moderado">Moderado</mat-option>
+                  <mat-option value="Alto">Alto</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="flex flex-col gap-1 w-full">
+              <label class="text-sm font-semibold text-gray-600">Ingestão de Água</label>
+              <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+                <mat-select [(ngModel)]="anamnese.ingestaoAgua" name="agua" placeholder="Selecione...">
+                  <mat-option value="-1L">Menos de 1L/dia</mat-option>
+                  <mat-option value="1-2L">1 a 2L/dia</mat-option>
+                  <mat-option value="+2L">Mais de 2L/dia</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div class="flex flex-col gap-1 w-full">
+            <label class="text-sm font-semibold text-gray-600">Contato de Emergência (Nome, Parentesco e Telefone)</label>
+            <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+              <mat-icon matPrefix class="text-gray-400 mr-2">contact_phone</mat-icon>
+              <input matInput [(ngModel)]="anamnese.contatoEmergencia" name="emergencia" placeholder="Ex: Maria (Esposa) - (11) 99999-9999">
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div class="p-5 mt-2 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl shadow-inner">
+          <mat-checkbox [(ngModel)]="anamnese.termoAssinado" name="termo" color="primary" class="font-bold text-amber-900">
+            Confirmo que as informações prestadas pelo aluno são verdadeiras e que o mesmo está ciente do Termo de Responsabilidade física.
+          </mat-checkbox>
+        </div>
+
+      </div>
+    </mat-tab>
+
+  </mat-tab-group>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="px-6 py-4 bg-white border-t border-gray-100 rounded-b-2xl">
+  <button mat-button class="!rounded-lg text-gray-500 hover:bg-gray-50" (click)="fechar()">Cancelar Ficha</button>
+  <button mat-flat-button color="primary" class="!rounded-lg !px-8 !py-5 shadow-md" (click)="salvar()" [disabled]="!anamnese.termoAssinado">
+    <mat-icon>check_circle</mat-icon>
+    {{ isEdicao() ? 'Salvar Alterações' : 'Finalizar Avaliação' }}
+  </button>
+</mat-dialog-actions>

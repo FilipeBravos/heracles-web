@@ -1,0 +1,62 @@
+<div class="p-8 max-w-7xl mx-auto">
+  
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-800">Planos & Matrículas</h1>
+      <p class="text-gray-500">Gerencie os pacotes da academia e realize novas matrículas.</p>
+    </div>
+    <button mat-flat-button color="primary" class="!rounded-none !py-6" (click)="abrirModalNovoPlano()">
+      <mat-icon>add_business</mat-icon> Criar Novo Plano
+    </button>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    @for (plano of planos(); track plano.id) {
+      <div class="bg-white border border-gray-100 rounded-3xl shadow-sm p-7 hover:shadow-lg transition-shadow relative flex flex-col justify-between group">
+        
+        <div class="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button mat-icon-button class="text-gray-400 hover:text-amber-500 scale-90" (click)="abrirModalEditarPlano(plano)" title="Editar Plano">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button class="text-gray-400 hover:text-red-500 scale-90" (click)="deletarPlano(plano)" title="Excluir Plano">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+
+        <div>
+          <span class="inline-block px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full uppercase tracking-wider mb-3">
+            {{ plano.duracaoMeses }} Meses
+          </span>
+          <h3 class="text-2xl font-bold text-gray-800">{{ plano.nome }}</h3>
+          
+          <div class="mt-4 mb-6 flex items-end gap-1">
+            <span class="text-4xl font-black text-gray-900">{{ plano.valor | currency:'BRL' }}</span>
+            <span class="text-sm font-semibold text-gray-400 mb-1">/ total</span>
+          </div>
+
+          <ul class="text-sm text-gray-600 flex flex-col gap-3 mt-4">
+            <li class="flex items-center gap-2">
+              <mat-icon class="scale-75 text-green-500">check_circle</mat-icon> Acesso completo à musculação
+            </li>
+            <li class="flex items-center gap-2">
+              <mat-icon class="scale-75 text-green-500">check_circle</mat-icon> Montagem de ficha de treino
+            </li>
+            <li class="flex items-center gap-2 opacity-70">
+              <mat-icon class="scale-75 text-gray-400">info</mat-icon> Válido por {{ plano.duracaoMeses }} meses
+            </li>
+          </ul>
+        </div>
+        
+        
+
+      </div>
+    }
+  </div>
+
+  @if (planos().length === 0) {
+    <div class="text-center py-16 bg-gray-50 rounded-3xl border border-dashed text-gray-400 italic">
+      <mat-icon class="!w-12 !h-12 text-5xl mb-3 opacity-50">sell</mat-icon>
+      <p>Nenhum plano cadastrado no sistema.</p>
+    </div>
+  }
+</div>
