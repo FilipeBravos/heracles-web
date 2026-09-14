@@ -5,4 +5,9 @@ export interface ResumoDashboard {
   treinosCadastrados: number;
   fichasAtribuidas: number;
   novasMatriculasNoMes: number;
+  /** Aparelhos fora de operação agora. */
+  equipamentosEmManutencao: number;
+  produtosComEstoqueBaixo: number;
+  vendasNoMes: number;
+  faturamentoDoMes: number;
 }

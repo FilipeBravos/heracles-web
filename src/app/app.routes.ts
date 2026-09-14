@@ -28,6 +28,19 @@ export const routes: Routes = [
         path: 'treinos',
         loadComponent: () => import('./pages/treinos/treinos').then((m) => m.TreinosComponent),
       },
+      {
+        path: 'loja',
+        loadComponent: () => import('./pages/loja/loja').then((m) => m.LojaComponent),
+      },
+      {
+        path: 'equipamentos',
+        loadComponent: () =>
+          import('./pages/equipamentos/equipamentos').then((m) => m.EquipamentosComponent),
+      },
+      {
+        path: 'unidades',
+        loadComponent: () => import('./pages/unidades/unidades').then((m) => m.UnidadesComponent),
+      },
     ],
   },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },

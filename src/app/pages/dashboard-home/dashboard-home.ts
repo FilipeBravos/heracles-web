@@ -9,7 +9,7 @@ import { mensagemDeErro } from '../../core/services/erro-api';
 
 interface CartaoEstatistica {
   titulo: string;
-  valor: number;
+  valor: number | string;
   icon: string;
   /** Destaque visual só no indicador que pede atenção. */
   tom: 'neutro' | 'acento' | 'perigo';
@@ -24,6 +24,10 @@ interface CartaoEstatistica {
 })
 export class DashboardHomeComponent implements OnInit {
   private readonly dashboardService = inject(DashboardService);
+
+  private readonly moeda = new Intl.NumberFormat('pt-BR', {
+    style: 'currency', currency: 'BRL', maximumFractionDigits: 0,
+  });
 
   readonly carregando = signal(true);
   readonly erro = signal<string | null>(null);
@@ -58,6 +62,34 @@ export class DashboardHomeComponent implements OnInit {
         // para o que nao precisa de acao.
         tom: dados.alunosInativos > 0 ? 'perigo' : 'neutro',
         nota: dados.alunosInativos > 0 ? 'sem acesso até reativação' : 'nenhum acesso bloqueado',
+      },
+    ];
+  });
+
+  /** Segunda faixa: o que a operação do dia precisa olhar. */
+  readonly cartoesOperacao = computed<CartaoEstatistica[]>(() => {
+    const dados = this.resumo();
+    if (!dados) return [];
+
+    return [
+      {
+        titulo: 'Faturamento no mês',
+        valor: this.moeda.format(dados.faturamentoDoMes ?? 0),
+        icon: 'point_of_sale', tom: 'neutro',
+        nota: `${dados.vendasNoMes} venda(s) registrada(s)`,
+      },
+      {
+        titulo: 'Estoque baixo', valor: dados.produtosComEstoqueBaixo, icon: 'inventory_2',
+        // Só vira alerta quando há o que repor.
+        tom: dados.produtosComEstoqueBaixo > 0 ? 'acento' : 'neutro',
+        nota: dados.produtosComEstoqueBaixo > 0 ? 'produtos a repor' : 'nenhum produto a repor',
+      },
+      {
+        titulo: 'Em manutenção', valor: dados.equipamentosEmManutencao, icon: 'build',
+        tom: dados.equipamentosEmManutencao > 0 ? 'perigo' : 'neutro',
+        nota: dados.equipamentosEmManutencao > 0
+          ? 'aparelhos fora de operação'
+          : 'todos os aparelhos operando',
       },
     ];
   });

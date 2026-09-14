@@ -49,6 +49,27 @@
         <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="fitness_center"></mat-icon>
         <span>Treinos</span>
       </a>
+
+      <!-- Operação da unidade: balcão e salão. -->
+      <p class="h-rotulo !px-3 !pt-5 !pb-2 !text-grafite-400">Operação</p>
+
+      <a routerLink="/dashboard/loja" routerLinkActive="ativo" class="item-nav">
+        <span class="trilho"></span>
+        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="point_of_sale"></mat-icon>
+        <span>Loja</span>
+      </a>
+
+      <a routerLink="/dashboard/equipamentos" routerLinkActive="ativo" class="item-nav">
+        <span class="trilho"></span>
+        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="build"></mat-icon>
+        <span>Equipamentos</span>
+      </a>
+
+      <a routerLink="/dashboard/unidades" routerLinkActive="ativo" class="item-nav">
+        <span class="trilho"></span>
+        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="store"></mat-icon>
+        <span>Unidades</span>
+      </a>
     </nav>
 
     @if (usuario(); as u) {

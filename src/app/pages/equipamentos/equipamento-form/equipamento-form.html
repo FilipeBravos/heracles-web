@@ -1,0 +1,62 @@
+<div>
+  <div class="border-b border-linha px-6 py-5">
+    <h2 mat-dialog-title class="!m-0 !p-0 font-display !text-[22px] !font-bold !leading-tight text-tinta">
+      {{ isEditMode ? 'Editar equipamento' : 'Novo equipamento' }}
+    </h2>
+    <p class="mt-1 text-[12.5px] text-tinta-3">
+      A situação do aparelho não se edita aqui: ela acompanha os chamados de manutenção.
+    </p>
+  </div>
+
+  <mat-dialog-content class="!px-6 !pt-5 !pb-2">
+    @if (erro(); as mensagem) {
+      <div role="alert"
+           class="mb-4 flex items-start gap-2.5 rounded-marca border border-perigo-200 bg-perigo-50 px-4 py-3">
+        <mat-icon class="!mt-px !h-[18px] !w-[18px] !text-[18px] text-perigo-700" svgIcon="error"></mat-icon>
+        <span class="text-[12.5px] leading-snug text-perigo-700">{{ mensagem }}</span>
+      </div>
+    }
+
+    @if (carregandoUnidades()) {
+      <div class="flex items-center gap-3 py-4 text-[13px] text-tinta-3">
+        <mat-spinner diameter="20"></mat-spinner><span>Carregando unidades…</span>
+      </div>
+    } @else if (unidades().length === 0) {
+      <div class="rounded-marca border border-dashed border-linha-forte px-5 py-6 text-center">
+        <p class="text-[13px] text-tinta-2">Nenhuma unidade cadastrada.</p>
+        <p class="mt-1 text-[12.5px] text-tinta-3">Cadastre uma unidade antes de registrar equipamentos.</p>
+      </div>
+    } @else {
+      <form [formGroup]="form" class="flex flex-col gap-4 mt-2" (ngSubmit)="salvar()">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Unidade</mat-label>
+          <mat-select id="unidadeId" formControlName="unidadeId">
+            @for (u of unidades(); track u.id) {
+              <mat-option [value]="u.id">{{ u.nome }}</mat-option>
+            }
+          </mat-select>
+          @if (form.controls.unidadeId.touched && form.controls.unidadeId.invalid) {
+            <mat-error>Escolha a unidade.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Nome do equipamento</mat-label>
+          <input matInput id="nome" formControlName="nome" placeholder="Ex: Esteira 03, Leg Press 45">
+          @if (form.controls.nome.touched && form.controls.nome.invalid) {
+            <mat-error>Informe o nome do equipamento.</mat-error>
+          }
+        </mat-form-field>
+      </form>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="!gap-2 border-t border-linha !px-6 !py-4">
+    <button mat-button mat-dialog-close type="button" class="!text-tinta-2">Cancelar</button>
+    <button mat-flat-button color="primary" type="button" class="!px-5"
+            [disabled]="form.invalid || enviando() || unidades().length === 0" (click)="salvar()">
+      @if (enviando()) { <mat-spinner diameter="20"></mat-spinner> }
+      @else { {{ isEditMode ? 'Salvar alterações' : 'Cadastrar' }} }
+    </button>
+  </mat-dialog-actions>
+</div>
