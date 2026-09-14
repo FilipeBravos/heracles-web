@@ -1,104 +1,126 @@
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators, FormArray, FormGroup } from '@angular/forms';
-import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { HttpClient } from '@angular/common/http';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import { Component, inject, signal } from '@angular/core';
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
-import { MatDivider } from "@angular/material/divider";
-import { MatIcon } from "@angular/material/icon";
+
+import { ExercicioForm, Treino } from '../../../core/models';
+import { TreinoService } from '../../../core/services/treino.service';
+import { mensagemDeErro } from '../../../core/services/erro-api';
+
+export interface TreinoFormData {
+  treino: Treino | null;
+}
 
 @Component({
   selector: 'app-treino-form',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     MatSelectModule,
-    MatDivider,
-    MatIcon
-],
-  templateUrl: './treino-form.html'
+    MatDividerModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+  ],
+  templateUrl: './treino-form.html',
 })
 export class TreinoFormComponent {
-  private fb = inject(FormBuilder);
-  private http = inject(HttpClient);
-  public dialogRef = inject(MatDialogRef<TreinoFormComponent>); // Controla o modal aberto
+  private readonly fb = inject(FormBuilder);
+  private readonly treinoService = inject(TreinoService);
 
-  public data = inject(MAT_DIALOG_DATA, { optional: true });
-  isEditMode = false;
+  readonly dialogRef = inject(MatDialogRef<TreinoFormComponent>);
+  readonly data = inject<TreinoFormData>(MAT_DIALOG_DATA);
 
-  // Construindo o Formulário Reativo com as validações
-treinoForm = this.fb.group({
-    nome: ['', Validators.required],
-    foco: ['', Validators.required],
-    nivel: ['', Validators.required],
-    exercicios: this.fb.array([]) 
+  readonly treino = this.data?.treino ?? null;
+  readonly isEditMode = this.treino !== null;
+  readonly enviando = signal(false);
+  readonly erro = signal<string | null>(null);
+
+  readonly form = this.fb.nonNullable.group({
+    nome: [this.treino?.nome ?? '', [Validators.required, Validators.maxLength(100)]],
+    foco: [this.treino?.foco ?? '', Validators.required],
+    nivel: [this.treino?.nivel ?? '', Validators.required],
+    exercicios: this.fb.array<FormGroup>([]),
   });
 
-  get exercicios() {
-    return this.treinoForm.get('exercicios') as FormArray;
-  }
-
-  novoExercicio(): FormGroup {
-    return this.fb.group({
-      id: [null], 
-      nome: ['', Validators.required],
-      repeticoes: ['', Validators.required],
-      observacoes: ['']
-    });
-  }
-
-  adicionarExercicio() {
-    this.exercicios.push(this.novoExercicio());
-  }
-
-  removerExercicio(index: number) {
-    this.exercicios.removeAt(index);
-  }
-
-ngOnInit() {
-    if (this.data && this.data.treino) {
-      this.isEditMode = true;
-      
-      // Preenche dados básicos
-      this.treinoForm.patchValue({
-        nome: this.data.treino.nome,
-        foco: this.data.treino.foco,
-        nivel: this.data.treino.nivel
-      });
-
-      // Se já existem exercícios no banco, cria os campinhos e preenche
-      if (this.data.treino.exercicios && this.data.treino.exercicios.length > 0) {
-        this.data.treino.exercicios.forEach((ex: any) => {
-          const formEx = this.novoExercicio();
-          formEx.patchValue(ex);
-          this.exercicios.push(formEx);
-        });
-      }
+  constructor() {
+    if (this.treino && this.treino.exercicios.length > 0) {
+      // A API devolve os exercícios já ordenados por "ordem".
+      this.treino.exercicios.forEach((exercicio) =>
+        this.exercicios.push(this.novoExercicio(exercicio))
+      );
     } else {
-      // Se for criar um treino novo, já deixa 1 linha de exercício em branco para facilitar
       this.adicionarExercicio();
     }
   }
 
-salvar() {
-    if (this.treinoForm.valid) {
-      const url = 'http://localhost:8080/api/treinos';
-      const request = this.isEditMode 
-        ? this.http.put(`${url}/${this.data.treino.id}`, this.treinoForm.value)
-        : this.http.post(url, this.treinoForm.value);
+  get exercicios(): FormArray<FormGroup> {
+    return this.form.controls.exercicios;
+  }
 
-      request.subscribe({
-        next: () => this.dialogRef.close(true),
-        error: (err) => console.error('Erro ao salvar', err)
-      });
+  private novoExercicio(exercicio?: Partial<ExercicioForm>): FormGroup {
+    return this.fb.group({
+      // O id viaja de volta para a API, que reconcilia por ele em vez de
+      // apagar e recriar a lista inteira a cada edição.
+      id: [exercicio?.id ?? null],
+      nome: [exercicio?.nome ?? '', [Validators.required, Validators.maxLength(100)]],
+      repeticoes: [exercicio?.repeticoes ?? '', [Validators.required, Validators.maxLength(50)]],
+      observacoes: [exercicio?.observacoes ?? ''],
+    });
+  }
+
+  adicionarExercicio(): void {
+    this.exercicios.push(this.novoExercicio());
+  }
+
+  removerExercicio(indice: number): void {
+    this.exercicios.removeAt(indice);
+  }
+
+  salvar(): void {
+    if (this.form.invalid || this.exercicios.length === 0 || this.enviando()) {
+      this.form.markAllAsTouched();
+      return;
     }
+
+    this.enviando.set(true);
+    this.erro.set(null);
+
+    const valores = this.form.getRawValue();
+    const payload = {
+      nome: valores.nome,
+      foco: valores.foco,
+      nivel: valores.nivel,
+      exercicios: this.exercicios.controls.map((controle) => {
+        const exercicio = controle.getRawValue() as ExercicioForm;
+        return {
+          id: exercicio.id ?? null,
+          nome: exercicio.nome,
+          repeticoes: exercicio.repeticoes,
+          observacoes: exercicio.observacoes?.trim() || null,
+        };
+      }),
+    };
+
+    const requisicao = this.treino
+      ? this.treinoService.atualizar(this.treino.id, payload)
+      : this.treinoService.criar(payload);
+
+    requisicao.subscribe({
+      next: () => this.dialogRef.close(true),
+      error: (erro) => {
+        this.enviando.set(false);
+        this.erro.set(mensagemDeErro(erro, 'Não foi possível salvar a ficha.'));
+      },
+    });
   }
 }

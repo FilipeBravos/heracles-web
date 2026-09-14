@@ -1,0 +1,11 @@
+/*
+ * Tailwind v4 entra por um arquivo .css proprio.
+ *
+ * Enquanto vivia dentro de styles.scss, o "@import" era interpretado pelo
+ * Dart Sass, que o marca como deprecado e vai removê-lo na versao 3.0.
+ * Como CSS puro, o processamento fica todo com o plugin postcss do Tailwind.
+ *
+ * Carregado depois de styles.scss para que as utilidades vencam os padroes
+ * do tema do Angular Material, que e o comportamento que os templates assumem.
+ */
+@import "tailwindcss";

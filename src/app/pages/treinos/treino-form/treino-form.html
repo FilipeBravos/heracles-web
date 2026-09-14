@@ -2,21 +2,28 @@
   <h2 mat-dialog-title class="!p-0 !mb-6 text-2xl font-bold text-gray-800">
     {{ isEditMode ? 'Editar Ficha' : 'Nova Ficha' }}
   </h2>
-  
+
   <mat-dialog-content class="!p-0">
-    <!-- Não esqueça do formGroup principal -->
-    <form [formGroup]="treinoForm" class="flex flex-col mt-2">
-      
-      <!-- Dados Básicos do Treino -->
+    @if (erro(); as mensagem) {
+      <div class="flex items-start gap-2 p-3 mb-4 bg-red-50 border border-red-200 text-red-700 text-sm" role="alert">
+        <mat-icon class="!text-lg !w-5 !h-5">error_outline</mat-icon>
+        <span>{{ mensagem }}</span>
+      </div>
+    }
+
+    <form [formGroup]="form" class="flex flex-col mt-2">
       <mat-form-field appearance="outline" class="w-full mb-2">
         <mat-label>Nome da Ficha</mat-label>
-        <input matInput formControlName="nome" placeholder="Ex: Ficha A - Hipertrofia">
+        <input matInput id="nome" formControlName="nome" placeholder="Ex: Ficha A - Hipertrofia">
+        @if (form.controls.nome.touched && form.controls.nome.invalid) {
+          <mat-error>Informe o nome da ficha.</mat-error>
+        }
       </mat-form-field>
 
-      <div class="grid grid-cols-2 gap-4 mb-2">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
         <mat-form-field appearance="outline" class="w-full">
           <mat-label>Foco</mat-label>
-          <mat-select formControlName="foco">
+          <mat-select id="foco" formControlName="foco">
             <mat-option value="Hipertrofia">Hipertrofia</mat-option>
             <mat-option value="Condicionamento">Condicionamento</mat-option>
             <mat-option value="Emagrecimento">Emagrecimento</mat-option>
@@ -26,7 +33,7 @@
 
         <mat-form-field appearance="outline" class="w-full">
           <mat-label>Nível</mat-label>
-          <mat-select formControlName="nivel">
+          <mat-select id="nivel" formControlName="nivel">
             <mat-option value="Iniciante">Iniciante</mat-option>
             <mat-option value="Intermediário">Intermediário</mat-option>
             <mat-option value="Avançado">Avançado</mat-option>
@@ -34,10 +41,8 @@
         </mat-form-field>
       </div>
 
-      <!-- Divisória Visual -->
       <mat-divider class="my-4"></mat-divider>
 
-      <!-- Cabeçalho dos Exercícios -->
       <div class="flex justify-between items-center mb-4">
         <h3 class="text-lg font-bold text-gray-700 m-0">Exercícios da Ficha</h3>
         <button mat-button color="primary" type="button" class="!rounded-none" (click)="adicionarExercicio()">
@@ -45,25 +50,24 @@
         </button>
       </div>
 
-      <!-- LISTA DINÂMICA (FORM ARRAY) -->
       <div formArrayName="exercicios" class="flex flex-col gap-4 max-h-[35vh] overflow-y-auto pr-2">
-        
-        @for (ex of exercicios.controls; track $index; let i = $index) {
-          <!-- Aqui amarramos o sub-formulário ao índice atual -->
-          <div [formGroupName]="i" class="p-4 border border-gray-200 bg-gray-50 flex flex-col relative">
-            
-            <!-- Botão de Excluir Exercício no canto superior direito -->
-            <button mat-icon-button color="warn" type="button" class="absolute top-2 right-2 z-10" title="Remover" (click)="removerExercicio(i)">
+        @for (controle of exercicios.controls; track $index) {
+          <div [formGroupName]="$index" class="p-4 border border-gray-200 bg-gray-50 flex flex-col relative">
+            <button mat-icon-button color="warn" type="button" class="absolute top-2 right-2 z-10"
+                    aria-label="Remover exercício" (click)="removerExercicio($index)">
               <mat-icon>close</mat-icon>
             </button>
 
-            <!-- Inputs do Exercício -->
+            <p class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">
+              Exercício {{ $index + 1 }}
+            </p>
+
             <mat-form-field appearance="outline" class="w-full pr-10 mb-[-10px]">
               <mat-label>Nome do Exercício</mat-label>
               <input matInput formControlName="nome" placeholder="Ex: Supino Reto com Barra">
             </mat-form-field>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <mat-form-field appearance="outline" class="w-full mb-[-10px]">
                 <mat-label>Repetições / Séries</mat-label>
                 <input matInput formControlName="repeticoes" placeholder="Ex: 4x10 a 12">
@@ -74,27 +78,28 @@
                 <input matInput formControlName="observacoes" placeholder="Ex: Carga progressiva">
               </mat-form-field>
             </div>
-
           </div>
         }
 
-        <!-- Caso a pessoa delete todos, mostramos um aviso -->
         @if (exercicios.length === 0) {
           <div class="p-6 text-center border border-dashed border-gray-300 text-gray-500">
-            Nenhum exercício adicionado a esta ficha.
+            Nenhum exercício adicionado. A ficha precisa de pelo menos um.
           </div>
         }
-
       </div>
     </form>
   </mat-dialog-content>
 
   <mat-dialog-actions align="end" class="!p-0 !mt-8 pt-4 border-t border-gray-100">
-    <button mat-button mat-dialog-close class="!rounded-none text-gray-500">Cancelar</button>
-    <button mat-flat-button color="primary" class="!rounded-none" 
-            [disabled]="treinoForm.invalid || exercicios.length === 0" 
+    <button mat-button mat-dialog-close type="button" class="!rounded-none text-gray-500">Cancelar</button>
+    <button mat-flat-button color="primary" type="button" class="!rounded-none"
+            [disabled]="form.invalid || exercicios.length === 0 || enviando()"
             (click)="salvar()">
-      {{ isEditMode ? 'Salvar Alterações' : 'Salvar Treino Completo' }}
+      @if (enviando()) {
+        <mat-spinner diameter="20"></mat-spinner>
+      } @else {
+        {{ isEditMode ? 'Salvar Alterações' : 'Salvar Treino Completo' }}
+      }
     </button>
   </mat-dialog-actions>
 </div>

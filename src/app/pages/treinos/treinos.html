@@ -2,98 +2,92 @@
   <div class="flex justify-between items-center mb-8">
     <div>
       <h1 class="text-3xl font-bold text-gray-800">Treinos</h1>
-      <p class="text-gray-500">
-        Gerencie as fichas e programas de exercícios da unidade Heracles.
-      </p>
+      <p class="text-gray-500">Gerencie as fichas e programas de exercícios da unidade Herácles.</p>
     </div>
-    <!-- Botão com cantos retos -->
-    <button
-      mat-flat-button
-      color="primary"
-      class="rounded-none !py-6"
-      (click)="abrirModalNovoTreino()"
-    >
+    <button mat-flat-button color="primary" class="rounded-none !py-6" (click)="abrirModalNovoTreino()">
       <mat-icon>add</mat-icon> Novo Treino
     </button>
   </div>
 
-  <!-- Container da tabela com ângulos retos -->
-  <div
-    class="bg-white shadow-sm border border-gray-100 overflow-hidden rounded-none"
-  >
-    <table mat-table [dataSource]="dataSource()" class="w-full">
-      <!-- Coluna ID -->
-      <ng-container matColumnDef="id">
-        <th mat-header-cell *matHeaderCellDef class="!font-bold text-gray-700">
-          ID
-        </th>
-        <td mat-cell *matCellDef="let treino">#{{treino.id}}</td>
-      </ng-container>
+  @if (erro(); as mensagem) {
+    <div class="flex items-center justify-between gap-4 p-4 mb-6 bg-red-50 border border-red-200 text-red-700" role="alert">
+      <span class="flex items-center gap-2"><mat-icon>error_outline</mat-icon>{{ mensagem }}</span>
+      <button class="font-semibold underline" type="button" (click)="listar()">Tentar novamente</button>
+    </div>
+  }
 
-      <!-- Coluna Nome do Treino -->
-      <ng-container matColumnDef="nome">
-        <th mat-header-cell *matHeaderCellDef class="!font-bold text-gray-700">
-          Nome do Treino
-        </th>
-        <td mat-cell *matCellDef="let treino" class="font-medium">
-          {{treino.nome}}
-        </td>
-      </ng-container>
+  <div class="bg-white shadow-sm border border-gray-100 overflow-hidden rounded-none">
+    <div class="overflow-x-auto">
+      <table mat-table [dataSource]="treinos()" class="w-full">
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef class="!font-bold text-gray-700">ID</th>
+          <td mat-cell *matCellDef="let treino" class="tabular-nums">#{{ treino.id }}</td>
+        </ng-container>
 
-      <!-- Coluna Foco -->
-      <ng-container matColumnDef="foco">
-        <th mat-header-cell *matHeaderCellDef class="!font-bold text-gray-700">
-          Foco
-        </th>
-        <td mat-cell *matCellDef="let treino">{{treino.foco}}</td>
-      </ng-container>
+        <ng-container matColumnDef="nome">
+          <th mat-header-cell *matHeaderCellDef class="!font-bold text-gray-700">Nome do Treino</th>
+          <td mat-cell *matCellDef="let treino" class="font-medium">{{ treino.nome }}</td>
+        </ng-container>
 
-      <!-- Coluna Nível -->
-      <ng-container matColumnDef="nivel">
-        <th mat-header-cell *matHeaderCellDef class="!font-bold text-gray-700">
-          Nível
-        </th>
-        <td mat-cell *matCellDef="let treino">
-          <!-- Tag de nível visualmente alinhada -->
-          <span
-            class="px-3 py-1 text-xs font-bold bg-blue-50 text-blue-700 rounded-none border border-blue-200"
-          >
-            {{treino.nivel}}
-          </span>
-        </td>
-      </ng-container>
+        <ng-container matColumnDef="foco">
+          <th mat-header-cell *matHeaderCellDef class="!font-bold text-gray-700">Foco</th>
+          <td mat-cell *matCellDef="let treino">{{ treino.foco }}</td>
+        </ng-container>
 
-      <!-- Coluna Ações -->
-      <ng-container matColumnDef="acoes">
-        <th mat-header-cell *matHeaderCellDef></th>
-        <td mat-cell *matCellDef="let treino" class="text-right">
-          <button
-            mat-icon-button
-            color="accent"
-            (click)="abrirModalEditar(treino, $event)"
-            title="Editar Ficha"
-          >
-            <mat-icon>edit</mat-icon>
-          </button>
+        <ng-container matColumnDef="nivel">
+          <th mat-header-cell *matHeaderCellDef class="!font-bold text-gray-700">Nível</th>
+          <td mat-cell *matCellDef="let treino">
+            <span class="px-3 py-1 text-xs font-bold bg-blue-50 text-blue-700 rounded-none border border-blue-200">
+              {{ treino.nivel }}
+            </span>
+          </td>
+        </ng-container>
 
-          <button
-            mat-icon-button
-            color="warn"
-            (click)="deletarTreino(treino, $event)"
-            title="Excluir Ficha"
-          >
-            <mat-icon>delete</mat-icon>
-          </button>
-        </td>
-      </ng-container>
+        <ng-container matColumnDef="exercicios">
+          <th mat-header-cell *matHeaderCellDef class="!font-bold text-gray-700">Exercícios</th>
+          <td mat-cell *matCellDef="let treino" class="tabular-nums text-gray-600">
+            {{ treino.exercicios.length }}
+          </td>
+        </ng-container>
 
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr
-        mat-row
-        *matRowDef="let row; columns: displayedColumns;"
-        class="hover:bg-blue-50 cursor-pointer transition-colors"
-        (click)="abrirDetalhes(row)"
-      ></tr>
-    </table>
+        <ng-container matColumnDef="acoes">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let treino" class="text-right whitespace-nowrap">
+            <button mat-icon-button color="accent" (click)="abrirModalEditar(treino, $event)"
+                    matTooltip="Editar ficha" aria-label="Editar ficha">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="deletarTreino(treino, $event)"
+                    matTooltip="Excluir ficha" aria-label="Excluir ficha">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"
+            class="hover:bg-blue-50 cursor-pointer transition-colors"
+            (click)="abrirDetalhes(row)"></tr>
+      </table>
+    </div>
+
+    @if (carregando()) {
+      <div class="flex items-center gap-3 p-6 text-gray-500">
+        <mat-spinner diameter="24"></mat-spinner>
+        <span>Carregando treinos…</span>
+      </div>
+    } @else if (treinos().length === 0 && !erro()) {
+      <div class="p-10 text-center text-gray-500">
+        Nenhuma ficha cadastrada ainda. Use “Novo Treino” para criar a primeira.
+      </div>
+    }
+
+    <mat-paginator
+      [length]="total()"
+      [pageIndex]="pagina()"
+      [pageSize]="tamanhoPagina()"
+      [pageSizeOptions]="[10, 20, 50]"
+      (page)="mudarPagina($event)">
+    </mat-paginator>
   </div>
 </div>

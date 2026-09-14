@@ -12,8 +12,9 @@ html {
   ));
 }
 
-// 2. Importação do Tailwind v4 (Sempre após as definições de tema)
-@import "tailwindcss";
+// 2. O Tailwind e carregado por src/tailwind.css, listado logo apos este
+// arquivo em angular.json. Mantê-lo fora do Sass evita a regra "@import",
+// deprecada no Dart Sass.
 
 // 3. Resets Globais e Variáveis de Sistema
 html, body { 

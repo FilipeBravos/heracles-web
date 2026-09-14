@@ -1,22 +1,35 @@
 import { Routes } from '@angular/router';
-import { DashboardComponent } from './pages/dashboard/dashboard';
-import { AlunosComponent } from './pages/alunos/alunos';
-import { DashboardHome } from './pages/dashboard-home/dashboard-home';
+
+import { authGuard, visitanteGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
     path: 'login',
-    loadComponent: () => import('./pages/login/login').then(m => m.LoginComponent)
+    canActivate: [visitanteGuard],
+    loadComponent: () => import('./pages/login/login').then((m) => m.LoginComponent),
   },
-{
-  path: 'dashboard',
-  component: DashboardComponent,
-  children: [
-    { path: '', component: DashboardHome },
-    { path: 'alunos', component: AlunosComponent },
-    { path: 'treinos', loadComponent: () => import('./pages/treinos/treinos').then(m => m.TreinosComponent) }
-  ]
-},
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
-  { path: '**', redirectTo: 'login' }
+  {
+    path: 'dashboard',
+    // A area logada inteira exige autenticacao. Antes, /dashboard abria
+    // para qualquer visitante que digitasse a URL.
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.DashboardComponent),
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/dashboard-home/dashboard-home').then((m) => m.DashboardHomeComponent),
+      },
+      {
+        path: 'alunos',
+        loadComponent: () => import('./pages/alunos/alunos').then((m) => m.AlunosComponent),
+      },
+      {
+        path: 'treinos',
+        loadComponent: () => import('./pages/treinos/treinos').then((m) => m.TreinosComponent),
+      },
+    ],
+  },
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  { path: '**', redirectTo: 'dashboard' },
 ];

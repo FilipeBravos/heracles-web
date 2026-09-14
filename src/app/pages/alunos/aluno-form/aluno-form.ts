@@ -1,71 +1,92 @@
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { HttpClient } from '@angular/common/http';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import { Component, inject, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+
+import { Usuario } from '../../../core/models';
+import { UsuarioService } from '../../../core/services/usuario.service';
+import { mensagemDeErro } from '../../../core/services/erro-api';
+
+export interface AlunoFormData {
+  aluno: Usuario | null;
+}
 
 @Component({
   selector: 'app-aluno-form',
   standalone: true,
   imports: [
-    CommonModule, 
-    ReactiveFormsModule, 
-    MatDialogModule, 
-    MatFormFieldModule, 
-    MatInputModule, 
-    MatButtonModule
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
   ],
-  templateUrl: './aluno-form.html'
+  templateUrl: './aluno-form.html',
 })
-export class AlunoForm {
-  private fb = inject(FormBuilder);
-  private http = inject(HttpClient);
-  public dialogRef = inject(MatDialogRef<AlunoForm>);
-  public data = inject(MAT_DIALOG_DATA, { optional: true }); 
+export class AlunoFormComponent {
+  private readonly fb = inject(FormBuilder);
+  private readonly usuarioService = inject(UsuarioService);
 
-  isEditMode = false;
+  readonly dialogRef = inject(MatDialogRef<AlunoFormComponent>);
+  readonly data = inject<AlunoFormData>(MAT_DIALOG_DATA);
 
-  // Estrutura do Aluno baseada no seu PostgreSQL
-  alunoForm = this.fb.group({
-    nome: ['', Validators.required],
-    cpf: ['', Validators.required],
-    email: ['', [Validators.required, Validators.email]],
-    telefone: ['', Validators.required],
-    status: ['ATIVO'],       // Valor padrão oculto
-    tipoPerfil: ['ALUNO'],   // Valor padrão oculto
-    senhaHash: ['123456']    // Senha padrão inicial para o MVP
+  readonly aluno = this.data?.aluno ?? null;
+  readonly isEditMode = this.aluno !== null;
+  readonly enviando = signal(false);
+  readonly erro = signal<string | null>(null);
+
+  readonly form = this.fb.nonNullable.group({
+    nome: [this.aluno?.nome ?? '', [Validators.required, Validators.maxLength(100)]],
+    cpf: [this.aluno?.cpf ?? '', [Validators.required, Validators.pattern(/^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/)]],
+    email: [this.aluno?.email ?? '', [Validators.required, Validators.email]],
+    telefone: [this.aluno?.telefone ?? ''],
+    // Só no cadastro. A senha é enviada em claro sobre HTTPS e cifrada com
+    // BCrypt no servidor — o formulário não monta mais nenhum hash.
+    senha: ['', this.aluno ? [] : [Validators.required, Validators.minLength(8)]],
   });
 
-  ngOnInit() {
-    // Se recebeu dados, significa que clicamos no botão de Editar!
-    if (this.data && this.data.aluno) {
-      this.isEditMode = true;
-      // O patchValue preenche os campos do formulário automaticamente
-      this.alunoForm.patchValue(this.data.aluno); 
+  salvar(): void {
+    if (this.form.invalid || this.enviando()) {
+      this.form.markAllAsTouched();
+      return;
     }
-  }
 
- salvar() {
-    if (this.alunoForm.valid) {
-      if (this.isEditMode) {
-        // MODO EDIÇÃO: Dispara PUT para a rota com ID
-        const id = this.data.aluno.id;
-        this.http.put(`http://localhost:8080/api/usuarios/${id}`, this.alunoForm.value)
-          .subscribe({
-            next: () => this.dialogRef.close(true),
-            error: (err) => console.error('Erro ao atualizar aluno', err)
-          });
-      } else {
-        // MODO CRIAÇÃO: Dispara POST normal
-        this.http.post('http://localhost:8080/api/usuarios', this.alunoForm.value)
-          .subscribe({
-            next: () => this.dialogRef.close(true),
-            error: (err) => console.error('Erro ao criar aluno', err)
-          });
-      }
-    }
+    this.enviando.set(true);
+    this.erro.set(null);
+
+    const valores = this.form.getRawValue();
+    const telefone = valores.telefone.trim() || null;
+
+    const requisicao = this.aluno
+      ? this.usuarioService.atualizar(this.aluno.id, {
+          nome: valores.nome,
+          cpf: valores.cpf,
+          email: valores.email,
+          telefone,
+        })
+      : this.usuarioService.criar({
+          nome: valores.nome,
+          cpf: valores.cpf,
+          email: valores.email,
+          telefone,
+          // O perfil é fixo no cliente, mas quem decide de verdade é a API:
+          // só ADMIN e SECRETARIA conseguem chamar esta rota.
+          tipoPerfil: 'ALUNO',
+          senha: valores.senha,
+        });
+
+    requisicao.subscribe({
+      next: () => this.dialogRef.close(true),
+      error: (erro) => {
+        this.enviando.set(false);
+        this.erro.set(mensagemDeErro(erro, 'Não foi possível salvar o aluno.'));
+      },
+    });
   }
 }

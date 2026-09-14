@@ -1,49 +1,46 @@
- <!-- Área de Cards e Dados -->
-    <main class="p-8">
-      <header class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-800">Visão Geral</h1>
-        <p class="text-gray-500">
-          Acompanhe o desempenho da sua unidade em tempo real.
-        </p>
-      </header>
+<main class="p-8">
+  <header class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-800">Visão Geral</h1>
+    <p class="text-gray-500">Acompanhe o desempenho da sua unidade.</p>
+  </header>
 
-      <!-- Grid de Estatísticas -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        @for (item of estatisticas; track item.titulo) {
-        <mat-card
-          class="!rounded-2xl !shadow-sm border-0 hover:shadow-md transition-shadow"
-        >
+  @if (carregando()) {
+    <div class="flex items-center gap-3 text-gray-500">
+      <mat-spinner diameter="24"></mat-spinner>
+      <span>Carregando indicadores…</span>
+    </div>
+  } @else if (erro(); as mensagem) {
+    <div class="flex items-center justify-between gap-4 p-4 bg-red-50 border border-red-200 text-red-700" role="alert">
+      <span class="flex items-center gap-2">
+        <mat-icon>error_outline</mat-icon>
+        {{ mensagem }}
+      </span>
+      <button class="font-semibold underline" type="button" (click)="carregar()">Tentar novamente</button>
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      @for (item of cartoes(); track item.titulo) {
+        <mat-card class="!rounded-2xl !shadow-sm border-0 hover:shadow-md transition-shadow">
           <mat-card-content class="p-6 flex items-center justify-between">
             <div>
               <p class="text-sm font-medium text-gray-500">{{ item.titulo }}</p>
-              <h3 class="text-2xl font-bold mt-1 text-gray-800">
-                {{ item.valor }}
-              </h3>
+              <h3 class="text-2xl font-bold mt-1 text-gray-800 tabular-nums">{{ item.valor }}</h3>
             </div>
-            <div
-              [class]="'p-3 rounded-xl bg-opacity-10 ' + item.cor.replace('text', 'bg')"
-            >
-              <mat-icon [class]="item.cor">{{ item.icon }}</mat-icon>
+            <div class="p-3 rounded-xl" [class]="item.corFundo">
+              <mat-icon [class]="item.corTexto">{{ item.icon }}</mat-icon>
             </div>
           </mat-card-content>
         </mat-card>
-        }
-      </div>
+      }
+    </div>
 
-      <!-- Espaço para Gráficos ou Tabelas Futuras -->
-      <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <mat-card
-          class="lg:col-span-2 !rounded-2xl !shadow-sm border-0 h-64 flex items-center justify-center bg-white"
-        >
-          <p class="text-gray-400 italic">
-            Gráfico de Matrículas Mensais (Em breve)
-          </p>
-        </mat-card>
-        <mat-card
-          class="!rounded-2xl !shadow-sm border-0 h-64 flex items-center justify-center bg-white"
-        >
-          <p class="text-gray-400 italic">Próximos Vencimentos (Em breve)</p>
-        </mat-card>
-      </div>
-      <router-outlet></router-outlet>
-    </main>
+    <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <mat-card class="lg:col-span-2 !rounded-2xl !shadow-sm border-0 h-64 flex items-center justify-center bg-white">
+        <p class="text-gray-400 italic">Gráfico de Matrículas Mensais (em breve)</p>
+      </mat-card>
+      <mat-card class="!rounded-2xl !shadow-sm border-0 h-64 flex items-center justify-center bg-white">
+        <p class="text-gray-400 italic">Próximos Vencimentos (em breve)</p>
+      </mat-card>
+    </div>
+  }
+</main>

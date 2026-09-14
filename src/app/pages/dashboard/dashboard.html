@@ -1,64 +1,56 @@
 <mat-sidenav-container class="h-screen">
-  <!-- Menu Lateral -->
-  <mat-sidenav
-    mode="side"
-    opened
-    class="w-64 border-r border-gray-200 bg-white"
-  >
+  <mat-sidenav mode="side" opened class="w-64 border-r border-gray-200 bg-white">
     <div class="p-6">
-      <h2 class="text-2xl font-bold text-blue-600 tracking-tighter">
-        HERÁCLES
-      </h2>
-      <p class="text-xs text-gray-400 uppercase font-semibold mt-1">
-        Gestão de Gym
-      </p>
+      <h2 class="text-2xl font-bold text-blue-600 tracking-tighter">HERÁCLES</h2>
+      <p class="text-xs text-gray-400 uppercase font-semibold mt-1">Gestão de Gym</p>
     </div>
 
     <mat-nav-list class="px-3">
-      <a
-        mat-list-item
-        routerLink="/dashboard"
-        routerLinkActive="bg-blue-50 text-blue-600"
-        [routerLinkActiveOptions]="{exact: true}"
-        class="!rounded-lg mb-1"
-      >
+      <a mat-list-item routerLink="/dashboard" routerLinkActive="bg-blue-50 text-blue-600"
+         [routerLinkActiveOptions]="{ exact: true }" class="!rounded-lg mb-1">
         <mat-icon matListItemIcon>dashboard</mat-icon>
         <span matListItemTitle>Dashboard</span>
       </a>
 
-      <!-- Alunos Link -->
-      <a
-        mat-list-item
-        routerLink="/dashboard/alunos"
-        routerLinkActive="bg-blue-50 text-blue-600"
-        class="!rounded-lg mb-1 text-gray-600"
-      >
+      <a mat-list-item routerLink="/dashboard/alunos" routerLinkActive="bg-blue-50 text-blue-600"
+         class="!rounded-lg mb-1 text-gray-600">
         <mat-icon matListItemIcon>groups</mat-icon>
         <span matListItemTitle>Alunos</span>
       </a>
-      <a mat-list-item routerLink="/dashboard/treinos" routerLinkActive="bg-blue-50 text-blue-600" class="rounded-none mb-1 text-gray-600">
+
+      <a mat-list-item routerLink="/dashboard/treinos" routerLinkActive="bg-blue-50 text-blue-600"
+         class="!rounded-lg mb-1 text-gray-600">
         <mat-icon matListItemIcon>fitness_center</mat-icon>
         <span matListItemTitle>Treinos</span>
-      </a>
-      <a mat-list-item class="!rounded-lg mb-1 text-gray-600">
-        <mat-icon matListItemIcon>settings</mat-icon>
-        <span matListItemTitle>Configurações</span>
       </a>
     </mat-nav-list>
   </mat-sidenav>
 
-  <!-- Conteúdo Principal -->
   <mat-sidenav-content class="bg-gray-50">
-    <!-- Barra Superior -->
-    <mat-toolbar
-      class="!bg-white !border-b !border-gray-200 !h-16 flex justify-between px-8"
-    >
-      <span class="text-gray-700 font-medium">Bem-vindo, João Treinador</span>
-      <button mat-icon-button>
-        <mat-icon class="text-gray-500">account_circle</mat-icon>
-      </button>
+    <mat-toolbar class="!bg-white !border-b !border-gray-200 !h-16 flex justify-between px-8">
+      <!-- Nome real de quem esta logado, no lugar do "João Treinador" fixo. -->
+      <span class="text-gray-700 font-medium">
+        @if (usuario(); as u) {
+          Bem-vindo(a), {{ u.nome }}
+        }
+      </span>
+
+      <div class="flex items-center gap-2">
+        @if (usuario(); as u) {
+          <span class="text-xs font-bold uppercase tracking-wide text-gray-400">{{ u.tipoPerfil }}</span>
+        }
+        <button mat-icon-button [matMenuTriggerFor]="menuUsuario" aria-label="Menu do usuário">
+          <mat-icon class="text-gray-500">account_circle</mat-icon>
+        </button>
+        <mat-menu #menuUsuario="matMenu">
+          <button mat-menu-item (click)="sair()">
+            <mat-icon>logout</mat-icon>
+            <span>Sair</span>
+          </button>
+        </mat-menu>
+      </div>
     </mat-toolbar>
+
     <router-outlet></router-outlet>
-   
   </mat-sidenav-content>
 </mat-sidenav-container>
