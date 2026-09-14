@@ -1,46 +1,70 @@
 <div class="p-6">
   <h2 mat-dialog-title class="!p-0 !mb-6 text-2xl font-bold text-gray-800">
-  {{ isEditMode ? 'Editar Aluno' : 'Novo Aluno' }}
-</h2>
-  
+    {{ isEditMode ? 'Editar Aluno' : 'Novo Aluno' }}
+  </h2>
+
   <mat-dialog-content class="!p-0">
-    <form [formGroup]="alunoForm" class="flex flex-col gap-4 mt-2">
-      
-      <!-- Nome completo -->
+    @if (erro(); as mensagem) {
+      <div class="flex items-start gap-2 p-3 mb-4 bg-red-50 border border-red-200 text-red-700 text-sm" role="alert">
+        <mat-icon class="!text-lg !w-5 !h-5">error_outline</mat-icon>
+        <span>{{ mensagem }}</span>
+      </div>
+    }
+
+    <form [formGroup]="form" class="flex flex-col gap-4 mt-2" (ngSubmit)="salvar()">
       <mat-form-field appearance="outline" class="w-full">
         <mat-label>Nome Completo</mat-label>
-        <input matInput formControlName="nome" placeholder="Ex: Maria Silva">
+        <input matInput id="nome" formControlName="nome" placeholder="Ex: Maria Silva">
+        @if (form.controls.nome.touched && form.controls.nome.invalid) {
+          <mat-error>Informe o nome do aluno.</mat-error>
+        }
       </mat-form-field>
 
-      <div class="grid grid-cols-2 gap-4">
-        <!-- E-mail -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <mat-form-field appearance="outline" class="w-full">
           <mat-label>E-mail</mat-label>
-          <input matInput type="email" formControlName="email" placeholder="maria@email.com">
+          <input matInput id="email" type="email" formControlName="email" placeholder="maria@email.com">
+          @if (form.controls.email.touched && form.controls.email.invalid) {
+            <mat-error>Informe um e-mail válido.</mat-error>
+          }
         </mat-form-field>
 
-        <!-- Telefone -->
         <mat-form-field appearance="outline" class="w-full">
           <mat-label>Telefone / WhatsApp</mat-label>
-          <input matInput formControlName="telefone" placeholder="(11) 99999-9999">
+          <input matInput id="telefone" formControlName="telefone" placeholder="(11) 99999-9999">
         </mat-form-field>
       </div>
 
-      <!-- CPF -->
       <mat-form-field appearance="outline" class="w-full">
         <mat-label>CPF</mat-label>
-        <input matInput formControlName="cpf" placeholder="000.000.000-00">
+        <input matInput id="cpf" formControlName="cpf" placeholder="000.000.000-00">
+        @if (form.controls.cpf.touched && form.controls.cpf.invalid) {
+          <mat-error>Informe um CPF válido, com ou sem pontuação.</mat-error>
+        }
       </mat-form-field>
 
+      @if (!isEditMode) {
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Senha inicial</mat-label>
+          <input matInput id="senha" type="password" formControlName="senha" autocomplete="new-password">
+          <mat-hint>Mínimo de 8 caracteres. O aluno usa esta senha para entrar.</mat-hint>
+          @if (form.controls.senha.touched && form.controls.senha.invalid) {
+            <mat-error>A senha precisa ter no mínimo 8 caracteres.</mat-error>
+          }
+        </mat-form-field>
+      }
     </form>
   </mat-dialog-content>
 
   <mat-dialog-actions align="end" class="!p-0 !mt-8">
-    <button mat-button mat-dialog-close class="!rounded-none text-gray-500">Cancelar</button>
-   <button mat-flat-button color="primary" class="!rounded-none" 
-        [disabled]="alunoForm.invalid" 
-        (click)="salvar()">
-  {{ isEditMode ? 'Salvar Alterações' : 'Cadastrar Aluno' }}
-  </button>
+    <button mat-button mat-dialog-close type="button" class="!rounded-none text-gray-500">Cancelar</button>
+    <button mat-flat-button color="primary" type="button" class="!rounded-none"
+            [disabled]="form.invalid || enviando()" (click)="salvar()">
+      @if (enviando()) {
+        <mat-spinner diameter="20"></mat-spinner>
+      } @else {
+        {{ isEditMode ? 'Salvar Alterações' : 'Cadastrar Aluno' }}
+      }
+    </button>
   </mat-dialog-actions>
 </div>

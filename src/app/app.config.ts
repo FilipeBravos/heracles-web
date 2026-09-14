@@ -1,14 +1,17 @@
 import { ApplicationConfig, provideZonelessChangeDetection } from '@angular/core';
-import { provideRouter } from '@angular/router';
-import { provideHttpClient } from '@angular/common/http'; // <-- Adicione este
+import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+
+import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideZonelessChangeDetection(), 
-    provideRouter(routes), 
-    provideHttpClient(), // <-- E este aqui
-    provideAnimationsAsync()
-  ]
+    provideZonelessChangeDetection(),
+    provideRouter(routes, withComponentInputBinding()),
+    // O interceptor anexa o bearer token e derruba a sessao em 401.
+    provideHttpClient(withInterceptors([authInterceptor])),
+    provideAnimationsAsync(),
+  ],
 };

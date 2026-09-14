@@ -1,33 +1,39 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router'; // <-- Importe o RouterModule
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatSidenavModule } from '@angular/material/sidenav';
+import { Component, inject } from '@angular/core';
+import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
-import { MatCardModule } from '@angular/material/card';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatToolbarModule } from '@angular/material/toolbar';
 
+import { AuthService } from '../../core/services/auth.service';
+
+/**
+ * Casca da area logada: menu lateral, barra superior e o router-outlet
+ * dos filhos. Os cartoes de estatistica vivem em DashboardHomeComponent —
+ * antes o array 'estatisticas' estava duplicado aqui sem ser usado.
+ */
 @Component({
-  selector: 'app-dashboard',
+  selector: 'app-dashboard-shell',
   standalone: true,
   imports: [
-    CommonModule,
-    RouterModule, // <-- Adicione aqui para habilitar routerLink e routerLinkActiveOptions
+    RouterModule,
     MatToolbarModule,
     MatSidenavModule,
     MatButtonModule,
     MatIconModule,
     MatListModule,
-    MatCardModule
+    MatMenuModule,
   ],
-  templateUrl: './dashboard.html'
+  templateUrl: './dashboard.html',
 })
 export class DashboardComponent {
- estatisticas = [
-    { titulo: 'Alunos Ativos', valor: '128', icon: 'groups', cor: 'text-blue-600' },
-    { titulo: 'Treinos Hoje', valor: '42', icon: 'fitness_center', cor: 'text-green-600' },
-    { titulo: 'Novas Matrículas', valor: '12', icon: 'person_add', cor: 'text-purple-600' },
-    { titulo: 'Pendências', valor: '5', icon: 'warning', cor: 'text-red-600' }
-  ];
+  private readonly auth = inject(AuthService);
+
+  readonly usuario = this.auth.usuario;
+
+  sair(): void {
+    this.auth.logout();
+  }
 }
