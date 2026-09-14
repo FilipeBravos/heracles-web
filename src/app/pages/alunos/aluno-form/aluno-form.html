@@ -1,13 +1,19 @@
-<div class="p-6">
-  <h2 mat-dialog-title class="!p-0 !mb-6 text-2xl font-bold text-gray-800">
-    {{ isEditMode ? 'Editar Aluno' : 'Novo Aluno' }}
-  </h2>
+<div>
+  <div class="border-b border-linha px-6 py-5">
+    <h2 mat-dialog-title class="!m-0 !p-0 font-display !text-[22px] !font-bold !leading-tight text-tinta">
+      {{ isEditMode ? 'Editar aluno' : 'Novo aluno' }}
+    </h2>
+    <p class="mt-1 text-[12.5px] text-tinta-3">
+      {{ isEditMode ? 'Atualize os dados cadastrais do membro.' : 'Dados cadastrais e senha inicial de acesso.' }}
+    </p>
+  </div>
 
-  <mat-dialog-content class="!p-0">
+  <mat-dialog-content class="!px-6 !pt-5 !pb-2">
     @if (erro(); as mensagem) {
-      <div class="flex items-start gap-2 p-3 mb-4 bg-red-50 border border-red-200 text-red-700 text-sm" role="alert">
-        <mat-icon class="!text-lg !w-5 !h-5">error_outline</mat-icon>
-        <span>{{ mensagem }}</span>
+      <div role="alert"
+           class="mb-4 flex items-start gap-2.5 rounded-marca border border-perigo-200 bg-perigo-50 px-4 py-3">
+        <mat-icon class="!mt-px !h-[18px] !w-[18px] !text-[18px] text-perigo-700" svgIcon="error"></mat-icon>
+        <span class="text-[12.5px] leading-snug text-perigo-700">{{ mensagem }}</span>
       </div>
     }
 
@@ -47,7 +53,7 @@
         <mat-form-field appearance="outline" class="w-full">
           <mat-label>Senha inicial</mat-label>
           <input matInput id="senha" type="password" formControlName="senha" autocomplete="new-password">
-          <mat-hint>Mínimo de 8 caracteres. O aluno usa esta senha para entrar.</mat-hint>
+          <mat-hint>Mínimo de 8 caracteres. O aluno usa esta senha no primeiro acesso.</mat-hint>
           @if (form.controls.senha.touched && form.controls.senha.invalid) {
             <mat-error>A senha precisa ter no mínimo 8 caracteres.</mat-error>
           }
@@ -56,14 +62,14 @@
     </form>
   </mat-dialog-content>
 
-  <mat-dialog-actions align="end" class="!p-0 !mt-8">
-    <button mat-button mat-dialog-close type="button" class="!rounded-none text-gray-500">Cancelar</button>
-    <button mat-flat-button color="primary" type="button" class="!rounded-none"
+  <mat-dialog-actions align="end" class="!gap-2 border-t border-linha !px-6 !py-4">
+    <button mat-button mat-dialog-close type="button" class="!text-tinta-2">Cancelar</button>
+    <button mat-flat-button color="primary" type="button" class="!px-5"
             [disabled]="form.invalid || enviando()" (click)="salvar()">
       @if (enviando()) {
         <mat-spinner diameter="20"></mat-spinner>
       } @else {
-        {{ isEditMode ? 'Salvar Alterações' : 'Cadastrar Aluno' }}
+        {{ isEditMode ? 'Salvar alterações' : 'Cadastrar aluno' }}
       }
     </button>
   </mat-dialog-actions>

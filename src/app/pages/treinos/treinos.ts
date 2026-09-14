@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatPaginatorIntl, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
@@ -11,6 +11,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Treino } from '../../core/models';
 import { TreinoService } from '../../core/services/treino.service';
 import { mensagemDeErro } from '../../core/services/erro-api';
+import { PaginadorIntl } from '../../core/paginador-intl';
 import { TreinoDetalhesComponent } from './treino-detalhes/treino-detalhes';
 import { TreinoFormComponent } from './treino-form/treino-form';
 
@@ -26,13 +27,17 @@ import { TreinoFormComponent } from './treino-form/treino-form';
     MatTooltipModule,
   ],
   templateUrl: './treinos.html',
+  // Rótulos do paginador em português. Providos aqui, e não na raiz:
+  // importar o paginador em app.config arrastava o módulo inteiro para
+  // o bundle inicial, que é carregado antes mesmo do login.
+  providers: [{ provide: MatPaginatorIntl, useClass: PaginadorIntl }],
 })
 export class TreinosComponent implements OnInit {
   private readonly treinoService = inject(TreinoService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
 
-  readonly displayedColumns = ['id', 'nome', 'foco', 'nivel', 'exercicios', 'acoes'];
+  readonly displayedColumns = ['nome', 'nivel', 'exercicios', 'volume', 'acoes'];
 
   readonly treinos = signal<Treino[]>([]);
   readonly carregando = signal(true);

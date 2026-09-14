@@ -1,33 +1,416 @@
 @use '@angular/material' as mat;
 
-// 1. Definição do Tema do Material Design 3
+/* =============================================================
+   Tema do Angular Material.
+
+   A paleta primaria passa de azure para orange porque o azul era o
+   padrao do gerador, nao uma escolha: aparecia igual em botao, link,
+   selecao e etiqueta de nivel. O laranja do Material e a ponte para
+   o bronze da marca, definido em tailwind.css.
+   ============================================================= */
 html {
   @include mat.theme((
     color: (
-      primary: mat.$azure-palette,
-      tertiary: mat.$blue-palette,
+      primary: mat.$orange-palette,
+      tertiary: mat.$yellow-palette,
     ),
-    typography: Roboto,
-    density: 0,
+    typography: (
+      plain-family: Barlow,
+      brand-family: 'Barlow Condensed',
+      regular-weight: 400,
+      medium-weight: 500,
+      bold-weight: 700,
+    ),
+    // -1: console operado o dia inteiro; linhas mais justas cabem
+    // mais alunos na tela sem prejudicar o alvo de clique.
+    density: -1,
   ));
 }
 
-// 2. O Tailwind e carregado por src/tailwind.css, listado logo apos este
-// arquivo em angular.json. Mantê-lo fora do Sass evita a regra "@import",
-// deprecada no Dart Sass.
-
-// 3. Resets Globais e Variáveis de Sistema
-html, body { 
-  height: 100%; 
+html,
+body {
+  height: 100%;
 }
 
 body {
-  margin: 0; 
-  font-family: Roboto, "Helvetica Neue", sans-serif;
+  margin: 0;
   color-scheme: light;
+  background-color: var(--color-fundo);
+  color: var(--color-tinta);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
 
-  // Usa as variáveis geradas pelo @include mat.theme acima
-  background-color: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-medium);
+/* Numerais tabulares onde numero alinha em coluna. */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* =============================================================
+   Icones
+
+   Sao SVG embutidos (core/icones.ts), nao fonte. O mat-icon desenha o
+   SVG dentro de uma caixa de 24px; aqui fazemos o desenho acompanhar a
+   caixa quando o template pede um tamanho diferente.
+   ============================================================= */
+mat-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* =============================================================
+   Tipografia de apoio
+   ============================================================= */
+.h-titulo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  color: var(--color-tinta);
+}
+
+/* Rotulo de secao: caixa alta, pequeno, espacado. Usado em cabecalho
+   de tabela e em rotulo de indicador. */
+.h-rotulo {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-tinta-3);
+}
+
+/* =============================================================
+   Etiquetas de estado
+
+   Borda + fundo tenue em vez de pilula solida: o estado precisa ser
+   legivel de relance sem competir com o nome do aluno na mesma linha.
+   ============================================================= */
+.h-etiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-marca-sm);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.h-etiqueta--ok {
+  background: var(--color-ok-50);
+  border-color: var(--color-ok-200);
+  color: var(--color-ok-700);
+}
+
+.h-etiqueta--perigo {
+  background: var(--color-perigo-50);
+  border-color: var(--color-perigo-200);
+  color: var(--color-perigo-700);
+}
+
+.h-etiqueta--acento {
+  background: var(--color-bronze-100);
+  border-color: var(--color-bronze-200);
+  color: var(--color-bronze-800);
+}
+
+.h-etiqueta--neutra {
+  background: var(--color-fundo-2);
+  border-color: var(--color-linha-forte);
+  color: var(--color-tinta-2);
+}
+
+/* Prescricao numerica: mantem a caixa original. */
+.h-etiqueta--prescricao {
+  background: var(--color-fundo-2);
+  border-color: var(--color-linha-forte);
+  color: var(--color-tinta);
+  text-transform: none;
+  letter-spacing: 0.01em;
+  font-size: 12px;
+}
+
+/* Variante sem borda: usada em lista, onde varias etiquetas na mesma
+   linha com contorno viram ruido e competem com o nome do aluno. */
+.h-etiqueta--suave {
+  background: var(--color-bronze-50);
+  border-color: transparent;
+  color: var(--color-bronze-700);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+  font-size: 11.5px;
+}
+
+/* =============================================================
+   Superficie de conteudo
+   ============================================================= */
+.h-painel {
+  background: var(--color-papel);
+  border: 1px solid var(--color-linha);
+  border-radius: var(--radius-marca);
+}
+
+/* =============================================================
+   Tabelas
+
+   O Material desenha a tabela com as cores do tema; aqui trocamos
+   por cabecalho em rotulo e linhas separadas por fio fino, que e o
+   que faz uma lista longa continuar legivel.
+   ============================================================= */
+.h-tabela {
+  width: 100%;
+  background: transparent;
+
+  .mat-mdc-header-row {
+    height: 40px;
+    background: var(--color-fundo);
+    border-bottom: 1px solid var(--color-linha-forte);
+  }
+
+  .mat-mdc-header-cell {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-tinta-3);
+    border-bottom: none;
+  }
+
+  .mat-mdc-row {
+    height: 56px;
+    transition: background-color 120ms ease;
+  }
+
+  .mat-mdc-row:hover {
+    background: var(--color-fundo);
+  }
+
+  .mat-mdc-cell {
+    border-bottom: 1px solid var(--color-linha);
+    color: var(--color-tinta);
+    font-size: 13.5px;
+  }
+}
+
+/* =============================================================
+   Ajustes pontuais no Material
+
+   Menos arredondamento: o padrao do M3 (pilula) dava ao console um ar
+   de aplicativo de consumo. Um raio unico e discreto mantem a leitura
+   de ferramenta.
+   ============================================================= */
+.mat-mdc-unelevated-button,
+.mat-mdc-raised-button,
+.mat-mdc-outlined-button,
+.mat-mdc-button {
+  --mdc-outlined-button-container-shape: var(--radius-marca);
+  --mdc-filled-button-container-shape: var(--radius-marca);
+  --mdc-text-button-container-shape: var(--radius-marca);
+  --mdc-protected-button-container-shape: var(--radius-marca);
+  letter-spacing: 0.01em;
+  font-weight: 600;
+}
+
+.mat-mdc-dialog-container {
+  --mdc-dialog-container-shape: var(--radius-marca-lg);
+}
+
+.mat-mdc-form-field {
+  --mdc-outlined-text-field-container-shape: var(--radius-marca);
+}
+
+/* O paginador herda o fundo do tema; aqui ele encosta na tabela. */
+.mat-mdc-paginator {
+  background: transparent;
+  border-top: 1px solid var(--color-linha);
+  font-size: 12.5px;
+}
+
+/* Foco visivel e consistente, sem depender do halo do Material. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-bronze-600);
+  outline-offset: 2px;
+  border-radius: var(--radius-marca-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =============================================================
+   Item de navegacao da barra lateral
+
+   Fica aqui, e nao no template, porque o estado ativo combina tres
+   coisas (trilho, fundo e cor do texto) que ficariam ilegiveis como
+   lista de utilidades repetida em cada link.
+   ============================================================= */
+.item-nav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px 10px 14px;
+  margin-bottom: 2px;
+  border-radius: var(--radius-marca);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--color-grafite-300);
+  text-decoration: none;
+  transition: background-color 120ms ease, color 120ms ease;
+
+  .trilho {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    height: 0;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+    background: var(--color-bronze-500);
+    transform: translateY(-50%);
+    transition: height 140ms ease;
+  }
+
+  mat-icon {
+    color: var(--color-grafite-400);
+    transition: color 120ms ease;
+  }
+
+  &:hover {
+    background: var(--color-grafite-800);
+    color: #fff;
+
+    mat-icon {
+      color: var(--color-grafite-300);
+    }
+  }
+
+  /* Ativo: o trilho de bronze e o unico lugar do menu onde a cor da
+     marca aparece, entao ele carrega sozinho o "voce esta aqui". */
+  &.ativo {
+    background: var(--color-grafite-800);
+    color: #fff;
+    font-weight: 600;
+
+    .trilho {
+      height: 20px;
+    }
+
+    mat-icon {
+      color: var(--color-bronze-500);
+    }
+  }
+}
+
+/* =============================================================
+   Cabecalho de pagina — mesmo ritmo em Alunos, Treinos e Visao geral
+   ============================================================= */
+.h-cabecalho {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    line-height: 1.05;
+    margin: 0;
+    color: var(--color-tinta);
+  }
+
+  p {
+    margin: 6px 0 0;
+    font-size: 13.5px;
+    color: var(--color-tinta-3);
+    max-width: 62ch;
+  }
+}
+
+/* =============================================================
+   Conflito entre o preflight do Tailwind e o Angular Material
+
+   O preflight aplica `border-style: solid` a todo elemento. O Material
+   define apenas a LARGURA das bordas do entalhe do campo e conta com o
+   estilo `none` padrao do navegador nas laterais — que o preflight
+   substitui por `solid`. Resultado: um tracinho vertical ao lado de cada
+   rotulo, em todos os formularios.
+
+   Aqui devolvemos o estilo esperado por cada parte do contorno.
+   ============================================================= */
+.mdc-notched-outline__notch {
+  border-left-style: none !important;
+  border-right-style: none !important;
+}
+
+.mdc-notched-outline__leading {
+  border-right-style: none !important;
+}
+
+.mdc-notched-outline__trailing {
+  border-left-style: none !important;
+}
+
+/* Quando o rotulo sobe, o Material remove a borda superior do entalhe. */
+.mdc-notched-outline--notched .mdc-notched-outline__notch {
+  border-top-style: none !important;
+}
+
+/* =============================================================
+   Superficies neutras
+
+   A paleta tonal do M3 tinge os neutros com a cor primaria: com o
+   laranja, linha de tabela e painel ficavam com um creme perceptivel.
+   Num console de listagem isso le como "linha destacada" sem motivo.
+   Fixamos os neutros nos tokens da marca e deixamos o laranja so onde
+   ele e escolha: acao primaria, item ativo, acento.
+   ============================================================= */
+html {
+  --mat-sys-surface: var(--color-papel);
+  --mat-sys-surface-container-lowest: var(--color-papel);
+  --mat-sys-surface-container-low: var(--color-papel);
+  --mat-sys-surface-container: var(--color-papel);
+  --mat-sys-surface-container-high: var(--color-papel);
+  --mat-sys-surface-container-highest: var(--color-fundo);
+  --mat-sys-surface-variant: var(--color-fundo);
+  --mat-sys-background: var(--color-fundo);
+  --mat-sys-on-surface: var(--color-tinta);
+  --mat-sys-on-surface-variant: var(--color-tinta-2);
+  --mat-sys-outline: var(--color-linha-forte);
+  --mat-sys-outline-variant: var(--color-linha);
+}
+
+/* =============================================================
+   Botoes
+
+   O M3 entrega botao em formato de pilula. Num console de operacao isso
+   puxa a interface para o registro de aplicativo de consumo; o raio
+   unico da marca mantem a leitura de ferramenta. Os tokens de forma
+   mudaram de nome entre versoes, entao fixamos o raio direto.
+   ============================================================= */
+.mat-mdc-unelevated-button,
+.mat-mdc-raised-button,
+.mat-mdc-outlined-button,
+.mat-mdc-button {
+  border-radius: var(--radius-marca) !important;
+}
+
+/* Botao de icone continua redondo: ali a forma circular e o alvo. */
+.mat-mdc-icon-button {
+  border-radius: 50% !important;
 }

@@ -1,20 +1,25 @@
-<div class="p-6">
-  <h2 mat-dialog-title class="!p-0 !mb-2 text-2xl font-bold text-gray-800">Gerenciar Treinos</h2>
-  <p class="text-gray-500 mb-6">
-    Selecione as fichas para o(a) aluno(a) <strong>{{ data.aluno.nome }}</strong>.
-  </p>
+<div>
+  <div class="border-b border-linha px-6 py-5">
+    <h2 mat-dialog-title class="!m-0 !p-0 font-display !text-[22px] !font-bold !leading-tight text-tinta">
+      Fichas do aluno
+    </h2>
+    <p class="mt-1 text-[12.5px] text-tinta-3">
+      Selecione as fichas de <strong class="font-semibold text-tinta-2">{{ data.aluno.nome }}</strong>.
+    </p>
+  </div>
 
-  <mat-dialog-content class="!p-0">
+  <mat-dialog-content class="!px-6 !pt-5 !pb-2">
     @if (erro(); as mensagem) {
-      <div class="flex items-start gap-2 p-3 mb-4 bg-red-50 border border-red-200 text-red-700 text-sm" role="alert">
-        <mat-icon class="!text-lg !w-5 !h-5">error_outline</mat-icon>
-        <span>{{ mensagem }}</span>
+      <div role="alert"
+           class="mb-4 flex items-start gap-2.5 rounded-marca border border-perigo-200 bg-perigo-50 px-4 py-3">
+        <mat-icon class="!mt-px !h-[18px] !w-[18px] !text-[18px] text-perigo-700" svgIcon="error"></mat-icon>
+        <span class="text-[12.5px] leading-snug text-perigo-700">{{ mensagem }}</span>
       </div>
     }
 
     @if (carregando()) {
-      <div class="flex items-center gap-3 py-4 text-gray-500">
-        <mat-spinner diameter="24"></mat-spinner>
+      <div class="flex items-center gap-3 py-4 text-[13px] text-tinta-3">
+        <mat-spinner diameter="20"></mat-spinner>
         <span>Carregando fichas…</span>
       </div>
     } @else {
@@ -32,14 +37,14 @@
     }
   </mat-dialog-content>
 
-  <mat-dialog-actions align="end" class="!p-0 !mt-8">
-    <button mat-button mat-dialog-close type="button" class="!rounded-none text-gray-500">Cancelar</button>
-    <button mat-flat-button color="primary" type="button" class="!rounded-none"
+  <mat-dialog-actions align="end" class="!gap-2 border-t border-linha !px-6 !py-4">
+    <button mat-button mat-dialog-close type="button" class="!text-tinta-2">Cancelar</button>
+    <button mat-flat-button color="primary" type="button" class="!px-5"
             [disabled]="carregando() || enviando()" (click)="salvar()">
       @if (enviando()) {
         <mat-spinner diameter="20"></mat-spinner>
       } @else {
-        Salvar Fichas
+        Salvar fichas
       }
     </button>
   </mat-dialog-actions>

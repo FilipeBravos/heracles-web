@@ -1,46 +1,72 @@
-<main class="p-8">
-  <header class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-800">Visão Geral</h1>
-    <p class="text-gray-500">Acompanhe o desempenho da sua unidade.</p>
+<div class="mx-auto max-w-[1180px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+  <header class="h-cabecalho">
+    <div>
+      <h1>Visão geral</h1>
+      <p>Como está a unidade agora. Os números vêm direto da base, atualizados a cada carregamento.</p>
+    </div>
   </header>
 
   @if (carregando()) {
-    <div class="flex items-center gap-3 text-gray-500">
-      <mat-spinner diameter="24"></mat-spinner>
-      <span>Carregando indicadores…</span>
+    <!-- Esqueleto com a forma dos cartões: a página não salta quando os
+         dados chegam, e a espera fica com uma duração aparente menor. -->
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="h-[132px] animate-pulse rounded-marca border border-linha bg-papel"></div>
+      }
     </div>
   } @else if (erro(); as mensagem) {
-    <div class="flex items-center justify-between gap-4 p-4 bg-red-50 border border-red-200 text-red-700" role="alert">
-      <span class="flex items-center gap-2">
-        <mat-icon>error_outline</mat-icon>
+    <div role="alert"
+         class="flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+      <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>
         {{ mensagem }}
       </span>
-      <button class="font-semibold underline" type="button" (click)="carregar()">Tentar novamente</button>
+      <button type="button" (click)="carregar()"
+              class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">
+        Tentar novamente
+      </button>
     </div>
   } @else {
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       @for (item of cartoes(); track item.titulo) {
-        <mat-card class="!rounded-2xl !shadow-sm border-0 hover:shadow-md transition-shadow">
-          <mat-card-content class="p-6 flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-gray-500">{{ item.titulo }}</p>
-              <h3 class="text-2xl font-bold mt-1 text-gray-800 tabular-nums">{{ item.valor }}</h3>
-            </div>
-            <div class="p-3 rounded-xl" [class]="item.corFundo">
-              <mat-icon [class]="item.corTexto">{{ item.icon }}</mat-icon>
-            </div>
-          </mat-card-content>
-        </mat-card>
+        <article class="group relative overflow-hidden rounded-marca border border-linha bg-papel p-5">
+          <!-- Fio superior: só os indicadores que pedem leitura ativa
+               recebem cor. Os neutros ficam sem fio. -->
+          @if (item.tom === 'acento') {
+            <span class="absolute inset-x-0 top-0 h-[3px] bg-bronze-500"></span>
+          } @else if (item.tom === 'perigo') {
+            <span class="absolute inset-x-0 top-0 h-[3px] bg-perigo-700"></span>
+          }
+
+          <div class="flex items-start justify-between gap-3">
+            <p class="h-rotulo">{{ item.titulo }}</p>
+            <mat-icon
+              class="!h-[18px] !w-[18px] !text-[18px]"
+              [class]="item.tom === 'acento' ? 'text-bronze-600'
+                     : item.tom === 'perigo' ? 'text-perigo-700' : 'text-tinta-3'" [svgIcon]="item.icon"></mat-icon>
+          </div>
+
+          <p class="mt-3 font-display text-[40px] font-bold leading-none tracking-tight tabular-nums text-tinta">
+            {{ item.valor }}
+          </p>
+          <p class="mt-2 text-[12px] leading-snug text-tinta-3">{{ item.nota }}</p>
+        </article>
       }
     </div>
 
-    <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <mat-card class="lg:col-span-2 !rounded-2xl !shadow-sm border-0 h-64 flex items-center justify-center bg-white">
-        <p class="text-gray-400 italic">Gráfico de Matrículas Mensais (em breve)</p>
-      </mat-card>
-      <mat-card class="!rounded-2xl !shadow-sm border-0 h-64 flex items-center justify-center bg-white">
-        <p class="text-gray-400 italic">Próximos Vencimentos (em breve)</p>
-      </mat-card>
+    <!-- Painéis futuros: marcados como pendentes em vez de simulados,
+         para ninguém confundir moldura com dado. -->
+    <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div class="flex h-60 flex-col items-center justify-center gap-2 rounded-marca border border-dashed border-linha-forte bg-papel/60 lg:col-span-2">
+        <mat-icon class="!h-6 !w-6 !text-[24px] text-tinta-3" svgIcon="show_chart"></mat-icon>
+        <p class="text-[13px] font-medium text-tinta-2">Matrículas por mês</p>
+        <span class="h-etiqueta h-etiqueta--neutra">Em breve</span>
+      </div>
+      <div class="flex h-60 flex-col items-center justify-center gap-2 rounded-marca border border-dashed border-linha-forte bg-papel/60">
+        <mat-icon class="!h-6 !w-6 !text-[24px] text-tinta-3" svgIcon="event_upcoming"></mat-icon>
+        <p class="text-[13px] font-medium text-tinta-2">Próximos vencimentos</p>
+        <span class="h-etiqueta h-etiqueta--neutra">Em breve</span>
+      </div>
     </div>
   }
-</main>
+</div>

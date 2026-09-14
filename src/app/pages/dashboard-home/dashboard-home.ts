@@ -11,8 +11,9 @@ interface CartaoEstatistica {
   titulo: string;
   valor: number;
   icon: string;
-  corTexto: string;
-  corFundo: string;
+  /** Destaque visual só no indicador que pede atenção. */
+  tom: 'neutro' | 'acento' | 'perigo';
+  nota: string;
 }
 
 @Component({
@@ -34,22 +35,29 @@ export class DashboardHomeComponent implements OnInit {
     const dados = this.resumo();
     if (!dados) return [];
 
+    // Os quatro indicadores nao tem o mesmo peso: matricula nova e o
+    // numero que o gestor persegue, e aluno inativo e o que exige acao.
+    // Os outros dois sao contexto e ficam neutros de proposito — quando
+    // tudo e destaque, nada e.
     return [
       {
-        titulo: 'Alunos Ativos', valor: dados.alunosAtivos,
-        icon: 'groups', corTexto: 'text-blue-600', corFundo: 'bg-blue-50',
+        titulo: 'Alunos ativos', valor: dados.alunosAtivos, icon: 'groups',
+        tom: 'neutro', nota: 'com acesso liberado hoje',
       },
       {
-        titulo: 'Fichas Atribuídas', valor: dados.fichasAtribuidas,
-        icon: 'assignment_turned_in', corTexto: 'text-green-600', corFundo: 'bg-green-50',
+        titulo: 'Fichas atribuídas', valor: dados.fichasAtribuidas,
+        icon: 'assignment_turned_in', tom: 'neutro', nota: 'alunos com treino vinculado',
       },
       {
-        titulo: 'Novas Matrículas no Mês', valor: dados.novasMatriculasNoMes,
-        icon: 'person_add', corTexto: 'text-purple-600', corFundo: 'bg-purple-50',
+        titulo: 'Matrículas no mês', valor: dados.novasMatriculasNoMes,
+        icon: 'trending_up', tom: 'acento', nota: 'cadastros desde o dia 1º',
       },
       {
-        titulo: 'Alunos Inativos', valor: dados.alunosInativos,
-        icon: 'person_off', corTexto: 'text-red-600', corFundo: 'bg-red-50',
+        titulo: 'Alunos inativos', valor: dados.alunosInativos, icon: 'person_off',
+        // Zero inativo e boa noticia: marcar em vermelho chamaria atencao
+        // para o que nao precisa de acao.
+        tom: dados.alunosInativos > 0 ? 'perigo' : 'neutro',
+        nota: dados.alunosInativos > 0 ? 'sem acesso até reativação' : 'nenhum acesso bloqueado',
       },
     ];
   });
