@@ -61,21 +61,53 @@
             <p class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">
               Exercício {{ $index + 1 }}
             </p>
+            <p class="text-xs text-gray-500 mb-2">
+              Séries × repetições por série. Para prescrição exata, repita o
+              mesmo valor em mínimo e máximo.
+            </p>
 
             <mat-form-field appearance="outline" class="w-full pr-10 mb-[-10px]">
               <mat-label>Nome do Exercício</mat-label>
               <input matInput formControlName="nome" placeholder="Ex: Supino Reto com Barra">
             </mat-form-field>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Três colunas para a prescrição numérica: rótulos curtos cabem
+                 sem truncar, e a carga ganha a linha seguinte por ser texto. -->
+            <div class="grid grid-cols-3 gap-3">
               <mat-form-field appearance="outline" class="w-full mb-[-10px]">
-                <mat-label>Repetições / Séries</mat-label>
-                <input matInput formControlName="repeticoes" placeholder="Ex: 4x10 a 12">
+                <mat-label>Séries</mat-label>
+                <input matInput type="number" inputmode="numeric" min="1" max="20"
+                       formControlName="series">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="w-full mb-[-10px]">
+                <mat-label>Mín.</mat-label>
+                <input matInput type="number" inputmode="numeric" min="1" max="500"
+                       formControlName="repeticoesMin">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="w-full mb-[-10px]">
+                <mat-label>Máx.</mat-label>
+                <input matInput type="number" inputmode="numeric" min="1" max="500"
+                       formControlName="repeticoesMax">
+              </mat-form-field>
+            </div>
+
+            @if (controle.hasError('faixaInvertida')) {
+              <p class="text-red-600 text-xs mt-1 mb-2">
+                O máximo de repetições não pode ser menor que o mínimo.
+              </p>
+            }
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <mat-form-field appearance="outline" class="w-full mb-[-10px]">
+                <mat-label>Carga</mat-label>
+                <input matInput formControlName="carga" placeholder="Ex: 70% 1RM, até a falha">
               </mat-form-field>
 
               <mat-form-field appearance="outline" class="w-full mb-[-10px]">
                 <mat-label>Observações</mat-label>
-                <input matInput formControlName="observacoes" placeholder="Ex: Carga progressiva">
+                <input matInput formControlName="observacoes" placeholder="Ex: Descanso de 90s">
               </mat-form-field>
             </div>
           </div>

@@ -1,5 +1,13 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormArray,
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
@@ -10,6 +18,20 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 
 import { ExercicioForm, Treino } from '../../../core/models';
+
+/**
+ * Espelha a validação `faixaDeRepeticoesCoerente` do DTO na API, para que o
+ * erro apareça enquanto se digita em vez de só voltar do servidor.
+ */
+function faixaDeRepeticoesCoerente(grupo: AbstractControl): ValidationErrors | null {
+  const min = grupo.get('repeticoesMin')?.value;
+  const max = grupo.get('repeticoesMax')?.value;
+
+  if (min == null || max == null || min === '' || max === '') {
+    return null; // quem reporta ausência é o Validators.required
+  }
+  return Number(max) >= Number(min) ? null : { faixaInvertida: true };
+}
 import { TreinoService } from '../../../core/services/treino.service';
 import { mensagemDeErro } from '../../../core/services/erro-api';
 
@@ -68,14 +90,29 @@ export class TreinoFormComponent {
   }
 
   private novoExercicio(exercicio?: Partial<ExercicioForm>): FormGroup {
-    return this.fb.group({
-      // O id viaja de volta para a API, que reconcilia por ele em vez de
-      // apagar e recriar a lista inteira a cada edição.
-      id: [exercicio?.id ?? null],
-      nome: [exercicio?.nome ?? '', [Validators.required, Validators.maxLength(100)]],
-      repeticoes: [exercicio?.repeticoes ?? '', [Validators.required, Validators.maxLength(50)]],
-      observacoes: [exercicio?.observacoes ?? ''],
-    });
+    return this.fb.group(
+      {
+        // O id viaja de volta para a API, que reconcilia por ele em vez de
+        // apagar e recriar a lista inteira a cada edição.
+        id: [exercicio?.id ?? null],
+        nome: [exercicio?.nome ?? '', [Validators.required, Validators.maxLength(100)]],
+        series: [
+          exercicio?.series ?? 3,
+          [Validators.required, Validators.min(1), Validators.max(20)],
+        ],
+        repeticoesMin: [
+          exercicio?.repeticoesMin ?? 10,
+          [Validators.required, Validators.min(1), Validators.max(500)],
+        ],
+        repeticoesMax: [
+          exercicio?.repeticoesMax ?? 10,
+          [Validators.required, Validators.min(1), Validators.max(500)],
+        ],
+        carga: [exercicio?.carga ?? ''],
+        observacoes: [exercicio?.observacoes ?? ''],
+      },
+      { validators: faixaDeRepeticoesCoerente }
+    );
   }
 
   adicionarExercicio(): void {
@@ -105,7 +142,10 @@ export class TreinoFormComponent {
         return {
           id: exercicio.id ?? null,
           nome: exercicio.nome,
-          repeticoes: exercicio.repeticoes,
+          series: Number(exercicio.series),
+          repeticoesMin: Number(exercicio.repeticoesMin),
+          repeticoesMax: Number(exercicio.repeticoesMax),
+          carga: exercicio.carga?.trim() || null,
           observacoes: exercicio.observacoes?.trim() || null,
         };
       }),

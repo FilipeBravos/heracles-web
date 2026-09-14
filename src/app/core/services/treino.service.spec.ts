@@ -30,13 +30,22 @@ describe('TreinoService', () => {
         nome: 'Ficha C',
         foco: 'Força',
         nivel: 'Avançado',
-        exercicios: [{ id: null, nome: 'Agachamento', repeticoes: '5x5', observacoes: null }],
+        exercicios: [
+          {
+            id: null, nome: 'Agachamento', series: 5,
+            repeticoesMin: 5, repeticoesMax: 5, carga: '80% 1RM', observacoes: null,
+          },
+        ],
       })
       .subscribe();
 
     const req = httpMock.expectOne(`${environment.apiUrl}/treinos`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body.exercicios.length).toBe(1);
+    // A prescrição viaja como números, não como texto livre.
+    expect(req.request.body.exercicios[0].series).toBe(5);
+    expect(req.request.body.exercicios[0].repeticoesMin).toBe(5);
+    expect(req.request.body.exercicios[0].repeticoes).toBeUndefined();
     req.flush({});
   });
 
@@ -57,7 +66,12 @@ describe('TreinoService', () => {
         nome: 'Ficha C',
         foco: 'Força',
         nivel: 'Avançado',
-        exercicios: [{ id: 6, nome: 'Agachamento', repeticoes: '5x3', observacoes: null }],
+        exercicios: [
+          {
+            id: 6, nome: 'Agachamento', series: 5,
+            repeticoesMin: 3, repeticoesMax: 5, carga: null, observacoes: null,
+          },
+        ],
       })
       .subscribe();
 
