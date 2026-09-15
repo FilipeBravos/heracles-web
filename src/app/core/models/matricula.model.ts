@@ -127,3 +127,45 @@ export const CLASSE_SITUACAO: Readonly<Record<SituacaoMatricula, string>> = {
 function emDatas(iso: string): number {
   return Date.parse(`${iso}T00:00:00`);
 }
+
+/** Linha da fila de vencimentos do painel. */
+export interface Vencimento {
+  assinaturaId: number;
+  alunoId: number;
+  alunoNome: string;
+  planoNome: string;
+  dataVencimento: string;
+  status: StatusAssinatura;
+  /** Calculado pela API. Negativo quando já venceu. */
+  diasParaVencer: number;
+}
+
+export interface FilaDeVencimentos {
+  dias: number;
+  /** A fila inteira, não só o que veio na lista. */
+  total: number;
+  itens: Vencimento[];
+}
+
+/**
+ * Como o prazo se lê numa linha.
+ *
+ * "em 3 dias" e "há 3 dias" ocupam o mesmo espaço e dizem coisas
+ * opostas — o sinal do número não pode ser a única diferença visível.
+ */
+export function descreverPrazo(diasParaVencer: number): string {
+  if (diasParaVencer < -1) return `venceu há ${-diasParaVencer} dias`;
+  if (diasParaVencer === -1) return 'venceu ontem';
+  if (diasParaVencer === 0) return 'vence hoje';
+  if (diasParaVencer === 1) return 'vence amanhã';
+  return `vence em ${diasParaVencer} dias`;
+}
+
+/**
+ * Urgência da linha: o que já venceu grita, o que vence esta semana
+ * chama, o resto é contexto.
+ */
+export function urgenciaDoPrazo(diasParaVencer: number): 'vencido' | 'proximo' | 'distante' {
+  if (diasParaVencer < 0) return 'vencido';
+  return diasParaVencer <= DIAS_PARA_VENCER ? 'proximo' : 'distante';
+}

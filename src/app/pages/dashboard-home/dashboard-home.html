@@ -110,17 +110,103 @@
       }
     </div>
 
-    <!-- Painéis futuros: marcados como pendentes em vez de simulados,
-         para ninguém confundir moldura com dado. -->
     <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-      <div class="flex h-60 flex-col items-center justify-center gap-2 rounded-marca border border-dashed border-linha-forte bg-papel/60 lg:col-span-2">
+      <!-- ============ Próximos vencimentos ============ -->
+      @if (podeVerFila()) {
+        <section class="rounded-marca border border-linha bg-papel lg:col-span-2"
+                 aria-labelledby="titulo-vencimentos">
+          <header class="flex flex-wrap items-center justify-between gap-3 border-b border-linha px-5 py-4">
+            <div>
+              <h2 id="titulo-vencimentos" class="h-rotulo">Próximos vencimentos</h2>
+              <p class="mt-1 text-[12px] text-tinta-3">
+                Quem vence nos próximos 15 dias — e quem já venceu.
+              </p>
+            </div>
+            <a routerLink="/dashboard/matriculas"
+               class="text-[12.5px] font-semibold text-bronze-700 underline underline-offset-2">
+              Ver matrículas
+            </a>
+          </header>
+
+          @if (carregandoFila()) {
+            <div class="flex items-center gap-3 px-5 py-8 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando vencimentos…</span>
+            </div>
+          } @else if (erroFila(); as mensagem) {
+            <div role="alert" class="flex flex-wrap items-center justify-between gap-3 px-5 py-6">
+              <span class="flex items-center gap-2.5 text-[13px] text-perigo-700">
+                <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="error"></mat-icon>{{ mensagem }}
+              </span>
+              <button type="button" (click)="carregarFila()"
+                      class="text-[12.5px] font-semibold text-perigo-700 underline underline-offset-2">
+                Tentar novamente
+              </button>
+            </div>
+          } @else if (fila()?.itens?.length) {
+            <ul class="m-0 list-none divide-y divide-linha p-0">
+              @for (v of fila()!.itens; track v.assinaturaId) {
+                <li class="flex items-center gap-3 px-5 py-3">
+                  <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-marca
+                               bg-fundo-2 text-[11px] font-bold tracking-wide text-tinta-2">
+                    {{ iniciais(v) }}
+                  </span>
+
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate text-[13.5px] font-semibold text-tinta">{{ v.alunoNome }}</p>
+                    <p class="truncate text-[12px] text-tinta-3">{{ v.planoNome }}</p>
+                  </div>
+
+                  @if (v.status === 'INADIMPLENTE') {
+                    <span class="h-etiqueta h-etiqueta--perigo shrink-0">Inadimplente</span>
+                  }
+
+                  <div class="shrink-0 text-right">
+                    <!-- O prazo em palavras, e não só o sinal do número:
+                         "em 3 dias" e "há 3 dias" ocupam o mesmo espaço e
+                         dizem coisas opostas. -->
+                    <p class="text-[12.5px] font-semibold"
+                       [class]="urgencia(v.diasParaVencer) === 'vencido' ? 'text-perigo-700'
+                              : urgencia(v.diasParaVencer) === 'proximo' ? 'text-alerta-700'
+                              : 'text-tinta-2'">
+                      {{ prazo(v.diasParaVencer) }}
+                    </p>
+                    <p class="text-[11.5px] tabular-nums text-tinta-3">
+                      {{ v.dataVencimento | date: 'dd/MM/yyyy' }}
+                    </p>
+                  </div>
+                </li>
+              }
+            </ul>
+
+            @if (restantesNaFila() > 0) {
+              <!-- Sem esta linha, a lista truncada parece a fila inteira,
+                   e é aí que o trabalho some de vista. -->
+              <div class="border-t border-linha px-5 py-3 text-center">
+                <a routerLink="/dashboard/matriculas"
+                   class="text-[12.5px] font-semibold text-bronze-700 underline underline-offset-2">
+                  e mais {{ restantesNaFila() }} na fila
+                </a>
+              </div>
+            }
+          } @else {
+            <div class="flex flex-col items-center gap-2 px-5 py-12 text-center">
+              <mat-icon class="!h-6 !w-6 !text-[24px] text-tinta-3" svgIcon="check_circle"></mat-icon>
+              <p class="text-[13.5px] font-semibold text-tinta">Nada vencendo por ora</p>
+              <p class="max-w-xs text-[12.5px] text-tinta-3">
+                Nenhuma matrícula vence nos próximos 15 dias.
+              </p>
+            </div>
+          }
+        </section>
+      }
+
+      <!-- Painel futuro: marcado como pendente em vez de simulado, para
+           ninguém confundir moldura com dado. -->
+      <div class="flex h-60 flex-col items-center justify-center gap-2 rounded-marca border border-dashed
+                  border-linha-forte bg-papel/60"
+           [class.lg:col-span-3]="!podeVerFila()">
         <mat-icon class="!h-6 !w-6 !text-[24px] text-tinta-3" svgIcon="show_chart"></mat-icon>
         <p class="text-[13px] font-medium text-tinta-2">Matrículas por mês</p>
-        <span class="h-etiqueta h-etiqueta--neutra">Em breve</span>
-      </div>
-      <div class="flex h-60 flex-col items-center justify-center gap-2 rounded-marca border border-dashed border-linha-forte bg-papel/60">
-        <mat-icon class="!h-6 !w-6 !text-[24px] text-tinta-3" svgIcon="event_upcoming"></mat-icon>
-        <p class="text-[13px] font-medium text-tinta-2">Próximos vencimentos</p>
         <span class="h-etiqueta h-etiqueta--neutra">Em breve</span>
       </div>
     </div>

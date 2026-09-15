@@ -1,4 +1,9 @@
-import { Assinatura, situacaoDaMatricula } from './matricula.model';
+import {
+  Assinatura,
+  descreverPrazo,
+  situacaoDaMatricula,
+  urgenciaDoPrazo,
+} from './matricula.model';
 
 function assinatura(parcial: Partial<Assinatura>): Assinatura {
   return {
@@ -57,5 +62,27 @@ describe('situacaoDaMatricula', () => {
   it('usa o sinal `vencida` da API, não o próprio cálculo', () => {
     expect(situacaoDaMatricula(assinatura({ vencida: true, dataVencimento: '2026-09-10' }), hoje))
       .toBe('VENCIDA');
+  });
+});
+
+describe('descreverPrazo', () => {
+  it('distingue atraso de prazo com palavras, não só com o sinal', () => {
+    expect(descreverPrazo(-3)).toBe('venceu há 3 dias');
+    expect(descreverPrazo(3)).toBe('vence em 3 dias');
+  });
+
+  it('usa ontem, hoje e amanhã no lugar de "1 dia"', () => {
+    expect(descreverPrazo(-1)).toBe('venceu ontem');
+    expect(descreverPrazo(0)).toBe('vence hoje');
+    expect(descreverPrazo(1)).toBe('vence amanhã');
+  });
+});
+
+describe('urgenciaDoPrazo', () => {
+  it('separa vencido, próximo e distante na janela de cobrança', () => {
+    expect(urgenciaDoPrazo(-1)).toBe('vencido');
+    expect(urgenciaDoPrazo(0)).toBe('proximo');
+    expect(urgenciaDoPrazo(7)).toBe('proximo');
+    expect(urgenciaDoPrazo(8)).toBe('distante');
   });
 });

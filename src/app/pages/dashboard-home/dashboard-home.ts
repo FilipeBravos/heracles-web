@@ -1,9 +1,20 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-import { ResumoDashboard } from '../../core/models';
+import { RouterLink } from '@angular/router';
+
+import {
+  FilaDeVencimentos,
+  ResumoDashboard,
+  Vencimento,
+  descreverPrazo,
+  urgenciaDoPrazo,
+} from '../../core/models';
+import { AssinaturaService } from '../../core/services/assinatura.service';
+import { AuthService } from '../../core/services/auth.service';
 import { DashboardService } from '../../core/services/dashboard.service';
 import { mensagemDeErro } from '../../core/services/erro-api';
 
@@ -19,11 +30,16 @@ interface CartaoEstatistica {
 @Component({
   selector: 'app-dashboard-home',
   standalone: true,
-  imports: [MatCardModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [MatCardModule, MatIconModule, MatProgressSpinnerModule, DatePipe, RouterLink],
   templateUrl: './dashboard-home.html',
 })
 export class DashboardHomeComponent implements OnInit {
   private readonly dashboardService = inject(DashboardService);
+  private readonly assinaturaService = inject(AssinaturaService);
+  private readonly auth = inject(AuthService);
+
+  /** Janela do painel de vencimentos. */
+  private readonly DIAS_DA_FILA = 15;
 
   private readonly moeda = new Intl.NumberFormat('pt-BR', {
     style: 'currency', currency: 'BRL', maximumFractionDigits: 0,
@@ -32,6 +48,30 @@ export class DashboardHomeComponent implements OnInit {
   readonly carregando = signal(true);
   readonly erro = signal<string | null>(null);
   readonly resumo = signal<ResumoDashboard | null>(null);
+
+  readonly fila = signal<FilaDeVencimentos | null>(null);
+  readonly carregandoFila = signal(true);
+  readonly erroFila = signal<string | null>(null);
+
+  /**
+   * A carteira de matrículas é da recepção e da administração: o professor
+   * não cobra ninguém, e a situação de pagamento de um aluno não é dado
+   * que ele precise ver. A API recusa a rota para o perfil dele — esconder
+   * o painel evita mostrar um erro no lugar de um painel que não é dele.
+   */
+  readonly podeVerFila = computed(() => {
+    const perfil = this.auth.usuario()?.tipoPerfil;
+    return perfil === 'ADMIN' || perfil === 'SECRETARIA';
+  });
+
+  /** Quantas ficaram de fora da lista mostrada. */
+  readonly restantesNaFila = computed(() => {
+    const fila = this.fila();
+    return fila ? Math.max(0, fila.total - fila.itens.length) : 0;
+  });
+
+  readonly prazo = descreverPrazo;
+  readonly urgencia = urgenciaDoPrazo;
 
   // Os numeros vem da API. Antes eram literais ("128", "42", "12", "5") que
   // apareciam iguais com tres ou tres mil alunos na base.
@@ -126,6 +166,35 @@ export class DashboardHomeComponent implements OnInit {
 
   ngOnInit(): void {
     this.carregar();
+    if (this.podeVerFila()) {
+      this.carregarFila();
+    } else {
+      this.carregandoFila.set(false);
+    }
+  }
+
+  carregarFila(): void {
+    this.carregandoFila.set(true);
+    this.erroFila.set(null);
+
+    this.assinaturaService.vencimentos(this.DIAS_DA_FILA).subscribe({
+      next: (fila) => {
+        this.fila.set(fila);
+        this.carregandoFila.set(false);
+      },
+      error: (erro) => {
+        this.erroFila.set(mensagemDeErro(erro, 'Não foi possível carregar os vencimentos.'));
+        this.carregandoFila.set(false);
+      },
+    });
+  }
+
+  /** Iniciais do aluno para o avatar da linha. */
+  iniciais(vencimento: Vencimento): string {
+    const partes = vencimento.alunoNome.trim().split(/\s+/);
+    const primeira = partes[0]?.[0] ?? '';
+    const ultima = partes.length > 1 ? partes[partes.length - 1][0] : '';
+    return (primeira + ultima).toUpperCase();
   }
 
   carregar(): void {
