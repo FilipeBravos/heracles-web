@@ -114,6 +114,15 @@ mat-icon svg {
   color: var(--color-perigo-700);
 }
 
+/* Amarelo e o terceiro estado da escala: ainda em dia, mas ja pede
+   acao — vencimento da semana, estoque a repor. Sem ele, "vence em
+   dois dias" e "vencida" leem iguais. */
+.h-etiqueta--alerta {
+  background: var(--color-alerta-50);
+  border-color: var(--color-alerta-200);
+  color: var(--color-alerta-700);
+}
+
 .h-etiqueta--acento {
   background: var(--color-bronze-100);
   border-color: var(--color-bronze-200);

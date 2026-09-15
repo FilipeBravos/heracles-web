@@ -39,10 +39,10 @@ export class DashboardHomeComponent implements OnInit {
     const dados = this.resumo();
     if (!dados) return [];
 
-    // Os quatro indicadores nao tem o mesmo peso: matricula nova e o
-    // numero que o gestor persegue, e aluno inativo e o que exige acao.
-    // Os outros dois sao contexto e ficam neutros de proposito — quando
-    // tudo e destaque, nada e.
+    // Aluno inativo e o unico que exige acao aqui; os outros dois sao
+    // contexto e ficam neutros de proposito — quando tudo e destaque,
+    // nada e. Matricula saiu desta faixa: com o schema matriculas em
+    // uso, ela tem numeros proprios e uma faixa so dela.
     return [
       {
         titulo: 'Alunos ativos', valor: dados.alunosAtivos, icon: 'groups',
@@ -51,10 +51,6 @@ export class DashboardHomeComponent implements OnInit {
       {
         titulo: 'Fichas atribuídas', valor: dados.fichasAtribuidas,
         icon: 'assignment_turned_in', tom: 'neutro', nota: 'alunos com treino vinculado',
-      },
-      {
-        titulo: 'Matrículas no mês', valor: dados.novasMatriculasNoMes,
-        icon: 'trending_up', tom: 'acento', nota: 'cadastros desde o dia 1º',
       },
       {
         titulo: 'Alunos inativos', valor: dados.alunosInativos, icon: 'person_off',
@@ -66,7 +62,41 @@ export class DashboardHomeComponent implements OnInit {
     ];
   });
 
-  /** Segunda faixa: o que a operação do dia precisa olhar. */
+  /**
+   * Segunda faixa: a carteira de matrículas.
+   *
+   * Inadimplente e vencida são coisas diferentes e não podem virar um
+   * número só: inadimplente é quem a secretaria marcou por falta de
+   * pagamento, vencida é quem simplesmente passou da data. As duas
+   * barram o acesso, mas a primeira já foi tratada e a segunda não.
+   */
+  readonly cartoesMatriculas = computed<CartaoEstatistica[]>(() => {
+    const dados = this.resumo();
+    if (!dados) return [];
+
+    return [
+      {
+        titulo: 'Matrículas no mês', valor: dados.novasMatriculasNoMes,
+        icon: 'trending_up', tom: 'acento', nota: 'iniciadas desde o dia 1º',
+      },
+      {
+        titulo: 'Inadimplentes', valor: dados.matriculasInadimplentes, icon: 'block',
+        tom: dados.matriculasInadimplentes > 0 ? 'perigo' : 'neutro',
+        nota: dados.matriculasInadimplentes > 0
+          ? 'em atraso, com acesso interrompido'
+          : 'nenhuma matrícula em atraso',
+      },
+      {
+        titulo: 'Vencidas', valor: dados.matriculasVencidas, icon: 'event_upcoming',
+        tom: dados.matriculasVencidas > 0 ? 'acento' : 'neutro',
+        nota: dados.matriculasVencidas > 0
+          ? 'passaram da data e precisam renovar'
+          : 'nenhuma matrícula vencida',
+      },
+    ];
+  });
+
+  /** Terceira faixa: o que a operação do dia precisa olhar. */
   readonly cartoesOperacao = computed<CartaoEstatistica[]>(() => {
     const dados = this.resumo();
     if (!dados) return [];

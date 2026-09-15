@@ -9,8 +9,8 @@
   @if (carregando()) {
     <!-- Esqueleto com a forma dos cartões: a página não salta quando os
          dados chegam, e a espera fica com uma duração aparente menor. -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      @for (i of [1, 2, 3, 4]; track i) {
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      @for (i of [1, 2, 3]; track i) {
         <div class="h-[132px] animate-pulse rounded-marca border border-linha bg-papel"></div>
       }
     </div>
@@ -27,7 +27,7 @@
       </button>
     </div>
   } @else {
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       @for (item of cartoes(); track item.titulo) {
         <article class="group relative overflow-hidden rounded-marca border border-linha bg-papel p-5">
           <!-- Fio superior: só os indicadores que pedem leitura ativa
@@ -54,8 +54,36 @@
       }
     </div>
 
-    <!-- Operação: balcão e salão. Segunda faixa porque responde a outra
-         pergunta — o topo é sobre alunos, esta é sobre o dia da unidade. -->
+    <!-- Matrículas: a carteira. Faixa própria porque responde a outra
+         pergunta — o topo é quem está cadastrado, esta é quem está pagando. -->
+    <h2 class="h-rotulo mt-8 mb-3">Matrículas</h2>
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      @for (item of cartoesMatriculas(); track item.titulo) {
+        <article class="relative overflow-hidden rounded-marca border border-linha bg-papel p-5">
+          @if (item.tom === 'acento') {
+            <span class="absolute inset-x-0 top-0 h-[3px] bg-bronze-500"></span>
+          } @else if (item.tom === 'perigo') {
+            <span class="absolute inset-x-0 top-0 h-[3px] bg-perigo-700"></span>
+          }
+
+          <div class="flex items-start justify-between gap-3">
+            <p class="h-rotulo">{{ item.titulo }}</p>
+            <mat-icon class="!h-[18px] !w-[18px] !text-[18px]"
+                      [class]="item.tom === 'acento' ? 'text-bronze-600'
+                             : item.tom === 'perigo' ? 'text-perigo-700' : 'text-tinta-3'"
+                      [svgIcon]="item.icon"></mat-icon>
+          </div>
+
+          <p class="mt-3 font-display text-[34px] font-bold leading-none tracking-tight tabular-nums text-tinta">
+            {{ item.valor }}
+          </p>
+          <p class="mt-2 text-[12px] leading-snug text-tinta-3">{{ item.nota }}</p>
+        </article>
+      }
+    </div>
+
+    <!-- Operação: balcão e salão. Terceira faixa porque responde a outra
+         pergunta — as de cima são sobre alunos, esta é sobre o dia da unidade. -->
     <h2 class="h-rotulo mt-8 mb-3">Operação</h2>
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       @for (item of cartoesOperacao(); track item.titulo) {

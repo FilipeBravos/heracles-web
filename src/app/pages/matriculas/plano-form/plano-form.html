@@ -1,0 +1,90 @@
+<div>
+  <div class="border-b border-linha px-6 py-5">
+    <h2 mat-dialog-title class="!m-0 !p-0 font-display !text-[22px] !font-bold !leading-tight text-tinta">
+      {{ isEditMode ? 'Editar plano' : 'Novo plano' }}
+    </h2>
+    <p class="mt-1 text-[12.5px] text-tinta-3">
+      O plano define o valor, de quanto em quanto tempo a matrícula vence e onde o aluno pode treinar.
+    </p>
+  </div>
+
+  <mat-dialog-content class="!px-6 !pt-5 !pb-2">
+    @if (erro(); as mensagem) {
+      <div role="alert"
+           class="mb-4 flex items-start gap-2.5 rounded-marca border border-perigo-200 bg-perigo-50 px-4 py-3">
+        <mat-icon class="!mt-px !h-[18px] !w-[18px] !text-[18px] text-perigo-700" svgIcon="error"></mat-icon>
+        <span class="text-[12.5px] leading-snug text-perigo-700">{{ mensagem }}</span>
+      </div>
+    }
+
+    <form [formGroup]="form" class="mt-2 flex flex-col gap-4" (ngSubmit)="salvar()">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Nome do plano</mat-label>
+        <input matInput id="nome" formControlName="nome" placeholder="Ex: Mensal Centro">
+        @if (form.controls.nome.touched && form.controls.nome.invalid) {
+          <mat-error>Informe o nome.</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Valor mensal</mat-label>
+          <span matTextPrefix class="pr-1 text-tinta-3">R$&nbsp;</span>
+          <input matInput id="valorMensal" type="number" inputmode="decimal" min="0.01" step="0.01"
+                 formControlName="valorMensal" placeholder="0,00">
+          @if (form.controls.valorMensal.touched && form.controls.valorMensal.invalid) {
+            <mat-error>Informe um valor maior que zero.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Cobrança</mat-label>
+          <mat-select id="tipoCobranca" formControlName="tipoCobranca">
+            @for (t of tiposCobranca; track t.valor) {
+              <mat-option [value]="t.valor">{{ t.rotulo }}</mat-option>
+            }
+          </mat-select>
+          <mat-hint>É o período que a renovação avança.</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <div>
+        <p class="h-rotulo !mb-2 !px-0">Unidades que o plano cobre</p>
+
+        @if (carregandoUnidades()) {
+          <div class="flex items-center gap-3 py-3 text-[13px] text-tinta-3">
+            <mat-spinner diameter="18"></mat-spinner><span>Carregando unidades…</span>
+          </div>
+        } @else if (unidades().length === 0) {
+          <div class="rounded-marca border border-dashed border-linha-forte px-5 py-6 text-center">
+            <p class="text-[13px] text-tinta-2">Nenhuma unidade cadastrada.</p>
+            <p class="mt-1 text-[12.5px] text-tinta-3">Cadastre uma unidade antes de criar planos.</p>
+          </div>
+        } @else {
+          <div class="flex flex-col gap-1 rounded-marca border border-linha bg-fundo px-4 py-3">
+            @for (u of unidades(); track u.id) {
+              <mat-checkbox [checked]="estaSelecionada(u.id)" (change)="alternarUnidade(u.id)">
+                <span class="text-[13.5px] text-tinta">{{ u.nome }}</span>
+                <span class="ml-2 text-[12px] text-tinta-3">{{ u.tipo === 'ACADEMIA' ? 'Academia' : 'CrossFit' }}</span>
+              </mat-checkbox>
+            }
+          </div>
+          @if (semUnidade) {
+            <p class="mt-2 text-[12.5px] text-perigo-700">
+              Selecione ao menos uma unidade: um plano sem unidade não dá acesso a lugar nenhum.
+            </p>
+          }
+        }
+      </div>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="!gap-2 border-t border-linha !px-6 !py-4">
+    <button mat-button mat-dialog-close type="button" class="!text-tinta-2">Cancelar</button>
+    <button mat-flat-button color="primary" type="button" class="!px-5"
+            [disabled]="form.invalid || semUnidade || enviando()" (click)="salvar()">
+      @if (enviando()) { <mat-spinner diameter="20"></mat-spinner> }
+      @else { {{ isEditMode ? 'Salvar alterações' : 'Cadastrar plano' }} }
+    </button>
+  </mat-dialog-actions>
+</div>

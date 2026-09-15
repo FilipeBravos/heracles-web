@@ -1,6 +1,7 @@
 export * from './auth.model';
 export * from './dashboard.model';
 export * from './erro-api.model';
+export * from './matricula.model';
 export * from './operacoes.model';
 export * from './pagina.model';
 export * from './treino.model';

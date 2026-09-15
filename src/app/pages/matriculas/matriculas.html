@@ -1,0 +1,239 @@
+<div class="mx-auto max-w-[1180px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+  <header class="h-cabecalho">
+    <div>
+      <h1>Matrículas</h1>
+      <p>Planos contratáveis e a matrícula de cada aluno. O vencimento é calculado pelo período do plano.</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button mat-stroked-button class="!h-11 !px-4" (click)="abrirConferenciaDeAcesso()">
+        <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="how_to_reg"></mat-icon>
+        Conferir acesso
+      </button>
+      <button mat-flat-button color="primary" class="!h-11 !px-5" (click)="abrirMatricula()">
+        <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="group_add"></mat-icon>
+        Nova matrícula
+      </button>
+    </div>
+  </header>
+
+  <mat-tab-group (selectedIndexChange)="aoTrocarAba($event)" animationDuration="0ms">
+    <!-- ============ Matrículas ============ -->
+    <mat-tab label="Matrículas">
+      <div class="pt-5">
+        @if (erroAssinaturas(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="listarAssinaturas()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        }
+
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="assinaturas()" class="h-tabela">
+              <ng-container matColumnDef="aluno">
+                <th mat-header-cell *matHeaderCellDef>Aluno</th>
+                <td mat-cell *matCellDef="let a" class="font-semibold text-tinta">{{ a.alunoNome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="plano">
+                <th mat-header-cell *matHeaderCellDef>Plano</th>
+                <td mat-cell *matCellDef="let a">
+                  <p class="text-tinta">{{ a.planoNome }}</p>
+                  <p class="text-[12px] tabular-nums text-tinta-3">{{ a.valorMensal | currency: 'BRL' }} /mês</p>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="origem">
+                <th mat-header-cell *matHeaderCellDef>Origem</th>
+                <td mat-cell *matCellDef="let a">
+                  <span class="text-tinta-2">{{ rotuloOrigem(a) }}</span>
+                  @if (a.tokenParceiro) {
+                    <p class="text-[12px] text-tinta-3">{{ a.tokenParceiro }}</p>
+                  }
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="vencimento">
+                <th mat-header-cell *matHeaderCellDef>Vencimento</th>
+                <td mat-cell *matCellDef="let a" class="whitespace-nowrap tabular-nums text-tinta-2">
+                  {{ a.dataVencimento | date: 'dd/MM/yyyy' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="situacao">
+                <th mat-header-cell *matHeaderCellDef>Situação</th>
+                <td mat-cell *matCellDef="let a">
+                  <span class="h-etiqueta" [class]="classeSituacao(a)">{{ rotuloSituacao(a) }}</span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="acoes">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Ações</th>
+                <td mat-cell *matCellDef="let a" class="!text-right whitespace-nowrap">
+                  <!-- Uma matrícula cancelada não tem ação: para voltar, o
+                       aluno é matriculado de novo. -->
+                  @if (a.status !== 'CANCELADA') {
+                    <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-ok-700"
+                            (click)="renovar(a, $event)"
+                            matTooltip="Registrar pagamento e renovar" aria-label="Renovar matrícula">
+                      <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="autorenew"></mat-icon>
+                    </button>
+                    @if (a.status === 'ATIVA') {
+                      <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-alerta-700"
+                              (click)="marcarInadimplente(a, $event)"
+                              matTooltip="Marcar como inadimplente" aria-label="Marcar como inadimplente">
+                        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="block"></mat-icon>
+                      </button>
+                    }
+                    <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-perigo-700"
+                            (click)="cancelar(a, $event)"
+                            matTooltip="Cancelar matrícula" aria-label="Cancelar matrícula">
+                      <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="delete"></mat-icon>
+                    </button>
+                  } @else {
+                    <span class="text-[12px] text-tinta-3">
+                      Cancelada em {{ a.dataCancelamento | date: 'dd/MM/yyyy' }}
+                    </span>
+                  }
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasAssinatura"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasAssinatura"></tr>
+            </table>
+          </div>
+
+          @if (carregandoAssinaturas()) {
+            <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando matrículas…</span>
+            </div>
+          } @else if (assinaturas().length === 0 && !erroAssinaturas()) {
+            <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="card_membership"></mat-icon>
+              <p class="text-[14px] font-semibold text-tinta">Nenhuma matrícula registrada</p>
+              <p class="max-w-sm text-[13px] text-tinta-3">
+                Cadastre um plano na aba ao lado e matricule os alunos para acompanhar vencimento e acesso.
+              </p>
+              <button mat-flat-button color="primary" class="!mt-1" (click)="abrirMatricula()">
+                <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="group_add"></mat-icon>
+                Nova matrícula
+              </button>
+            </div>
+          }
+
+          @if (totalAssinaturas() > 0) {
+            <mat-paginator [length]="totalAssinaturas()" [pageIndex]="paginaAssinaturas()" [pageSize]="20"
+                           [pageSizeOptions]="[10, 20, 50]" (page)="mudarPaginaAssinaturas($event)"></mat-paginator>
+          }
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- ============ Planos ============ -->
+    <mat-tab label="Planos">
+      <div class="pt-5">
+        <div class="mb-4 flex justify-end">
+          <button mat-stroked-button (click)="abrirFormularioPlano(null)">
+            <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+            Novo plano
+          </button>
+        </div>
+
+        @if (erroPlanos(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="listarPlanos()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        }
+
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="planos()" class="h-tabela">
+              <ng-container matColumnDef="nome">
+                <th mat-header-cell *matHeaderCellDef>Plano</th>
+                <td mat-cell *matCellDef="let p" class="font-semibold text-tinta">{{ p.nome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="valor">
+                <th mat-header-cell *matHeaderCellDef>Valor mensal</th>
+                <td mat-cell *matCellDef="let p" class="whitespace-nowrap tabular-nums font-semibold text-tinta">
+                  {{ p.valorMensal | currency: 'BRL' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="cobranca">
+                <th mat-header-cell *matHeaderCellDef>Cobrança</th>
+                <td mat-cell *matCellDef="let p" class="text-tinta-2">{{ rotuloCobranca(p) }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="unidades">
+                <th mat-header-cell *matHeaderCellDef>Dá acesso a</th>
+                <td mat-cell *matCellDef="let p" class="text-tinta-2">{{ unidadesDoPlano(p) }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="situacao">
+                <th mat-header-cell *matHeaderCellDef>Situação</th>
+                <td mat-cell *matCellDef="let p">
+                  <span class="h-etiqueta" [class]="p.ativo ? 'h-etiqueta--ok' : 'h-etiqueta--neutra'">
+                    {{ p.ativo ? 'Em oferta' : 'Fora de linha' }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="acoes">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Ações</th>
+                <td mat-cell *matCellDef="let p" class="!text-right whitespace-nowrap">
+                  <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
+                          (click)="abrirFormularioPlano(p); $event.stopPropagation()"
+                          matTooltip="Editar plano" aria-label="Editar plano">
+                    <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="edit"></mat-icon>
+                  </button>
+                  <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-perigo-700"
+                          (click)="alternarAtivoPlano(p, $event)"
+                          [matTooltip]="p.ativo ? 'Tirar de linha' : 'Voltar a oferecer'"
+                          [attr.aria-label]="p.ativo ? 'Tirar de linha' : 'Voltar a oferecer'">
+                    <mat-icon class="!h-5 !w-5 !text-[20px]" [svgIcon]="p.ativo ? 'block' : 'check_circle'"></mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasPlano"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasPlano"></tr>
+            </table>
+          </div>
+
+          @if (carregandoPlanos()) {
+            <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando planos…</span>
+            </div>
+          } @else if (planos().length === 0 && !erroPlanos()) {
+            <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="card_membership"></mat-icon>
+              <p class="text-[14px] font-semibold text-tinta">Nenhum plano cadastrado</p>
+              <p class="max-w-sm text-[13px] text-tinta-3">
+                O plano define o valor, o período de vencimento e as unidades em que o aluno pode treinar.
+              </p>
+              <button mat-flat-button color="primary" class="!mt-1" (click)="abrirFormularioPlano(null)">
+                <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+                Novo plano
+              </button>
+            </div>
+          }
+
+          @if (totalPlanos() > 0) {
+            <mat-paginator [length]="totalPlanos()" [pageIndex]="paginaPlanos()" [pageSize]="20"
+                           [pageSizeOptions]="[10, 20, 50]" (page)="mudarPaginaPlanos($event)"></mat-paginator>
+          }
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>
