@@ -1,0 +1,88 @@
+<div>
+  <div class="border-b border-linha px-6 py-5">
+    <h2 mat-dialog-title class="!m-0 !p-0 font-display !text-[22px] !font-bold !leading-tight text-tinta">
+      {{ isEditMode ? 'Editar produto' : 'Novo produto' }}
+    </h2>
+    <p class="mt-1 text-[12.5px] text-tinta-3">Item vendido no balcão. O estoque é por unidade.</p>
+  </div>
+
+  <mat-dialog-content class="!px-6 !pt-5 !pb-2">
+    @if (erro(); as mensagem) {
+      <div role="alert"
+           class="mb-4 flex items-start gap-2.5 rounded-marca border border-perigo-200 bg-perigo-50 px-4 py-3">
+        <mat-icon class="!mt-px !h-[18px] !w-[18px] !text-[18px] text-perigo-700" svgIcon="error"></mat-icon>
+        <span class="text-[12.5px] leading-snug text-perigo-700">{{ mensagem }}</span>
+      </div>
+    }
+
+    @if (carregandoUnidades()) {
+      <div class="flex items-center gap-3 py-4 text-[13px] text-tinta-3">
+        <mat-spinner diameter="20"></mat-spinner><span>Carregando unidades…</span>
+      </div>
+    } @else if (unidades().length === 0) {
+      <div class="rounded-marca border border-dashed border-linha-forte px-5 py-6 text-center">
+        <p class="text-[13px] text-tinta-2">Nenhuma unidade cadastrada.</p>
+        <p class="mt-1 text-[12.5px] text-tinta-3">Cadastre uma unidade antes de registrar produtos.</p>
+      </div>
+    } @else {
+      <form [formGroup]="form" class="flex flex-col gap-4 mt-2" (ngSubmit)="salvar()">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Unidade</mat-label>
+          <mat-select id="unidadeId" formControlName="unidadeId">
+            @for (u of unidades(); track u.id) {
+              <mat-option [value]="u.id">{{ u.nome }}</mat-option>
+            }
+          </mat-select>
+          @if (form.controls.unidadeId.touched && form.controls.unidadeId.invalid) {
+            <mat-error>Escolha a unidade.</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Nome do produto</mat-label>
+            <input matInput id="nome" formControlName="nome" placeholder="Ex: Whey Protein 900g">
+            @if (form.controls.nome.touched && form.controls.nome.invalid) {
+              <mat-error>Informe o nome.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Marca</mat-label>
+            <input matInput id="marca" formControlName="marca" placeholder="Ex: Growth">
+          </mat-form-field>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Preço de venda</mat-label>
+            <span matTextPrefix class="pr-1 text-tinta-3">R$&nbsp;</span>
+            <input matInput id="precoVenda" type="number" inputmode="decimal" min="0.01" step="0.01"
+                   formControlName="precoVenda" placeholder="0,00">
+            @if (form.controls.precoVenda.touched && form.controls.precoVenda.invalid) {
+              <mat-error>Informe um preço maior que zero.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Estoque inicial</mat-label>
+            <input matInput id="quantidadeEstoque" type="number" inputmode="numeric" min="0" step="1"
+                   formControlName="quantidadeEstoque">
+            @if (isEditMode) {
+              <mat-hint>Alterado por entrada de estoque e por venda.</mat-hint>
+            }
+          </mat-form-field>
+        </div>
+      </form>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="!gap-2 border-t border-linha !px-6 !py-4">
+    <button mat-button mat-dialog-close type="button" class="!text-tinta-2">Cancelar</button>
+    <button mat-flat-button color="primary" type="button" class="!px-5"
+            [disabled]="form.invalid || enviando() || unidades().length === 0" (click)="salvar()">
+      @if (enviando()) { <mat-spinner diameter="20"></mat-spinner> }
+      @else { {{ isEditMode ? 'Salvar alterações' : 'Cadastrar produto' }} }
+    </button>
+  </mat-dialog-actions>
+</div>

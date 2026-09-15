@@ -1,0 +1,55 @@
+<div>
+  <div class="border-b border-linha px-6 py-5">
+    <h2 mat-dialog-title class="!m-0 !p-0 font-display !text-[22px] !font-bold !leading-tight text-tinta">
+      {{ isEditMode ? 'Editar unidade' : 'Nova unidade' }}
+    </h2>
+    <p class="mt-1 text-[12.5px] text-tinta-3">Endereço da rede onde ficam alunos, produtos e equipamentos.</p>
+  </div>
+
+  <mat-dialog-content class="!px-6 !pt-5 !pb-2">
+    @if (erro(); as mensagem) {
+      <div role="alert"
+           class="mb-4 flex items-start gap-2.5 rounded-marca border border-perigo-200 bg-perigo-50 px-4 py-3">
+        <mat-icon class="!mt-px !h-[18px] !w-[18px] !text-[18px] text-perigo-700" svgIcon="error"></mat-icon>
+        <span class="text-[12.5px] leading-snug text-perigo-700">{{ mensagem }}</span>
+      </div>
+    }
+
+    <form [formGroup]="form" class="flex flex-col gap-4 mt-2" (ngSubmit)="salvar()">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Nome da unidade</mat-label>
+        <input matInput id="nome" formControlName="nome" placeholder="Ex: Unidade Centro">
+        @if (form.controls.nome.touched && form.controls.nome.invalid) {
+          <mat-error>Informe o nome da unidade.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Tipo</mat-label>
+        <mat-select id="tipo" formControlName="tipo">
+          <mat-option value="ACADEMIA">Academia</mat-option>
+          <mat-option value="CROSSFIT">CrossFit</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Endereço</mat-label>
+        <input matInput id="endereco" formControlName="endereco" placeholder="Rua, número, bairro">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Telefone</mat-label>
+        <input matInput id="telefone" formControlName="telefone" placeholder="(11) 3333-0000">
+      </mat-form-field>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="!gap-2 border-t border-linha !px-6 !py-4">
+    <button mat-button mat-dialog-close type="button" class="!text-tinta-2">Cancelar</button>
+    <button mat-flat-button color="primary" type="button" class="!px-5"
+            [disabled]="form.invalid || enviando()" (click)="salvar()">
+      @if (enviando()) { <mat-spinner diameter="20"></mat-spinner> }
+      @else { {{ isEditMode ? 'Salvar alterações' : 'Cadastrar unidade' }} }
+    </button>
+  </mat-dialog-actions>
+</div>

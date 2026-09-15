@@ -1,13 +1,19 @@
-<div class="p-6">
-  <h2 mat-dialog-title class="!p-0 !mb-6 text-2xl font-bold text-gray-800">
-    {{ isEditMode ? 'Editar Ficha' : 'Nova Ficha' }}
-  </h2>
+<div>
+  <div class="border-b border-linha px-6 py-5">
+    <h2 mat-dialog-title class="!m-0 !p-0 font-display !text-[22px] !font-bold !leading-tight text-tinta">
+      {{ isEditMode ? 'Editar ficha' : 'Nova ficha' }}
+    </h2>
+    <p class="mt-1 text-[12.5px] text-tinta-3">
+      Ficha modelo: pode ser vinculada a vários alunos depois de salva.
+    </p>
+  </div>
 
-  <mat-dialog-content class="!p-0">
+  <mat-dialog-content class="!px-6 !pt-5 !pb-2">
     @if (erro(); as mensagem) {
-      <div class="flex items-start gap-2 p-3 mb-4 bg-red-50 border border-red-200 text-red-700 text-sm" role="alert">
-        <mat-icon class="!text-lg !w-5 !h-5">error_outline</mat-icon>
-        <span>{{ mensagem }}</span>
+      <div role="alert"
+           class="mb-4 flex items-start gap-2.5 rounded-marca border border-perigo-200 bg-perigo-50 px-4 py-3">
+        <mat-icon class="!mt-px !h-[18px] !w-[18px] !text-[18px] text-perigo-700" svgIcon="error"></mat-icon>
+        <span class="text-[12.5px] leading-snug text-perigo-700">{{ mensagem }}</span>
       </div>
     }
 
@@ -43,23 +49,28 @@
 
       <mat-divider class="my-4"></mat-divider>
 
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-bold text-gray-700 m-0">Exercícios da Ficha</h3>
-        <button mat-button color="primary" type="button" class="!rounded-none" (click)="adicionarExercicio()">
-          <mat-icon>add</mat-icon> Adicionar Exercício
+      <div class="mb-3 flex items-center justify-between">
+        <h3 class="h-rotulo !text-[11px]">Exercícios da ficha</h3>
+        <button mat-button color="primary" type="button" (click)="adicionarExercicio()">
+          <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+          Adicionar exercício
         </button>
       </div>
 
-      <div formArrayName="exercicios" class="flex flex-col gap-4 max-h-[35vh] overflow-y-auto pr-2">
+      <div formArrayName="exercicios" class="flex max-h-[38vh] flex-col gap-3 overflow-y-auto pr-1">
         @for (controle of exercicios.controls; track $index) {
-          <div [formGroupName]="$index" class="p-4 border border-gray-200 bg-gray-50 flex flex-col relative">
-            <button mat-icon-button color="warn" type="button" class="absolute top-2 right-2 z-10"
+          <div [formGroupName]="$index"
+               class="relative flex flex-col rounded-marca border border-linha bg-fundo p-4">
+            <button mat-icon-button type="button"
+                    class="!absolute !right-1.5 !top-1.5 z-10 !h-8 !w-8 !text-tinta-3 hover:!text-perigo-700"
                     aria-label="Remover exercício" (click)="removerExercicio($index)">
-              <mat-icon>close</mat-icon>
+              <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="close"></mat-icon>
             </button>
 
-            <p class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">
-              Exercício {{ $index + 1 }}
+            <p class="h-rotulo mb-1.5">Exercício {{ $index + 1 }}</p>
+            <p class="mb-2.5 text-[12px] leading-snug text-tinta-3">
+              Séries × repetições por série. Para prescrição exata, repita o
+              mesmo valor em mínimo e máximo.
             </p>
 
             <mat-form-field appearance="outline" class="w-full pr-10 mb-[-10px]">
@@ -67,22 +78,50 @@
               <input matInput formControlName="nome" placeholder="Ex: Supino Reto com Barra">
             </mat-form-field>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Três colunas para a prescrição numérica: rótulos curtos cabem
+                 sem truncar, e a carga ganha a linha seguinte por ser texto. -->
+            <div class="grid grid-cols-3 gap-3">
               <mat-form-field appearance="outline" class="w-full mb-[-10px]">
-                <mat-label>Repetições / Séries</mat-label>
-                <input matInput formControlName="repeticoes" placeholder="Ex: 4x10 a 12">
+                <mat-label>Séries</mat-label>
+                <input matInput type="number" inputmode="numeric" min="1" max="20"
+                       formControlName="series">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="w-full mb-[-10px]">
+                <mat-label>Mín.</mat-label>
+                <input matInput type="number" inputmode="numeric" min="1" max="500"
+                       formControlName="repeticoesMin">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="w-full mb-[-10px]">
+                <mat-label>Máx.</mat-label>
+                <input matInput type="number" inputmode="numeric" min="1" max="500"
+                       formControlName="repeticoesMax">
+              </mat-form-field>
+            </div>
+
+            @if (controle.hasError('faixaInvertida')) {
+              <p class="mb-2 mt-1 text-[12px] font-medium text-perigo-700">
+                O máximo de repetições não pode ser menor que o mínimo.
+              </p>
+            }
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <mat-form-field appearance="outline" class="w-full mb-[-10px]">
+                <mat-label>Carga</mat-label>
+                <input matInput formControlName="carga" placeholder="Ex: 70% 1RM, até a falha">
               </mat-form-field>
 
               <mat-form-field appearance="outline" class="w-full mb-[-10px]">
                 <mat-label>Observações</mat-label>
-                <input matInput formControlName="observacoes" placeholder="Ex: Carga progressiva">
+                <input matInput formControlName="observacoes" placeholder="Ex: Descanso de 90s">
               </mat-form-field>
             </div>
           </div>
         }
 
         @if (exercicios.length === 0) {
-          <div class="p-6 text-center border border-dashed border-gray-300 text-gray-500">
+          <div class="rounded-marca border border-dashed border-linha-forte px-6 py-8 text-center text-[13px] text-tinta-3">
             Nenhum exercício adicionado. A ficha precisa de pelo menos um.
           </div>
         }
@@ -90,15 +129,15 @@
     </form>
   </mat-dialog-content>
 
-  <mat-dialog-actions align="end" class="!p-0 !mt-8 pt-4 border-t border-gray-100">
-    <button mat-button mat-dialog-close type="button" class="!rounded-none text-gray-500">Cancelar</button>
-    <button mat-flat-button color="primary" type="button" class="!rounded-none"
+  <mat-dialog-actions align="end" class="!gap-2 border-t border-linha !px-6 !py-4">
+    <button mat-button mat-dialog-close type="button" class="!text-tinta-2">Cancelar</button>
+    <button mat-flat-button color="primary" type="button" class="!px-5"
             [disabled]="form.invalid || exercicios.length === 0 || enviando()"
             (click)="salvar()">
       @if (enviando()) {
         <mat-spinner diameter="20"></mat-spinner>
       } @else {
-        {{ isEditMode ? 'Salvar Alterações' : 'Salvar Treino Completo' }}
+        {{ isEditMode ? 'Salvar alterações' : 'Salvar ficha' }}
       }
     </button>
   </mat-dialog-actions>
