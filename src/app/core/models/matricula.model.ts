@@ -169,3 +169,80 @@ export function urgenciaDoPrazo(diasParaVencer: number): 'vencido' | 'proximo' |
   if (diasParaVencer < 0) return 'vencido';
   return diasParaVencer <= DIAS_PARA_VENCER ? 'proximo' : 'distante';
 }
+
+/** Um mês da série do gráfico. `mes` vem como `yyyy-MM`. */
+export interface PontoMensal {
+  mes: string;
+  quantidade: number;
+}
+
+export interface HistoricoMensal {
+  meses: number;
+  /** Soma do período — o cabeçalho mostra sem obrigar a somar as barras. */
+  total: number;
+  pontos: PontoMensal[];
+}
+
+const MESES_ABREVIADOS = [
+  'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
+  'jul', 'ago', 'set', 'out', 'nov', 'dez',
+];
+
+/**
+ * Rótulo curto do eixo: "set".
+ *
+ * Tabela fixa em vez de `toLocaleDateString`: o navegador devolve com
+ * ponto ("set.") em alguns locales e o eixo fica sujo, e o idioma da
+ * interface não é o do navegador.
+ */
+export function rotularMes(mesIso: string): string {
+  const mes = Number(mesIso.slice(5, 7));
+  return MESES_ABREVIADOS[mes - 1] ?? mesIso;
+}
+
+/** Ano com dois dígitos, para ancorar a virada. */
+export function rotularAno(mesIso: string): string {
+  return mesIso.slice(2, 4);
+}
+
+/** Nome por extenso, para o rótulo acessível e o tooltip. */
+export function descreverMes(mesIso: string): string {
+  const extenso = [
+    'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+    'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+  ];
+  const mes = Number(mesIso.slice(5, 7));
+  return `${extenso[mes - 1] ?? mesIso} de ${mesIso.slice(0, 4)}`;
+}
+
+export interface EscalaGrafico {
+  /** Topo do eixo: sempre um número redondo, nunca o maior valor cru. */
+  maximo: number;
+  /** As marcas do eixo, de baixo para cima, incluindo 0 e o máximo. */
+  marcas: number[];
+}
+
+/**
+ * Escala do eixo vertical, arredondada para números limpos.
+ *
+ * Um eixo que termina exatamente no maior valor faz a barra mais alta
+ * encostar no topo e tira a referência de quanto falta; e uma marca como
+ * "13" não ajuda ninguém a ler as outras barras. Daí o passo em 1, 2, 5
+ * ou 10 e o topo no próximo múltiplo.
+ */
+export function escalaDoGrafico(valores: number[]): EscalaGrafico {
+  const maior = Math.max(0, ...valores);
+
+  // Série toda zerada ainda precisa de um eixo: sem ele não há o que
+  // desenhar, e o painel pareceria quebrado em vez de vazio.
+  if (maior === 0) return { maximo: 4, marcas: [0, 2, 4] };
+
+  const alvo = maior / 4; // queremos cerca de quatro faixas
+  const magnitude = 10 ** Math.floor(Math.log10(alvo));
+  const passo = ([1, 2, 5, 10].find((m) => magnitude * m >= alvo) ?? 10) * magnitude;
+  const maximo = Math.ceil(maior / passo) * passo;
+
+  const marcas: number[] = [];
+  for (let v = 0; v <= maximo + 1e-9; v += passo) marcas.push(Math.round(v));
+  return { maximo, marcas };
+}

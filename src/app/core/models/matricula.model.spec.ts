@@ -1,6 +1,10 @@
 import {
   Assinatura,
+  descreverMes,
   descreverPrazo,
+  escalaDoGrafico,
+  rotularAno,
+  rotularMes,
   situacaoDaMatricula,
   urgenciaDoPrazo,
 } from './matricula.model';
@@ -84,5 +88,40 @@ describe('urgenciaDoPrazo', () => {
     expect(urgenciaDoPrazo(0)).toBe('proximo');
     expect(urgenciaDoPrazo(7)).toBe('proximo');
     expect(urgenciaDoPrazo(8)).toBe('distante');
+  });
+});
+
+describe('escalaDoGrafico', () => {
+  it('sobe o topo até um número redondo em vez de parar no maior valor', () => {
+    // Uma barra que encosta no topo tira a referência de quanto falta.
+    expect(escalaDoGrafico([5, 8, 3, 12, 11]).maximo).toBe(15);
+    expect(escalaDoGrafico([5, 8, 3, 12, 11]).marcas).toEqual([0, 5, 10, 15]);
+  });
+
+  it('usa passo pequeno em série pequena', () => {
+    expect(escalaDoGrafico([1, 2, 3]).marcas).toEqual([0, 1, 2, 3]);
+  });
+
+  it('acompanha a ordem de grandeza', () => {
+    expect(escalaDoGrafico([120, 340, 90]).maximo).toBe(400);
+    expect(escalaDoGrafico([1200, 3400]).maximo).toBe(4000);
+  });
+
+  it('série toda zerada ainda tem eixo', () => {
+    // Sem eixo o painel pareceria quebrado, em vez de vazio.
+    expect(escalaDoGrafico([0, 0, 0])).toEqual({ maximo: 4, marcas: [0, 2, 4] });
+    expect(escalaDoGrafico([])).toEqual({ maximo: 4, marcas: [0, 2, 4] });
+  });
+});
+
+describe('rótulos de mês', () => {
+  it('abrevia sem ponto e sem depender do locale do navegador', () => {
+    expect(rotularMes('2026-09')).toBe('set');
+    expect(rotularMes('2025-10')).toBe('out');
+    expect(rotularAno('2025-10')).toBe('25');
+  });
+
+  it('descreve por extenso para leitor de tela e tooltip', () => {
+    expect(descreverMes('2026-03')).toBe('março de 2026');
   });
 });
