@@ -8,11 +8,13 @@ import { RouterLink } from '@angular/router';
 
 import {
   FilaDeVencimentos,
+  HistoricoMensal,
   ResumoDashboard,
   Vencimento,
   descreverPrazo,
   urgenciaDoPrazo,
 } from '../../core/models';
+import { GraficoMatriculasComponent } from './grafico-matriculas/grafico-matriculas';
 import { AssinaturaService } from '../../core/services/assinatura.service';
 import { AuthService } from '../../core/services/auth.service';
 import { DashboardService } from '../../core/services/dashboard.service';
@@ -30,7 +32,14 @@ interface CartaoEstatistica {
 @Component({
   selector: 'app-dashboard-home',
   standalone: true,
-  imports: [MatCardModule, MatIconModule, MatProgressSpinnerModule, DatePipe, RouterLink],
+  imports: [
+    MatCardModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    DatePipe,
+    RouterLink,
+    GraficoMatriculasComponent,
+  ],
   templateUrl: './dashboard-home.html',
 })
 export class DashboardHomeComponent implements OnInit {
@@ -41,6 +50,9 @@ export class DashboardHomeComponent implements OnInit {
   /** Janela do painel de vencimentos. */
   private readonly DIAS_DA_FILA = 15;
 
+  /** Quantos meses o gráfico cobre. */
+  private readonly MESES_DO_GRAFICO = 12;
+
   private readonly moeda = new Intl.NumberFormat('pt-BR', {
     style: 'currency', currency: 'BRL', maximumFractionDigits: 0,
   });
@@ -49,6 +61,10 @@ export class DashboardHomeComponent implements OnInit {
   readonly erro = signal<string | null>(null);
   readonly resumo = signal<ResumoDashboard | null>(null);
 
+  readonly historico = signal<HistoricoMensal | null>(null);
+  readonly carregandoHistorico = signal(true);
+  readonly erroHistorico = signal<string | null>(null);
+
   readonly fila = signal<FilaDeVencimentos | null>(null);
   readonly carregandoFila = signal(true);
   readonly erroFila = signal<string | null>(null);
@@ -56,10 +72,15 @@ export class DashboardHomeComponent implements OnInit {
   /**
    * A carteira de matrículas é da recepção e da administração: o professor
    * não cobra ninguém, e a situação de pagamento de um aluno não é dado
-   * que ele precise ver. A API recusa a rota para o perfil dele — esconder
-   * o painel evita mostrar um erro no lugar de um painel que não é dele.
+   * que ele precise ver. Vale para os dois painéis daqui — a fila de
+   * vencimentos e o gráfico —, porque os dois saem de `/api/assinaturas`,
+   * que a API recusa para esse perfil. Esconder evita mostrar um erro no
+   * lugar de um painel que não é dele.
+   *
+   * Os cartões agregados seguem visíveis: eles vêm de `/api/dashboard`, e
+   * um número não nomeia ninguém.
    */
-  readonly podeVerFila = computed(() => {
+  readonly podeVerMatriculas = computed(() => {
     const perfil = this.auth.usuario()?.tipoPerfil;
     return perfil === 'ADMIN' || perfil === 'SECRETARIA';
   });
@@ -166,11 +187,30 @@ export class DashboardHomeComponent implements OnInit {
 
   ngOnInit(): void {
     this.carregar();
-    if (this.podeVerFila()) {
+
+    if (this.podeVerMatriculas()) {
+      this.carregarHistorico();
       this.carregarFila();
     } else {
+      this.carregandoHistorico.set(false);
       this.carregandoFila.set(false);
     }
+  }
+
+  carregarHistorico(): void {
+    this.carregandoHistorico.set(true);
+    this.erroHistorico.set(null);
+
+    this.assinaturaService.historicoMensal(this.MESES_DO_GRAFICO).subscribe({
+      next: (historico) => {
+        this.historico.set(historico);
+        this.carregandoHistorico.set(false);
+      },
+      error: (erro) => {
+        this.erroHistorico.set(mensagemDeErro(erro, 'Não foi possível carregar o histórico.'));
+        this.carregandoHistorico.set(false);
+      },
+    });
   }
 
   carregarFila(): void {

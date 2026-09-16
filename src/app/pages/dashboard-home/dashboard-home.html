@@ -110,10 +110,45 @@
       }
     </div>
 
-    <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+    @if (podeVerMatriculas()) {
+      <div class="mt-6 grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+      <!-- ============ Matrículas por mês ============ -->
+      <section class="rounded-marca border border-linha bg-papel" aria-labelledby="titulo-grafico">
+        <header class="flex flex-wrap items-baseline justify-between gap-3 border-b border-linha px-5 py-4">
+          <div>
+            <h2 id="titulo-grafico" class="h-rotulo">Matrículas por mês</h2>
+            <p class="mt-1 text-[12px] text-tinta-3">Últimos 12 meses, pela data de início.</p>
+          </div>
+          @if (historico(); as h) {
+            <!-- O total do período no cabeçalho: sem ele o leitor teria
+                 de somar doze barras de cabeça. -->
+            <p class="text-[12.5px] text-tinta-3">
+              <strong class="tabular-nums text-[15px] text-tinta">{{ h.total }}</strong> no período
+            </p>
+          }
+        </header>
+
+        @if (carregandoHistorico()) {
+          <div class="flex items-center gap-3 px-5 py-14 text-[13px] text-tinta-3">
+            <mat-spinner diameter="20"></mat-spinner><span>Carregando histórico…</span>
+          </div>
+        } @else if (erroHistorico(); as mensagem) {
+          <div role="alert" class="flex flex-wrap items-center justify-between gap-3 px-5 py-10">
+            <span class="flex items-center gap-2.5 text-[13px] text-perigo-700">
+              <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="carregarHistorico()"
+                    class="text-[12.5px] font-semibold text-perigo-700 underline underline-offset-2">
+              Tentar novamente
+            </button>
+          </div>
+        } @else if (historico(); as h) {
+          <app-grafico-matriculas [historico]="h"></app-grafico-matriculas>
+        }
+      </section>
+
       <!-- ============ Próximos vencimentos ============ -->
-      @if (podeVerFila()) {
-        <section class="rounded-marca border border-linha bg-papel lg:col-span-2"
+      <section class="rounded-marca border border-linha bg-papel"
                  aria-labelledby="titulo-vencimentos">
           <header class="flex flex-wrap items-center justify-between gap-3 border-b border-linha px-5 py-4">
             <div>
@@ -198,17 +233,7 @@
             </div>
           }
         </section>
-      }
-
-      <!-- Painel futuro: marcado como pendente em vez de simulado, para
-           ninguém confundir moldura com dado. -->
-      <div class="flex h-60 flex-col items-center justify-center gap-2 rounded-marca border border-dashed
-                  border-linha-forte bg-papel/60"
-           [class.lg:col-span-3]="!podeVerFila()">
-        <mat-icon class="!h-6 !w-6 !text-[24px] text-tinta-3" svgIcon="show_chart"></mat-icon>
-        <p class="text-[13px] font-medium text-tinta-2">Matrículas por mês</p>
-        <span class="h-etiqueta h-etiqueta--neutra">Em breve</span>
       </div>
-    </div>
+    }
   }
 </div>

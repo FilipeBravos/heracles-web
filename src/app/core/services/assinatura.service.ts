@@ -3,7 +3,14 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { Acesso, Assinatura, FilaDeVencimentos, MatricularForm, Pagina } from '../models';
+import {
+  Acesso,
+  Assinatura,
+  FilaDeVencimentos,
+  HistoricoMensal,
+  MatricularForm,
+  Pagina,
+} from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class AssinaturaService {
@@ -36,6 +43,12 @@ export class AssinaturaService {
   /** Cancelar não apaga: a assinatura vira CANCELADA com data. */
   cancelar(id: number): Observable<Assinatura> {
     return this.http.delete<Assinatura>(`${this.url}/${id}`);
+  }
+
+  /** Série do gráfico de matrículas por mês, do mais antigo ao atual. */
+  historicoMensal(meses = 12): Observable<HistoricoMensal> {
+    const params = new HttpParams().set('meses', meses);
+    return this.http.get<HistoricoMensal>(`${this.url}/historico-mensal`, { params });
   }
 
   /**
