@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatPaginatorIntl, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
@@ -11,6 +11,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Usuario } from '../../core/models';
 import { UsuarioService } from '../../core/services/usuario.service';
 import { mensagemDeErro } from '../../core/services/erro-api';
+import { PaginadorIntl } from '../../core/paginador-intl';
 import { AlunoFormComponent } from './aluno-form/aluno-form';
 import { VincularTreinoComponent } from './vincular-treino/vincular-treino';
 
@@ -26,13 +27,17 @@ import { VincularTreinoComponent } from './vincular-treino/vincular-treino';
     MatTooltipModule,
   ],
   templateUrl: './alunos.html',
+  // Rótulos do paginador em português. Providos aqui, e não na raiz:
+  // importar o paginador em app.config arrastava o módulo inteiro para
+  // o bundle inicial, que é carregado antes mesmo do login.
+  providers: [{ provide: MatPaginatorIntl, useClass: PaginadorIntl }],
 })
 export class AlunosComponent implements OnInit {
   private readonly usuarioService = inject(UsuarioService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
 
-  readonly displayedColumns = ['id', 'nome', 'cpf', 'email', 'treino', 'status', 'acoes'];
+  readonly displayedColumns = ['nome', 'cpf', 'treino', 'status', 'acoes'];
 
   readonly alunos = signal<Usuario[]>([]);
   readonly carregando = signal(true);
@@ -116,7 +121,21 @@ export class AlunosComponent implements OnInit {
     });
   }
 
-  nomesDasFichas(aluno: Usuario): string {
-    return aluno.treinos.map((treino) => treino.nome).join(', ');
+  /** Iniciais para o avatar da linha. */
+  iniciais(aluno: Usuario): string {
+    const partes = aluno.nome.trim().split(/\s+/).filter(Boolean);
+    const primeira = partes[0]?.[0] ?? '?';
+    const ultima = partes.length > 1 ? partes[partes.length - 1][0] : '';
+    return (primeira + ultima).toUpperCase();
+  }
+
+  /**
+   * A API guarda o CPF só com dígitos, para que a unicidade não dependa da
+   * pontuação. Na leitura, a máscara volta: é assim que se confere um CPF.
+   */
+  cpfFormatado(aluno: Usuario): string {
+    const digitos = aluno.cpf?.replace(/\D/g, '') ?? '';
+    if (digitos.length !== 11) return aluno.cpf ?? '';
+    return `${digitos.slice(0, 3)}.${digitos.slice(3, 6)}.${digitos.slice(6, 9)}-${digitos.slice(9)}`;
   }
 }

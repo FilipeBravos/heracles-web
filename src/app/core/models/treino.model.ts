@@ -9,13 +9,24 @@ export interface TreinoResumo {
 export interface Exercicio {
   id: number | null;
   nome: string;
-  repeticoes: string;
+  /** Numero de series prescritas. */
+  series: number;
+  /**
+   * Faixa de repeticoes por serie. Quando a prescricao e exata, min e max
+   * sao iguais; a formatacao para leitura fica em `descreverPrescricao`.
+   */
+  repeticoesMin: number;
+  repeticoesMax: number;
+  /** Prescricao de carga em texto ("ate a falha", "70% 1RM"), nao um peso. */
+  carga: string | null;
   observacoes: string | null;
   ordem: number;
 }
 
 export interface Treino extends TreinoResumo {
   exercicios: Exercicio[];
+  /** Repeticoes totais minimas da ficha, calculadas pela API. */
+  volumePrescritoMinimo: number;
 }
 
 /** Espelha TreinoRequest. O id do exercicio e opcional: nulo significa "novo". */
@@ -29,6 +40,25 @@ export interface TreinoForm {
 export interface ExercicioForm {
   id: number | null;
   nome: string;
-  repeticoes: string;
+  series: number;
+  repeticoesMin: number;
+  repeticoesMax: number;
+  carga: string | null;
   observacoes: string | null;
+}
+
+/**
+ * Formata a prescricao para leitura: "4x10 a 12" quando e faixa,
+ * "3x12" quando e exata.
+ *
+ * Fica junto do modelo para que a forma de escrever a prescricao seja uma
+ * decisao unica, e nao algo reinventado em cada template.
+ */
+export function descreverPrescricao(exercicio: Pick<Exercicio, 'series' | 'repeticoesMin' | 'repeticoesMax'>): string {
+  const repeticoes =
+    exercicio.repeticoesMax > exercicio.repeticoesMin
+      ? `${exercicio.repeticoesMin} a ${exercicio.repeticoesMax}`
+      : `${exercicio.repeticoesMin}`;
+
+  return `${exercicio.series}x${repeticoes}`;
 }

@@ -1,56 +1,104 @@
-<mat-sidenav-container class="h-screen">
-  <mat-sidenav mode="side" opened class="w-64 border-r border-gray-200 bg-white">
-    <div class="p-6">
-      <h2 class="text-2xl font-bold text-blue-600 tracking-tighter">HERÁCLES</h2>
-      <p class="text-xs text-gray-400 uppercase font-semibold mt-1">Gestão de Gym</p>
+<div class="flex h-screen overflow-hidden bg-fundo">
+  <!-- Barra superior: só existe abaixo de lg, onde a navegação vira gaveta. -->
+  <header class="fixed inset-x-0 top-0 z-30 flex h-14 items-center gap-3 border-b border-grafite-800
+                 bg-grafite-900 px-4 lg:hidden">
+    <button type="button" (click)="alternarMenu()"
+            class="-ml-1 flex h-10 w-10 items-center justify-center rounded-marca text-grafite-300 hover:text-white"
+            [attr.aria-expanded]="menuAberto()" aria-controls="nav-lateral" aria-label="Abrir navegação">
+      <mat-icon class="!h-6 !w-6 !text-[24px]" [svgIcon]="menuAberto() ? 'close' : 'menu'"></mat-icon>
+    </button>
+    <span class="font-display text-[20px] font-bold uppercase tracking-[0.08em] text-white">Herácles</span>
+  </header>
+
+  @if (menuAberto()) {
+    <div class="fixed inset-0 z-30 bg-grafite-950/60 lg:hidden" (click)="fecharMenu()" aria-hidden="true"></div>
+  }
+
+  <!-- ============ Navegação ============ -->
+  <aside id="nav-lateral"
+         class="fixed inset-y-0 left-0 z-40 flex w-[248px] shrink-0 flex-col bg-grafite-900 text-grafite-300
+                transition-transform duration-200 ease-out lg:static lg:translate-x-0"
+         [class.translate-x-0]="menuAberto()"
+         [class.-translate-x-full]="!menuAberto()">
+    <div class="px-5 pt-6 pb-5">
+      <h1 class="font-display text-[26px] font-bold uppercase leading-none tracking-[0.08em] text-white">
+        Herácles
+      </h1>
+      <div class="mt-2.5 h-px w-9 bg-bronze-600"></div>
+      <p class="mt-2.5 text-[10px] font-bold uppercase tracking-[0.14em] text-grafite-400">
+        Gestão de unidade
+      </p>
     </div>
 
-    <mat-nav-list class="px-3">
-      <a mat-list-item routerLink="/dashboard" routerLinkActive="bg-blue-50 text-blue-600"
-         [routerLinkActiveOptions]="{ exact: true }" class="!rounded-lg mb-1">
-        <mat-icon matListItemIcon>dashboard</mat-icon>
-        <span matListItemTitle>Dashboard</span>
+    <nav class="flex-1 overflow-y-auto px-3 py-2" aria-label="Navegação principal">
+      <a routerLink="/dashboard" routerLinkActive="ativo" [routerLinkActiveOptions]="{ exact: true }"
+         class="item-nav">
+        <span class="trilho"></span>
+        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="dashboard"></mat-icon>
+        <span>Visão geral</span>
       </a>
 
-      <a mat-list-item routerLink="/dashboard/alunos" routerLinkActive="bg-blue-50 text-blue-600"
-         class="!rounded-lg mb-1 text-gray-600">
-        <mat-icon matListItemIcon>groups</mat-icon>
-        <span matListItemTitle>Alunos</span>
+      <a routerLink="/dashboard/alunos" routerLinkActive="ativo" class="item-nav">
+        <span class="trilho"></span>
+        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="groups"></mat-icon>
+        <span>Alunos</span>
       </a>
 
-      <a mat-list-item routerLink="/dashboard/treinos" routerLinkActive="bg-blue-50 text-blue-600"
-         class="!rounded-lg mb-1 text-gray-600">
-        <mat-icon matListItemIcon>fitness_center</mat-icon>
-        <span matListItemTitle>Treinos</span>
+      <a routerLink="/dashboard/treinos" routerLinkActive="ativo" class="item-nav">
+        <span class="trilho"></span>
+        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="fitness_center"></mat-icon>
+        <span>Treinos</span>
       </a>
-    </mat-nav-list>
-  </mat-sidenav>
 
-  <mat-sidenav-content class="bg-gray-50">
-    <mat-toolbar class="!bg-white !border-b !border-gray-200 !h-16 flex justify-between px-8">
-      <!-- Nome real de quem esta logado, no lugar do "João Treinador" fixo. -->
-      <span class="text-gray-700 font-medium">
-        @if (usuario(); as u) {
-          Bem-vindo(a), {{ u.nome }}
-        }
-      </span>
+      <a routerLink="/dashboard/matriculas" routerLinkActive="ativo" class="item-nav">
+        <span class="trilho"></span>
+        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="card_membership"></mat-icon>
+        <span>Matrículas</span>
+      </a>
 
-      <div class="flex items-center gap-2">
-        @if (usuario(); as u) {
-          <span class="text-xs font-bold uppercase tracking-wide text-gray-400">{{ u.tipoPerfil }}</span>
-        }
-        <button mat-icon-button [matMenuTriggerFor]="menuUsuario" aria-label="Menu do usuário">
-          <mat-icon class="text-gray-500">account_circle</mat-icon>
+      <!-- Operação da unidade: balcão e salão. -->
+      <p class="h-rotulo !px-3 !pt-5 !pb-2 !text-grafite-400">Operação</p>
+
+      <a routerLink="/dashboard/loja" routerLinkActive="ativo" class="item-nav">
+        <span class="trilho"></span>
+        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="point_of_sale"></mat-icon>
+        <span>Loja</span>
+      </a>
+
+      <a routerLink="/dashboard/equipamentos" routerLinkActive="ativo" class="item-nav">
+        <span class="trilho"></span>
+        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="build"></mat-icon>
+        <span>Equipamentos</span>
+      </a>
+
+      <a routerLink="/dashboard/unidades" routerLinkActive="ativo" class="item-nav">
+        <span class="trilho"></span>
+        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="store"></mat-icon>
+        <span>Unidades</span>
+      </a>
+    </nav>
+
+    @if (usuario(); as u) {
+      <div class="flex items-center gap-3 border-t border-grafite-800 px-4 py-3.5">
+        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-marca bg-bronze-600
+                    text-[12.5px] font-bold tracking-wide text-white">
+          {{ iniciais() }}
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-[13px] font-semibold text-white">{{ u.nome }}</p>
+          <p class="truncate text-[11px] text-grafite-400">{{ perfilLegivel() }}</p>
+        </div>
+        <button mat-icon-button type="button" (click)="sair()"
+                matTooltip="Sair" aria-label="Sair do sistema"
+                class="!h-9 !w-9 shrink-0 !text-grafite-400 hover:!text-white">
+          <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="logout"></mat-icon>
         </button>
-        <mat-menu #menuUsuario="matMenu">
-          <button mat-menu-item (click)="sair()">
-            <mat-icon>logout</mat-icon>
-            <span>Sair</span>
-          </button>
-        </mat-menu>
       </div>
-    </mat-toolbar>
+    }
+  </aside>
 
+  <!-- ============ Conteúdo ============ -->
+  <main class="flex-1 overflow-y-auto pt-14 lg:pt-0">
     <router-outlet></router-outlet>
-  </mat-sidenav-content>
-</mat-sidenav-container>
+  </main>
+</div>

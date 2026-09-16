@@ -1,0 +1,210 @@
+<div class="mx-auto max-w-[1180px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+  <header class="h-cabecalho">
+    <div>
+      <h1>Loja</h1>
+      <p>Suplementos e acessórios vendidos no balcão. O estoque baixa a cada venda registrada.</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button mat-stroked-button class="!h-11 !px-4" (click)="abrirFormularioProduto(null)">
+        <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+        Novo produto
+      </button>
+      <button mat-flat-button color="primary" class="!h-11 !px-5" (click)="abrirPdv()">
+        <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="point_of_sale"></mat-icon>
+        Nova venda
+      </button>
+    </div>
+  </header>
+
+  <mat-tab-group (selectedIndexChange)="aoTrocarAba($event)" animationDuration="0ms">
+    <!-- ============ Produtos ============ -->
+    <mat-tab label="Produtos">
+      <div class="pt-5">
+        @if (erroProdutos(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="listarProdutos()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        }
+
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="produtos()" class="h-tabela">
+              <ng-container matColumnDef="nome">
+                <th mat-header-cell *matHeaderCellDef>Produto</th>
+                <td mat-cell *matCellDef="let p">
+                  <p class="font-semibold text-tinta">{{ p.nome }}</p>
+                  <p class="text-[12px] text-tinta-3">{{ p.marca || 'Sem marca' }} · {{ p.unidadeNome }}</p>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="preco">
+                <th mat-header-cell *matHeaderCellDef>Preço</th>
+                <td mat-cell *matCellDef="let p" class="whitespace-nowrap tabular-nums font-semibold text-tinta">
+                  {{ p.precoVenda | currency: 'BRL' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="estoque">
+                <th mat-header-cell *matHeaderCellDef>Estoque</th>
+                <td mat-cell *matCellDef="let p">
+                  <span class="tabular-nums font-semibold"
+                        [class]="estoqueBaixo(p) ? 'text-alerta-700' : 'text-tinta'">{{ p.quantidadeEstoque }}</span>
+                  @if (estoqueBaixo(p)) {
+                    <span class="ml-2 h-etiqueta h-etiqueta--neutra !border-alerta-200 !bg-alerta-50 !text-alerta-700">
+                      Repor
+                    </span>
+                  }
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="situacao">
+                <th mat-header-cell *matHeaderCellDef>Situação</th>
+                <td mat-cell *matCellDef="let p">
+                  <span class="h-etiqueta" [class]="p.ativo ? 'h-etiqueta--ok' : 'h-etiqueta--neutra'">
+                    {{ p.ativo ? 'À venda' : 'Fora de linha' }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="acoes">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Ações</th>
+                <td mat-cell *matCellDef="let p" class="!text-right whitespace-nowrap">
+                  <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
+                          (click)="registrarEntrada(p, $event)"
+                          matTooltip="Registrar entrada de estoque" aria-label="Registrar entrada de estoque">
+                    <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="add_box"></mat-icon>
+                  </button>
+                  <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
+                          (click)="abrirFormularioProduto(p)"
+                          matTooltip="Editar produto" aria-label="Editar produto">
+                    <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="edit"></mat-icon>
+                  </button>
+                  <button mat-icon-button class="!h-9 !w-9 !text-tinta-2"
+                          [class]="p.ativo ? 'hover:!text-perigo-700' : 'hover:!text-ok-700'"
+                          (click)="alternarAtivo(p, $event)"
+                          [matTooltip]="p.ativo ? 'Tirar de linha' : 'Voltar a vender'"
+                          [attr.aria-label]="p.ativo ? 'Tirar de linha' : 'Voltar a vender'">
+                    <mat-icon class="!h-5 !w-5 !text-[20px]"
+                              [svgIcon]="p.ativo ? 'block' : 'check_circle'"></mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasProduto"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasProduto"></tr>
+            </table>
+          </div>
+
+          @if (carregandoProdutos()) {
+            <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando produtos…</span>
+            </div>
+          } @else if (produtos().length === 0 && !erroProdutos()) {
+            <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="inventory_2"></mat-icon>
+              <p class="text-[14px] font-semibold text-tinta">Nenhum produto cadastrado</p>
+              <p class="max-w-sm text-[13px] text-tinta-3">
+                Cadastre o primeiro item para começar a registrar vendas no balcão.
+              </p>
+              <button mat-flat-button color="primary" class="!mt-1" (click)="abrirFormularioProduto(null)">
+                <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+                Novo produto
+              </button>
+            </div>
+          }
+
+          @if (totalProdutos() > 0) {
+            <mat-paginator [length]="totalProdutos()" [pageIndex]="paginaProdutos()" [pageSize]="20"
+                           [hidePageSize]="true" (page)="mudarPaginaProdutos($event)"></mat-paginator>
+          }
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- ============ Vendas ============ -->
+    <mat-tab label="Vendas">
+      <div class="pt-5">
+        @if (erroVendas(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="listarVendas()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        }
+
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="vendas()" class="h-tabela">
+              <ng-container matColumnDef="data">
+                <th mat-header-cell *matHeaderCellDef>Data</th>
+                <td mat-cell *matCellDef="let v" class="whitespace-nowrap tabular-nums text-tinta-2">
+                  {{ v.dataVenda | date: 'dd/MM/yy HH:mm' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="itens">
+                <th mat-header-cell *matHeaderCellDef>Itens</th>
+                <td mat-cell *matCellDef="let v">
+                  <p class="text-tinta">{{ resumoItens(v) }}</p>
+                  @if (v.alunoNome) {
+                    <p class="text-[12px] text-tinta-3">Aluno: {{ v.alunoNome }}</p>
+                  } @else {
+                    <p class="text-[12px] italic text-tinta-3">Venda avulsa</p>
+                  }
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="pagamento">
+                <th mat-header-cell *matHeaderCellDef>Pagamento</th>
+                <td mat-cell *matCellDef="let v">
+                  <span class="h-etiqueta h-etiqueta--neutra">{{ rotuloPagamento(v) }}</span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="operador">
+                <th mat-header-cell *matHeaderCellDef>Operador</th>
+                <td mat-cell *matCellDef="let v" class="text-tinta-2">{{ v.operadorNome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="total">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Total</th>
+                <td mat-cell *matCellDef="let v"
+                    class="!text-right whitespace-nowrap tabular-nums font-semibold text-tinta">
+                  {{ v.valorTotal | currency: 'BRL' }}
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasVenda"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasVenda"></tr>
+            </table>
+          </div>
+
+          @if (carregandoVendas()) {
+            <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando vendas…</span>
+            </div>
+          } @else if (vendas().length === 0 && !erroVendas()) {
+            <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="point_of_sale"></mat-icon>
+              <p class="text-[14px] font-semibold text-tinta">Nenhuma venda registrada</p>
+              <p class="max-w-sm text-[13px] text-tinta-3">As vendas fechadas no balcão aparecem aqui.</p>
+            </div>
+          }
+
+          @if (totalVendas() > 0) {
+            <mat-paginator [length]="totalVendas()" [pageIndex]="paginaVendas()" [pageSize]="20"
+                           [hidePageSize]="true" (page)="mudarPaginaVendas($event)"></mat-paginator>
+          }
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

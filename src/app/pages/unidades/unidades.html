@@ -1,0 +1,82 @@
+<div class="mx-auto max-w-[1180px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+  <header class="h-cabecalho">
+    <div>
+      <h1>Unidades</h1>
+      <p>Endereços da rede. Produtos e equipamentos pertencem a uma unidade.</p>
+    </div>
+    <button mat-flat-button color="primary" class="!h-11 !px-5" (click)="abrirFormulario(null)">
+      <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+      Nova unidade
+    </button>
+  </header>
+
+  @if (erro(); as mensagem) {
+    <div role="alert"
+         class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+      <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+      </span>
+      <button type="button" (click)="listar()"
+              class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+    </div>
+  }
+
+  <div class="h-painel overflow-hidden">
+    <div class="overflow-x-auto">
+      <table mat-table [dataSource]="unidades()" class="h-tabela">
+        <ng-container matColumnDef="nome">
+          <th mat-header-cell *matHeaderCellDef>Unidade</th>
+          <td mat-cell *matCellDef="let u" class="font-semibold text-tinta">{{ u.nome }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="tipo">
+          <th mat-header-cell *matHeaderCellDef>Tipo</th>
+          <td mat-cell *matCellDef="let u">
+            <span class="h-etiqueta h-etiqueta--neutra">{{ rotuloTipo(u) }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="endereco">
+          <th mat-header-cell *matHeaderCellDef>Endereço</th>
+          <td mat-cell *matCellDef="let u" class="text-tinta-2">{{ u.endereco || '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="telefone">
+          <th mat-header-cell *matHeaderCellDef>Telefone</th>
+          <td mat-cell *matCellDef="let u" class="whitespace-nowrap text-tinta-2">{{ u.telefone || '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="acoes">
+          <th mat-header-cell *matHeaderCellDef class="!text-right">Ações</th>
+          <td mat-cell *matCellDef="let u" class="!text-right">
+            <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
+                    (click)="abrirFormulario(u)" matTooltip="Editar unidade" aria-label="Editar unidade">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="edit"></mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+
+    @if (carregando()) {
+      <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+        <mat-spinner diameter="20"></mat-spinner><span>Carregando unidades…</span>
+      </div>
+    } @else if (unidades().length === 0 && !erro()) {
+      <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+        <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="store"></mat-icon>
+        <p class="text-[14px] font-semibold text-tinta">Nenhuma unidade cadastrada</p>
+        <p class="max-w-sm text-[13px] text-tinta-3">
+          Cadastre a primeira unidade — produtos e equipamentos são registrados por unidade.
+        </p>
+        <button mat-flat-button color="primary" class="!mt-1" (click)="abrirFormulario(null)">
+          <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+          Nova unidade
+        </button>
+      </div>
+    }
+  </div>
+</div>

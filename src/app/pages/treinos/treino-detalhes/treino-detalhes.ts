@@ -3,7 +3,7 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
-import { Treino } from '../../../core/models';
+import { Exercicio, Treino, descreverPrescricao } from '../../../core/models';
 
 @Component({
   selector: 'app-treino-detalhes',
@@ -14,4 +14,9 @@ import { Treino } from '../../../core/models';
 export class TreinoDetalhesComponent {
   readonly treino = inject<Treino>(MAT_DIALOG_DATA);
   readonly dialogRef = inject(MatDialogRef<TreinoDetalhesComponent>);
+
+  /** "4x10 a 12" ou "3x12", conforme a prescrição seja faixa ou exata. */
+  prescricao(exercicio: Exercicio): string {
+    return descreverPrescricao(exercicio);
+  }
 }

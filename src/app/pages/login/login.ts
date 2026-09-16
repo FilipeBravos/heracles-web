@@ -30,6 +30,8 @@ export class LoginComponent {
   private readonly rota = inject(ActivatedRoute);
 
   readonly enviando = signal(false);
+  /** Ver a senha digitada evita a terceira tentativa errada antes do bloqueio. */
+  readonly mostrarSenha = signal(false);
   readonly erro = signal<string | null>(null);
   readonly sessaoExpirada = signal(
     this.rota.snapshot.queryParamMap.get('sessaoExpirada') === 'true'
@@ -42,6 +44,10 @@ export class LoginComponent {
     email: ['', [Validators.required, Validators.email]],
     senha: ['', [Validators.required]],
   });
+
+  alternarSenha(): void {
+    this.mostrarSenha.update((visivel) => !visivel);
+  }
 
   entrar(): void {
     if (this.form.invalid || this.enviando()) {

@@ -1,0 +1,123 @@
+<div>
+  <div class="border-b border-linha px-6 py-5">
+    <h2 mat-dialog-title class="!m-0 !p-0 font-display !text-[22px] !font-bold !leading-tight text-tinta">
+      Nova matrícula
+    </h2>
+    <p class="mt-1 text-[12.5px] text-tinta-3">
+      Um aluno tem uma matrícula vigente por vez. Para trocar de plano, cancele a atual.
+    </p>
+  </div>
+
+  <mat-dialog-content class="!px-6 !pt-5 !pb-2">
+    @if (erro(); as mensagem) {
+      <div role="alert"
+           class="mb-4 flex items-start gap-2.5 rounded-marca border border-perigo-200 bg-perigo-50 px-4 py-3">
+        <mat-icon class="!mt-px !h-[18px] !w-[18px] !text-[18px] text-perigo-700" svgIcon="error"></mat-icon>
+        <span class="text-[12.5px] leading-snug text-perigo-700">{{ mensagem }}</span>
+      </div>
+    }
+
+    @if (carregando()) {
+      <div class="flex items-center gap-3 py-4 text-[13px] text-tinta-3">
+        <mat-spinner diameter="20"></mat-spinner><span>Carregando alunos e planos…</span>
+      </div>
+    } @else if (planos().length === 0) {
+      <div class="rounded-marca border border-dashed border-linha-forte px-5 py-6 text-center">
+        <p class="text-[13px] text-tinta-2">Nenhum plano em oferta.</p>
+        <p class="mt-1 text-[12.5px] text-tinta-3">Cadastre um plano na aba "Planos" antes de matricular.</p>
+      </div>
+    } @else {
+      <form [formGroup]="form" class="mt-2 flex flex-col gap-4" (ngSubmit)="matricular()">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Aluno</mat-label>
+          <mat-select id="alunoId" formControlName="alunoId">
+            @for (a of alunos(); track a.id) {
+              <mat-option [value]="a.id">{{ a.nome }}</mat-option>
+            }
+          </mat-select>
+          @if (alunos().length === 0) {
+            <mat-hint>Nenhum aluno cadastrado.</mat-hint>
+          }
+          @if (form.controls.alunoId.touched && form.controls.alunoId.invalid) {
+            <mat-error>Escolha o aluno.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Plano</mat-label>
+          <mat-select id="planoId" formControlName="planoId">
+            @for (p of planos(); track p.id) {
+              <mat-option [value]="p.id">{{ p.nome }}</mat-option>
+            }
+          </mat-select>
+          @if (form.controls.planoId.touched && form.controls.planoId.invalid) {
+            <mat-error>Escolha o plano.</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Origem</mat-label>
+            <mat-select id="origem" formControlName="origem">
+              @for (o of origens; track o.valor) {
+                <mat-option [value]="o.valor">{{ o.rotulo }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Início</mat-label>
+            <input matInput id="dataInicio" type="date" formControlName="dataInicio">
+            <mat-hint>Em branco vale hoje.</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <!-- Só aparece no parceiro: na matrícula direta o código não
+             significa nada, e a API recusa se vier preenchido. -->
+        @if (exigeToken()) {
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Código do aluno no parceiro</mat-label>
+            <input matInput id="tokenParceiro" formControlName="tokenParceiro" placeholder="Ex: GP-84210">
+            <mat-hint>É o que identifica o aluno no parceiro — sem ele não há como conferir o acesso.</mat-hint>
+            @if (form.controls.tokenParceiro.touched && form.controls.tokenParceiro.invalid) {
+              <mat-error>Informe o código.</mat-error>
+            }
+          </mat-form-field>
+        }
+
+        <!-- Conferência para o operador: quem calcula o vencimento é a API. -->
+        @if (planoEscolhido(); as plano) {
+          <div class="rounded-marca border border-linha bg-fundo px-4 py-3">
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+              <span class="text-[12.5px] text-tinta-3">
+                {{ plano.tipoCobranca === 'PACOTE_ANUAL' ? 'Pacote anual' : 'Mensal recorrente' }}
+              </span>
+              <span class="tabular-nums text-[15px] font-bold text-tinta">
+                {{ plano.valorMensal | currency: 'BRL' }} <span class="text-[12px] font-normal text-tinta-3">/mês</span>
+              </span>
+            </div>
+            <!-- O período sai daqui em dd/MM/yyyy sempre: o input nativo
+                 de data desenha no locale do navegador, que numa máquina
+                 em inglês mostraria 09/15/2026. -->
+            @if (vencimentoPrevisto(); as vencimento) {
+              <p class="mt-1.5 text-[12.5px] text-tinta-2">
+                De <strong class="tabular-nums text-tinta">{{ inicioEscolhido() | date: 'dd/MM/yyyy' }}</strong>
+                até <strong class="tabular-nums text-tinta">{{ vencimento | date: 'dd/MM/yyyy' }}</strong>
+              </p>
+            }
+            <p class="mt-1 text-[12px] text-tinta-3">Dá acesso a: {{ unidadesDoPlano(plano) }}</p>
+          </div>
+        }
+      </form>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="!gap-2 border-t border-linha !px-6 !py-4">
+    <button mat-button mat-dialog-close type="button" class="!text-tinta-2">Cancelar</button>
+    <button mat-flat-button color="primary" type="button" class="!px-5"
+            [disabled]="form.invalid || enviando() || planos().length === 0" (click)="matricular()">
+      @if (enviando()) { <mat-spinner diameter="20"></mat-spinner> }
+      @else { Matricular }
+    </button>
+  </mat-dialog-actions>
+</div>

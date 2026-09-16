@@ -1,11 +1,61 @@
-/*
- * Tailwind v4 entra por um arquivo .css proprio.
- *
- * Enquanto vivia dentro de styles.scss, o "@import" era interpretado pelo
- * Dart Sass, que o marca como deprecado e vai removê-lo na versao 3.0.
- * Como CSS puro, o processamento fica todo com o plugin postcss do Tailwind.
- *
- * Carregado depois de styles.scss para que as utilidades vencam os padroes
- * do tema do Angular Material, que e o comportamento que os templates assumem.
- */
 @import "tailwindcss";
+
+/* =============================================================
+   Tokens de marca do Herácles.
+   Declarados aqui porque o @theme do Tailwind v4 gera, do mesmo
+   token, tanto a variavel CSS quanto a utilidade (bg-, text-,
+   border-). Fonte unica: styles.scss consome as mesmas variaveis.
+   ============================================================= */
+@theme {
+  /* --- Grafite: a cor institucional. Navegacao e texto. --- */
+  --color-grafite-950: #0f1216;
+  --color-grafite-900: #161a1f;
+  --color-grafite-800: #1f242b;
+  --color-grafite-700: #2c323b;
+  --color-grafite-600: #3e444e;
+  --color-grafite-400: #8d949d;
+  --color-grafite-300: #b4bac1;
+
+  /* --- Bronze: o acento. Ferro, anilha, medalha.
+         Usado com parcimonia: acao primaria, item ativo, marca. --- */
+  --color-bronze-800: #6f3b0c;
+  --color-bronze-700: #8a4a0f;
+  --color-bronze-600: #a85c14;
+  --color-bronze-500: #c26f1c;
+  --color-bronze-200: #f0d6b6;
+  --color-bronze-100: #f8e8d4;
+  --color-bronze-50: #fdf6ec;
+
+  /* --- Neutros com leve vies quente, para conversarem com o bronze
+         em vez de brigarem com ele. --- */
+  --color-tinta: #16191d;
+  --color-tinta-2: #4f5259;
+  --color-tinta-3: #767a80;
+  --color-papel: #ffffff;
+  --color-fundo: #f4f4f2;
+  --color-fundo-2: #eaeae7;
+  --color-linha: #e3e3df;
+  --color-linha-forte: #d2d2cd;
+
+  /* --- Semanticos: separados do acento de proposito. Estado do
+         aluno nunca deve depender da cor da marca. --- */
+  --color-ok-700: #1a6b42;
+  --color-ok-200: #b5dcc6;
+  --color-ok-50: #e9f4ee;
+  --color-perigo-700: #a3231b;
+  --color-perigo-200: #f0c4bf;
+  --color-perigo-50: #fbeae8;
+  --color-alerta-700: #8a5a06;
+  --color-alerta-200: #efd9a4;
+  --color-alerta-50: #fdf5e3;
+
+  /* --- Geometria: um raio discreto, nao a mistura de
+         rounded-none / rounded-lg / rounded-2xl de antes. --- */
+  --radius-marca: 6px;
+  --radius-marca-sm: 4px;
+  --radius-marca-lg: 10px;
+
+  /* --- Tipografia --- */
+  --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Barlow Condensed", "Barlow", ui-sans-serif, sans-serif;
+}

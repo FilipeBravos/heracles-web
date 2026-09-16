@@ -1,0 +1,72 @@
+<div>
+  <div class="border-b border-linha px-6 py-5">
+    <h2 mat-dialog-title class="!m-0 !p-0 font-display !text-[22px] !font-bold !leading-tight text-tinta">
+      {{ resolvendo ? 'Resolver chamado' : 'Abrir chamado' }}
+    </h2>
+    <p class="mt-1 text-[12.5px] text-tinta-3">
+      {{ equipamento.nome }} · {{ equipamento.unidadeNome }}
+    </p>
+  </div>
+
+  <mat-dialog-content class="!px-6 !pt-5 !pb-2">
+    @if (erro(); as mensagem) {
+      <div role="alert"
+           class="mb-4 flex items-start gap-2.5 rounded-marca border border-perigo-200 bg-perigo-50 px-4 py-3">
+        <mat-icon class="!mt-px !h-[18px] !w-[18px] !text-[18px] text-perigo-700" svgIcon="error"></mat-icon>
+        <span class="text-[12.5px] leading-snug text-perigo-700">{{ mensagem }}</span>
+      </div>
+    }
+
+    @if (resolvendo) {
+      <!-- O problema relatado fica à vista: quem fecha o chamado precisa
+           saber o que estava quebrado sem trocar de tela. -->
+      <div class="mb-4 rounded-marca border border-linha bg-fundo px-4 py-3">
+        <p class="h-rotulo mb-1.5">Problema relatado</p>
+        <p class="text-[13.5px] leading-snug text-tinta">{{ chamado?.descricaoProblema }}</p>
+      </div>
+
+      <form [formGroup]="formResolucao" (ngSubmit)="confirmar()">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Custo do reparo</mat-label>
+          <span matTextPrefix class="pr-1 text-tinta-3">R$&nbsp;</span>
+          <input matInput id="custoReparo" type="number" inputmode="decimal" min="0" step="0.01"
+                 formControlName="custoReparo" placeholder="0,00">
+          <mat-hint>Deixe em branco se não houve custo (garantia, ajuste interno).</mat-hint>
+          @if (formResolucao.controls.custoReparo.touched && formResolucao.controls.custoReparo.invalid) {
+            <mat-error>O custo não pode ser negativo.</mat-error>
+          }
+        </mat-form-field>
+      </form>
+
+      <p class="mt-3 flex items-start gap-2 text-[12.5px] leading-snug text-tinta-3">
+        <mat-icon class="!mt-px !h-[16px] !w-[16px] !text-[16px]" svgIcon="check_circle"></mat-icon>
+        Ao resolver, o equipamento volta a constar em operação.
+      </p>
+    } @else {
+      <form [formGroup]="formAbertura" (ngSubmit)="confirmar()">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>O que está acontecendo?</mat-label>
+          <textarea matInput id="descricaoProblema" rows="4" formControlName="descricaoProblema"
+                    placeholder="Ex: lona patinando sob carga acima de 8 km/h"></textarea>
+          @if (formAbertura.controls.descricaoProblema.touched && formAbertura.controls.descricaoProblema.invalid) {
+            <mat-error>Descreva o problema.</mat-error>
+          }
+        </mat-form-field>
+      </form>
+
+      <p class="mt-1 flex items-start gap-2 text-[12.5px] leading-snug text-alerta-700">
+        <mat-icon class="!mt-px !h-[16px] !w-[16px] !text-[16px]" svgIcon="build"></mat-icon>
+        O equipamento sai de operação assim que o chamado for aberto.
+      </p>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="!gap-2 border-t border-linha !px-6 !py-4">
+    <button mat-button mat-dialog-close type="button" class="!text-tinta-2">Cancelar</button>
+    <button mat-flat-button color="primary" type="button" class="!px-5"
+            [disabled]="enviando()" (click)="confirmar()">
+      @if (enviando()) { <mat-spinner diameter="20"></mat-spinner> }
+      @else { {{ resolvendo ? 'Resolver chamado' : 'Abrir chamado' }} }
+    </button>
+  </mat-dialog-actions>
+</div>
