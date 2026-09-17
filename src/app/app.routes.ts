@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { authGuard, visitanteGuard } from './core/guards/auth.guard';
+import { perfilGuard } from './core/guards/perfil.guard';
 
 export const routes: Routes = [
   {
@@ -17,33 +18,40 @@ export const routes: Routes = [
     children: [
       {
         path: '',
+        canActivate: [perfilGuard],
         loadComponent: () =>
           import('./pages/dashboard-home/dashboard-home').then((m) => m.DashboardHomeComponent),
       },
       {
         path: 'alunos',
+        canActivate: [perfilGuard],
         loadComponent: () => import('./pages/alunos/alunos').then((m) => m.AlunosComponent),
       },
       {
         path: 'treinos',
+        canActivate: [perfilGuard],
         loadComponent: () => import('./pages/treinos/treinos').then((m) => m.TreinosComponent),
       },
       {
         path: 'matriculas',
+        canActivate: [perfilGuard],
         loadComponent: () =>
           import('./pages/matriculas/matriculas').then((m) => m.MatriculasComponent),
       },
       {
         path: 'loja',
+        canActivate: [perfilGuard],
         loadComponent: () => import('./pages/loja/loja').then((m) => m.LojaComponent),
       },
       {
         path: 'equipamentos',
+        canActivate: [perfilGuard],
         loadComponent: () =>
           import('./pages/equipamentos/equipamentos').then((m) => m.EquipamentosComponent),
       },
       {
         path: 'unidades',
+        canActivate: [perfilGuard],
         loadComponent: () => import('./pages/unidades/unidades').then((m) => m.UnidadesComponent),
       },
     ],

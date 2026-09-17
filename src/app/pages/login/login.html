@@ -47,6 +47,17 @@
           </div>
         }
 
+        @if (semArea()) {
+          <div role="alert"
+               class="mb-5 flex items-start gap-2.5 rounded-marca border border-alerta-200 bg-alerta-50 px-4 py-3">
+            <mat-icon class="!mt-px !h-[18px] !w-[18px] !text-[18px] text-alerta-700" svgIcon="block"></mat-icon>
+            <span class="text-[12.5px] leading-snug text-alerta-700">
+              Suas credenciais estão corretas, mas o perfil de aluno ainda não tem
+              área neste sistema. Procure a recepção da sua unidade.
+            </span>
+          </div>
+        }
+
         @if (erro(); as mensagem) {
           <div role="alert"
                class="mb-5 flex items-start gap-2.5 rounded-marca border border-perigo-200 bg-perigo-50 px-4 py-3">

@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
+import { rotaInicial } from '../../core/acesso';
 import { AuthService } from '../../core/services/auth.service';
 import { mensagemDeErro } from '../../core/services/erro-api';
 
@@ -37,6 +38,14 @@ export class LoginComponent {
     this.rota.snapshot.queryParamMap.get('sessaoExpirada') === 'true'
   );
 
+  /**
+   * O perfil autenticou, mas não alcança nenhuma tela.
+   *
+   * Hoje é o caso do aluno: o sistema ainda não tem área para ele. Dizer
+   * isso é melhor que deixá-lo entrar e receber erro em cada tela.
+   */
+  readonly semArea = signal(this.rota.snapshot.queryParamMap.get('motivo') === 'sem-area');
+
   // Os campos agora estao ligados ao formulario. Antes o template tinha dois
   // matInput soltos, sem formControlName nem ngModel: o que fosse digitado
   // nao chegava a lugar nenhum.
@@ -58,11 +67,25 @@ export class LoginComponent {
     this.enviando.set(true);
     this.erro.set(null);
     this.sessaoExpirada.set(false);
+    this.semArea.set(false);
 
     this.auth.login(this.form.getRawValue()).subscribe({
-      next: () => {
-        const destino = this.rota.snapshot.queryParamMap.get('redirecionar') ?? '/dashboard';
-        void this.router.navigateByUrl(destino);
+      next: (resposta) => {
+        const inicial = rotaInicial(resposta.usuario.tipoPerfil);
+
+        if (!inicial) {
+          // Autenticou, mas não há tela para este perfil. Entrar só para
+          // colidir com o guard na próxima rota não ajuda ninguém.
+          this.auth.encerrarSessao();
+          this.enviando.set(false);
+          this.semArea.set(true);
+          return;
+        }
+
+        // O destino guardado só vale se o perfil alcança: um link salvo
+        // de outra sessão pode apontar para tela que não é dele.
+        const guardado = this.rota.snapshot.queryParamMap.get('redirecionar');
+        void this.router.navigateByUrl(guardado ?? inicial);
       },
       error: (erro) => {
         this.enviando.set(false);

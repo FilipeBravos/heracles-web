@@ -31,51 +31,29 @@
     </div>
 
     <nav class="flex-1 overflow-y-auto px-3 py-2" aria-label="Navegação principal">
-      <a routerLink="/dashboard" routerLinkActive="ativo" [routerLinkActiveOptions]="{ exact: true }"
-         class="item-nav">
-        <span class="trilho"></span>
-        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="dashboard"></mat-icon>
-        <span>Visão geral</span>
-      </a>
+      @for (area of areasPrincipais(); track area.rota) {
+        <a [routerLink]="area.rota" routerLinkActive="ativo"
+           [routerLinkActiveOptions]="{ exact: area.rota === '/dashboard' }" class="item-nav">
+          <span class="trilho"></span>
+          <mat-icon class="!h-5 !w-5 !text-[20px]" [svgIcon]="area.icone"></mat-icon>
+          <span>{{ area.rotulo }}</span>
+        </a>
+      }
 
-      <a routerLink="/dashboard/alunos" routerLinkActive="ativo" class="item-nav">
-        <span class="trilho"></span>
-        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="groups"></mat-icon>
-        <span>Alunos</span>
-      </a>
+      @if (areasDeOperacao().length) {
+        <!-- Operação da unidade: balcão e salão. A faixa só existe se o
+             perfil alcança algo dentro dela. -->
+        <p class="h-rotulo !px-3 !pt-5 !pb-2 !text-grafite-400">Operação</p>
 
-      <a routerLink="/dashboard/treinos" routerLinkActive="ativo" class="item-nav">
-        <span class="trilho"></span>
-        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="fitness_center"></mat-icon>
-        <span>Treinos</span>
-      </a>
+        @for (area of areasDeOperacao(); track area.rota) {
+          <a [routerLink]="area.rota" routerLinkActive="ativo" class="item-nav">
+            <span class="trilho"></span>
+            <mat-icon class="!h-5 !w-5 !text-[20px]" [svgIcon]="area.icone"></mat-icon>
+            <span>{{ area.rotulo }}</span>
+          </a>
+        }
+      }
 
-      <a routerLink="/dashboard/matriculas" routerLinkActive="ativo" class="item-nav">
-        <span class="trilho"></span>
-        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="card_membership"></mat-icon>
-        <span>Matrículas</span>
-      </a>
-
-      <!-- Operação da unidade: balcão e salão. -->
-      <p class="h-rotulo !px-3 !pt-5 !pb-2 !text-grafite-400">Operação</p>
-
-      <a routerLink="/dashboard/loja" routerLinkActive="ativo" class="item-nav">
-        <span class="trilho"></span>
-        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="point_of_sale"></mat-icon>
-        <span>Loja</span>
-      </a>
-
-      <a routerLink="/dashboard/equipamentos" routerLinkActive="ativo" class="item-nav">
-        <span class="trilho"></span>
-        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="build"></mat-icon>
-        <span>Equipamentos</span>
-      </a>
-
-      <a routerLink="/dashboard/unidades" routerLinkActive="ativo" class="item-nav">
-        <span class="trilho"></span>
-        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="store"></mat-icon>
-        <span>Unidades</span>
-      </a>
     </nav>
 
     @if (usuario(); as u) {
