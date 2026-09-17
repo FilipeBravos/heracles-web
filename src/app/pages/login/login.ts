@@ -41,8 +41,9 @@ export class LoginComponent {
   /**
    * O perfil autenticou, mas não alcança nenhuma tela.
    *
-   * Hoje é o caso do aluno: o sistema ainda não tem área para ele. Dizer
-   * isso é melhor que deixá-lo entrar e receber erro em cada tela.
+   * Nenhum perfil cai aqui hoje — o aluno passou a ter "Meu treino". Fica
+   * como rede de segurança: um perfil novo sem área declarada entraria e
+   * bateria no guard na rota seguinte, em laço.
    */
   readonly semArea = signal(this.rota.snapshot.queryParamMap.get('motivo') === 'sem-area');
 

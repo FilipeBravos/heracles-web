@@ -50,6 +50,12 @@ export const routes: Routes = [
           import('./pages/equipamentos/equipamentos').then((m) => m.EquipamentosComponent),
       },
       {
+        path: 'meu-treino',
+        canActivate: [perfilGuard],
+        loadComponent: () =>
+          import('./pages/meu-treino/meu-treino').then((m) => m.MeuTreinoComponent),
+      },
+      {
         path: 'unidades',
         canActivate: [perfilGuard],
         loadComponent: () => import('./pages/unidades/unidades').then((m) => m.UnidadesComponent),

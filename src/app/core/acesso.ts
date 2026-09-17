@@ -40,6 +40,12 @@ export const AREAS: readonly Area[] = [
   // Cadastro de unidade é estrutura da rede: só a administração escreve,
   // e a tela não faz outra coisa.
   { rota: '/dashboard/unidades', rotulo: 'Unidades', icone: 'store', perfis: ['ADMIN'], grupo: 'operacao' },
+
+  // A área do aluno. Única que ele alcança, e nenhum outro perfil a vê:
+  // ela mostra as fichas de quem está autenticado, e para a recepção e o
+  // professor isso seria uma tela vazia — eles consultam a ficha do aluno
+  // pela tela de Alunos.
+  { rota: '/dashboard/meu-treino', rotulo: 'Meu treino', icone: 'fitness_center', perfis: ['ALUNO'] },
 ];
 
 export function areasDoPerfil(perfil: TipoPerfil | null | undefined): Area[] {
