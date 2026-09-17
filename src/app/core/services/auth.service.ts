@@ -33,8 +33,19 @@ export class AuthService {
   }
 
   logout(): void {
-    this.limparSessao();
+    this.encerrarSessao();
     void this.router.navigate(['/login']);
+  }
+
+  /**
+   * Limpa a sessão sem navegar.
+   *
+   * Existe para quem já está decidindo o destino — um guard que devolve
+   * UrlTree, por exemplo. Chamar `logout()` ali poria duas navegações
+   * competindo pela mesma transição.
+   */
+  encerrarSessao(): void {
+    this.limparSessao();
   }
 
   get token(): string | null {

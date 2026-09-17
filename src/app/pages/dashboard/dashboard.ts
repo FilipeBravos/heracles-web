@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { AuthService } from '../../core/services/auth.service';
+import { Area, areasDoPerfil } from '../../core/acesso';
 
 /**
  * Casca da area logada: navegacao lateral e o router-outlet dos filhos.
@@ -25,6 +26,15 @@ export class DashboardComponent {
   private readonly router = inject(Router);
 
   readonly usuario = this.auth.usuario;
+
+  /**
+   * Os itens do menu saem da mesma tabela que o guard de rota consulta.
+   * Duas listas divergiriam, e um item que leva a 403 é pior que item nenhum.
+   */
+  private readonly areas = computed(() => areasDoPerfil(this.usuario()?.tipoPerfil));
+
+  readonly areasPrincipais = computed(() => this.areas().filter((a) => !a.grupo));
+  readonly areasDeOperacao = computed<Area[]>(() => this.areas().filter((a) => a.grupo === 'operacao'));
 
   /**
    * Em telas estreitas a navegacao vira gaveta sobreposta. Antes ela era
