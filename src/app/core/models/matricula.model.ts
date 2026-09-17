@@ -99,12 +99,28 @@ export type SituacaoMatricula = 'EM_DIA' | 'VENCE_EM_BREVE' | 'VENCIDA' | 'INADI
  * torna o teste possível sem congelar o relógio.
  */
 export function situacaoDaMatricula(assinatura: Assinatura, hoje: string): SituacaoMatricula {
-  if (assinatura.status === 'CANCELADA') return 'CANCELADA';
-  if (assinatura.status === 'INADIMPLENTE') return 'INADIMPLENTE';
-  if (assinatura.vencida) return 'VENCIDA';
-
   const dias = (emDatas(assinatura.dataVencimento) - emDatas(hoje)) / 86_400_000;
-  return dias <= DIAS_PARA_VENCER ? 'VENCE_EM_BREVE' : 'EM_DIA';
+  return situacaoPor(assinatura.status, assinatura.vencida, dias);
+}
+
+/**
+ * A regra em si, a partir do que já está decidido.
+ *
+ * Existe separada porque a lista do balcão e a tela do aluno chegam aqui
+ * por caminhos diferentes — uma conta os dias no navegador, a outra
+ * recebe a contagem pronta da API — e a classificação precisa ser a
+ * mesma nos dois. Duas cópias divergiriam na primeira mudança, e aí o
+ * mesmo aluno leria "em dia" numa tela e "vence em breve" na outra.
+ */
+function situacaoPor(
+  status: StatusAssinatura,
+  vencida: boolean,
+  diasParaVencer: number
+): SituacaoMatricula {
+  if (status === 'CANCELADA') return 'CANCELADA';
+  if (status === 'INADIMPLENTE') return 'INADIMPLENTE';
+  if (vencida) return 'VENCIDA';
+  return diasParaVencer <= DIAS_PARA_VENCER ? 'VENCE_EM_BREVE' : 'EM_DIA';
 }
 
 export const ROTULO_SITUACAO: Readonly<Record<SituacaoMatricula, string>> = {
@@ -168,6 +184,133 @@ export function descreverPrazo(diasParaVencer: number): string {
 export function urgenciaDoPrazo(diasParaVencer: number): 'vencido' | 'proximo' | 'distante' {
   if (diasParaVencer < 0) return 'vencido';
   return diasParaVencer <= DIAS_PARA_VENCER ? 'proximo' : 'distante';
+}
+
+/**
+ * A matrícula como o próprio aluno a vê.
+ *
+ * Não é a `Assinatura` do balcão: ele já sabe de quem ela é, e pergunta
+ * outra coisa — até quando vale e onde pode treinar. Daí `unidades`, que
+ * a listagem operacional não traz.
+ *
+ * Tudo é nulo quando `temMatricula` é falso, que é estado normal: aluno
+ * recém-cadastrado que ainda não passou na recepção, ou matrícula
+ * cancelada. A API responde 200 nesse caso, não 404.
+ */
+export interface MinhaMatricula {
+  temMatricula: boolean;
+  planoNome: string | null;
+  valorMensal: number | null;
+  tipoCobranca: TipoCobranca | null;
+  origem: OrigemAssinatura | null;
+  dataInicio: string | null;
+  dataVencimento: string | null;
+  status: StatusAssinatura | null;
+  vencida: boolean;
+  /** Contado pela API. Negativo quando já venceu. */
+  diasParaVencer: number;
+  /** Nomes das unidades que o plano cobre. */
+  unidades: string[];
+}
+
+/**
+ * Situação da própria matrícula, ou `null` quando não há nenhuma.
+ *
+ * Usa a contagem de dias que a API mandou em vez de refazer a conta com
+ * o relógio do navegador: é o mesmo dia de hoje que decide `vencida` e o
+ * veredito da catraca. Um relógio adiantado faria a tela do aluno
+ * discordar da catraca sobre ele mesmo.
+ */
+export function situacaoDaMinhaMatricula(minha: MinhaMatricula): SituacaoMatricula | null {
+  if (!minha.temMatricula || !minha.status) return null;
+  return situacaoPor(minha.status, minha.vencida, minha.diasParaVencer);
+}
+
+/** Como a tela do aluno anuncia a situação: tom, ícone e as duas frases. */
+export interface AvisoMatricula {
+  situacao: SituacaoMatricula | null;
+  tom: 'ok' | 'alerta' | 'perigo' | 'neutro';
+  icone: string;
+  titulo: string;
+  detalhe: string;
+}
+
+/**
+ * O aviso que abre a tela do aluno.
+ *
+ * Fica aqui, e não no componente, porque é a resposta à pergunta que
+ * motivou a tela — "meu acesso está em dia?" — e ela merece teste. Cada
+ * estado diz também o que fazer: saber que venceu sem saber que a
+ * catraca vai barrar não resolve a ida perdida até a academia.
+ */
+export function avisoDaMinhaMatricula(minha: MinhaMatricula): AvisoMatricula {
+  const situacao = situacaoDaMinhaMatricula(minha);
+  const prazo = descreverPrazo(minha.diasParaVencer);
+  const onde = ondeResolver(minha.origem);
+
+  switch (situacao) {
+    case 'EM_DIA':
+      return {
+        situacao,
+        tom: 'ok',
+        icone: 'check_circle',
+        titulo: 'Seu acesso está em dia',
+        detalhe: `Sua matrícula ${prazo}.`,
+      };
+    case 'VENCE_EM_BREVE':
+      return {
+        situacao,
+        tom: 'alerta',
+        icone: 'event_upcoming',
+        titulo: 'Sua matrícula vence em breve',
+        detalhe: `Ela ${prazo}. Renove ${onde} para não perder o acesso.`,
+      };
+    case 'VENCIDA':
+      return {
+        situacao,
+        tom: 'perigo',
+        icone: 'block',
+        titulo: 'Sua matrícula está vencida',
+        detalhe: `Ela ${prazo}. A catraca não libera até você renovar ${onde}.`,
+      };
+    case 'INADIMPLENTE':
+      return {
+        situacao,
+        tom: 'perigo',
+        icone: 'block',
+        titulo: 'Pagamento em atraso',
+        detalhe: `O acesso fica suspenso até o pagamento ser regularizado ${onde}.`,
+      };
+    default:
+      // Sem matrícula vigente — inclui a cancelada, que a API não devolve
+      // como vigente. Para o aluno as duas dão no mesmo: ele precisa
+      // passar na recepção.
+      return {
+        situacao: null,
+        tom: 'neutro',
+        icone: 'card_membership',
+        titulo: 'Você ainda não tem matrícula',
+        detalhe: 'Procure a recepção da sua unidade para se matricular e liberar o acesso.',
+      };
+  }
+}
+
+/**
+ * A quem o aluno recorre, pela origem da matrícula.
+ *
+ * Quem entrou por parceiro não renova no balcão — mandá-lo à recepção
+ * seria uma ida perdida, que é exatamente o que esta tela existe para
+ * evitar.
+ */
+function ondeResolver(origem: OrigemAssinatura | null): string {
+  switch (origem) {
+    case 'GYMPASS':
+      return 'no aplicativo do Gympass';
+    case 'TOTALPASS':
+      return 'no aplicativo do TotalPass';
+    default:
+      return 'na recepção';
+  }
 }
 
 /** Um mês da série do gráfico. `mes` vem como `yyyy-MM`. */

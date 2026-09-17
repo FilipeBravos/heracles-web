@@ -41,11 +41,14 @@ export const AREAS: readonly Area[] = [
   // e a tela não faz outra coisa.
   { rota: '/dashboard/unidades', rotulo: 'Unidades', icone: 'store', perfis: ['ADMIN'], grupo: 'operacao' },
 
-  // A área do aluno. Única que ele alcança, e nenhum outro perfil a vê:
-  // ela mostra as fichas de quem está autenticado, e para a recepção e o
-  // professor isso seria uma tela vazia — eles consultam a ficha do aluno
-  // pela tela de Alunos.
+  // A área do aluno: as duas telas mostram o que é dele, e nenhum outro
+  // perfil as vê — para a recepção e o professor seriam telas vazias, já
+  // que eles consultam ficha e matrícula de aluno por Alunos e
+  // Matrículas.
   { rota: '/dashboard/meu-treino', rotulo: 'Meu treino', icone: 'fitness_center', perfis: ['ALUNO'] },
+  // Separada do treino porque responde outra pergunta — "posso entrar
+  // hoje?" —, e ele precisa dela sem depender da recepção.
+  { rota: '/dashboard/minha-matricula', rotulo: 'Minha matrícula', icone: 'card_membership', perfis: ['ALUNO'] },
 ];
 
 export function areasDoPerfil(perfil: TipoPerfil | null | undefined): Area[] {

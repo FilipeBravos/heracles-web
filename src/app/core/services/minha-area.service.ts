@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { Treino } from '../models';
+import { MinhaMatricula, Treino } from '../models';
 
 /**
  * O que o aluno vê de si mesmo.
@@ -20,5 +20,15 @@ export class MinhaAreaService {
   /** As fichas vinculadas a quem está autenticado. */
   meusTreinos(): Observable<Treino[]> {
     return this.http.get<Treino[]>(`${this.url}/treinos`);
+  }
+
+  /**
+   * A matrícula vigente de quem está autenticado.
+   *
+   * Não ter matrícula volta 200 com `temMatricula: false` — é estado, não
+   * erro, e a tela precisa dizê-lo em vez de tratar como falha.
+   */
+  minhaMatricula(): Observable<MinhaMatricula> {
+    return this.http.get<MinhaMatricula>(`${this.url}/matricula`);
   }
 }
