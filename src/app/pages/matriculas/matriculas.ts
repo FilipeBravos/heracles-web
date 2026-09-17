@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
@@ -19,6 +19,8 @@ import {
 } from '../../core/models';
 import { AssinaturaService } from '../../core/services/assinatura.service';
 import { PlanoService } from '../../core/services/plano.service';
+import { podeExecutar } from '../../core/acesso';
+import { AuthService } from '../../core/services/auth.service';
 import { mensagemDeErro } from '../../core/services/erro-api';
 import { PaginadorIntl } from '../../core/paginador-intl';
 import { MatriculaDialogComponent } from './matricula-dialog/matricula-dialog';
@@ -44,12 +46,28 @@ import { AcessoDialogComponent } from './acesso-dialog/acesso-dialog';
 })
 export class MatriculasComponent implements OnInit {
   private readonly assinaturaService = inject(AssinaturaService);
+  private readonly auth = inject(AuthService);
+
+  /** A tela é alcançável por mais perfis do que esta ação. */
+  readonly podeGerenciarPlano = computed(() =>
+    podeExecutar('gerenciar-plano', this.auth.usuario()?.tipoPerfil)
+  );
+
+  /** A tela é alcançável por mais perfis do que esta ação. */
+  readonly podeCancelar = computed(() =>
+    podeExecutar('cancelar-matricula', this.auth.usuario()?.tipoPerfil)
+  );
   private readonly planoService = inject(PlanoService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
 
   readonly colunasAssinatura = ['aluno', 'plano', 'origem', 'vencimento', 'situacao', 'acoes'];
-  readonly colunasPlano = ['nome', 'valor', 'cobranca', 'unidades', 'situacao', 'acoes'];
+  /** Editar e tirar de linha são da administração; sem elas a coluna vazia é ruído. */
+  readonly colunasPlano = computed(() =>
+    this.podeGerenciarPlano()
+      ? ['nome', 'valor', 'cobranca', 'unidades', 'situacao', 'acoes']
+      : ['nome', 'valor', 'cobranca', 'unidades', 'situacao']
+  );
 
   readonly assinaturas = signal<Assinatura[]>([]);
   readonly carregandoAssinaturas = signal(true);

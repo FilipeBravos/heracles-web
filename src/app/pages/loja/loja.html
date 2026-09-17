@@ -5,10 +5,12 @@
       <p>Suplementos e acessórios vendidos no balcão. O estoque baixa a cada venda registrada.</p>
     </div>
     <div class="flex flex-wrap gap-2">
-      <button mat-stroked-button class="!h-11 !px-4" (click)="abrirFormularioProduto(null)">
-        <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
-        Novo produto
-      </button>
+      @if (podeGerenciarProduto()) {
+        <button mat-stroked-button class="!h-11 !px-4" (click)="abrirFormularioProduto(null)">
+          <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+          Novo produto
+        </button>
+      }
       <button mat-flat-button color="primary" class="!h-11 !px-5" (click)="abrirPdv()">
         <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="point_of_sale"></mat-icon>
         Nova venda
@@ -95,8 +97,8 @@
                 </td>
               </ng-container>
 
-              <tr mat-header-row *matHeaderRowDef="colunasProduto"></tr>
-              <tr mat-row *matRowDef="let row; columns: colunasProduto"></tr>
+              <tr mat-header-row *matHeaderRowDef="colunasProduto()"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasProduto()"></tr>
             </table>
           </div>
 
@@ -109,12 +111,18 @@
               <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="inventory_2"></mat-icon>
               <p class="text-[14px] font-semibold text-tinta">Nenhum produto cadastrado</p>
               <p class="max-w-sm text-[13px] text-tinta-3">
-                Cadastre o primeiro item para começar a registrar vendas no balcão.
+                @if (podeGerenciarProduto()) {
+                  Cadastre o primeiro item para começar a registrar vendas no balcão.
+                } @else {
+                  Nenhum produto foi cadastrado nesta unidade ainda.
+                }
               </p>
-              <button mat-flat-button color="primary" class="!mt-1" (click)="abrirFormularioProduto(null)">
-                <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
-                Novo produto
-              </button>
+              @if (podeGerenciarProduto()) {
+                <button mat-flat-button color="primary" class="!mt-1" (click)="abrirFormularioProduto(null)">
+                  <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+                  Novo produto
+                </button>
+              }
             </div>
           }
 

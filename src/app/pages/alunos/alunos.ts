@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,6 +10,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { Usuario } from '../../core/models';
 import { UsuarioService } from '../../core/services/usuario.service';
+import { podeExecutar } from '../../core/acesso';
+import { AuthService } from '../../core/services/auth.service';
 import { mensagemDeErro } from '../../core/services/erro-api';
 import { PaginadorIntl } from '../../core/paginador-intl';
 import { AlunoFormComponent } from './aluno-form/aluno-form';
@@ -34,6 +36,12 @@ import { VincularTreinoComponent } from './vincular-treino/vincular-treino';
 })
 export class AlunosComponent implements OnInit {
   private readonly usuarioService = inject(UsuarioService);
+  private readonly auth = inject(AuthService);
+
+  /** A tela é alcançável por mais perfis do que esta ação. */
+  readonly podeGerenciar = computed(() =>
+    podeExecutar('gerenciar-aluno', this.auth.usuario()?.tipoPerfil)
+  );
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
 

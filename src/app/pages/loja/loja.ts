@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
@@ -13,6 +13,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Produto, Venda } from '../../core/models';
 import { ProdutoService } from '../../core/services/produto.service';
 import { VendaService } from '../../core/services/venda.service';
+import { podeExecutar } from '../../core/acesso';
+import { AuthService } from '../../core/services/auth.service';
 import { mensagemDeErro } from '../../core/services/erro-api';
 import { PaginadorIntl } from '../../core/paginador-intl';
 import { ProdutoFormComponent } from './produto-form/produto-form';
@@ -40,11 +42,25 @@ const LIMITE_ESTOQUE_BAIXO = 5;
 })
 export class LojaComponent implements OnInit {
   private readonly produtoService = inject(ProdutoService);
+  private readonly auth = inject(AuthService);
+
+  /** A tela é alcançável por mais perfis do que esta ação. */
+  readonly podeGerenciarProduto = computed(() =>
+    podeExecutar('gerenciar-produto', this.auth.usuario()?.tipoPerfil)
+  );
   private readonly vendaService = inject(VendaService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
 
-  readonly colunasProduto = ['nome', 'preco', 'estoque', 'situacao', 'acoes'];
+  /**
+   * As três ações de produto são todas da administração. Para a secretaria
+   * a coluna ficaria vazia — cabeçalho sem conteúdo é ruído, não pista.
+   */
+  readonly colunasProduto = computed(() =>
+    this.podeGerenciarProduto()
+      ? ['nome', 'preco', 'estoque', 'situacao', 'acoes']
+      : ['nome', 'preco', 'estoque', 'situacao']
+  );
   readonly colunasVenda = ['data', 'itens', 'pagamento', 'operador', 'total'];
 
   readonly produtos = signal<Produto[]>([]);
