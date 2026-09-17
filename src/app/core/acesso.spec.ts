@@ -2,24 +2,29 @@ import { AREAS, Acao, areasDoPerfil, podeAcessar, podeExecutar, rotaInicial } fr
 import { TipoPerfil } from './models';
 
 describe('tabela de acesso', () => {
+  const AREAS_DO_ALUNO = ['/dashboard/meu-treino', '/dashboard/minha-matricula'];
+
   it('dá ao admin todas as áreas operacionais', () => {
-    // Todas menos a do aluno, que é da conta de quem está autenticado.
-    expect(areasDoPerfil('ADMIN').length).toBe(AREAS.length - 1);
+    // Todas menos as do aluno, que são da conta de quem está autenticado.
+    expect(areasDoPerfil('ADMIN').length).toBe(AREAS.length - AREAS_DO_ALUNO.length);
   });
 
-  it('dá ao aluno a sua área, e só ela', () => {
-    expect(areasDoPerfil('ALUNO').map((a) => a.rota)).toEqual(['/dashboard/meu-treino']);
+  it('dá ao aluno as suas áreas, e só elas', () => {
+    expect(areasDoPerfil('ALUNO').map((a) => a.rota)).toEqual(AREAS_DO_ALUNO);
+    // Ele cai no treino ao entrar: é o que ele abre todo dia.
     expect(rotaInicial('ALUNO')).toBe('/dashboard/meu-treino');
   });
 
-  it('a área do aluno não aparece para os perfis operacionais', () => {
-    // Ela mostra as fichas de quem está autenticado: para a recepção e o
-    // professor seria uma tela vazia. Eles consultam a ficha do aluno
-    // pela tela de Alunos.
-    for (const perfil of ['ADMIN', 'SECRETARIA', 'PROFESSOR'] as TipoPerfil[]) {
-      expect(podeAcessar('/dashboard/meu-treino', perfil)).toBeFalse();
+  it('as áreas do aluno não aparecem para os perfis operacionais', () => {
+    // Elas mostram a ficha e a matrícula de quem está autenticado: para a
+    // recepção e o professor seriam telas vazias. Eles consultam as do
+    // aluno por Alunos e Matrículas.
+    for (const rota of AREAS_DO_ALUNO) {
+      for (const perfil of ['ADMIN', 'SECRETARIA', 'PROFESSOR'] as TipoPerfil[]) {
+        expect(podeAcessar(rota, perfil)).toBeFalse();
+      }
+      expect(podeAcessar(rota, 'ALUNO')).toBeTrue();
     }
-    expect(podeAcessar('/dashboard/meu-treino', 'ALUNO')).toBeTrue();
   });
 
   it('sem perfil não há rota inicial — é o laço que o guard precisa evitar', () => {

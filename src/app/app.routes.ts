@@ -56,6 +56,12 @@ export const routes: Routes = [
           import('./pages/meu-treino/meu-treino').then((m) => m.MeuTreinoComponent),
       },
       {
+        path: 'minha-matricula',
+        canActivate: [perfilGuard],
+        loadComponent: () =>
+          import('./pages/minha-matricula/minha-matricula').then((m) => m.MinhaMatriculaComponent),
+      },
+      {
         path: 'unidades',
         canActivate: [perfilGuard],
         loadComponent: () => import('./pages/unidades/unidades').then((m) => m.UnidadesComponent),
