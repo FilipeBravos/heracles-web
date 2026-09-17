@@ -4,10 +4,12 @@
       <h1>Equipamentos</h1>
       <p>Inventário do salão e histórico de manutenção. Abrir um chamado tira o aparelho de operação.</p>
     </div>
-    <button mat-flat-button color="primary" class="!h-11 !px-5" (click)="abrirFormulario(null)">
-      <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
-      Novo equipamento
-    </button>
+    @if (podeGerenciar()) {
+      <button mat-flat-button color="primary" class="!h-11 !px-5" (click)="abrirFormulario(null)">
+        <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+        Novo equipamento
+      </button>
+    }
   </header>
 
   @if (erro(); as mensagem) {
@@ -54,11 +56,13 @@
                 <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="build"></mat-icon>
               </button>
             }
-            <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
-                    (click)="abrirFormulario(e); $event.stopPropagation()"
-                    matTooltip="Editar equipamento" aria-label="Editar equipamento">
-              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="edit"></mat-icon>
-            </button>
+            @if (podeGerenciar()) {
+              <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
+                      (click)="abrirFormulario(e); $event.stopPropagation()"
+                      matTooltip="Editar equipamento" aria-label="Editar equipamento">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="edit"></mat-icon>
+              </button>
+            }
             <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
                     [matTooltip]="expandido() === e.id ? 'Ocultar histórico' : 'Ver histórico'"
                     [attr.aria-label]="expandido() === e.id ? 'Ocultar histórico' : 'Ver histórico'"
@@ -121,7 +125,7 @@
                     }
                   </div>
 
-                  @if (chamado.status === 'ABERTO' && equipamentoExpandido(); as equipamento) {
+                  @if (podeResolver() && chamado.status === 'ABERTO' && equipamentoExpandido(); as equipamento) {
                     <button mat-stroked-button type="button" class="shrink-0"
                             (click)="resolverChamado(equipamento, chamado)">
                       <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="check_circle"></mat-icon>
@@ -145,12 +149,18 @@
         <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="build"></mat-icon>
         <p class="text-[14px] font-semibold text-tinta">Nenhum equipamento cadastrado</p>
         <p class="max-w-sm text-[13px] text-tinta-3">
-          Cadastre os aparelhos do salão para acompanhar manutenção e custo de reparo.
+          @if (podeGerenciar()) {
+            Cadastre os aparelhos do salão para acompanhar manutenção e custo de reparo.
+          } @else {
+            Nenhum aparelho foi cadastrado nesta unidade ainda.
+          }
         </p>
-        <button mat-flat-button color="primary" class="!mt-1" (click)="abrirFormulario(null)">
-          <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
-          Novo equipamento
-        </button>
+        @if (podeGerenciar()) {
+          <button mat-flat-button color="primary" class="!mt-1" (click)="abrirFormulario(null)">
+            <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+            Novo equipamento
+          </button>
+        }
       </div>
     }
 

@@ -40,6 +40,12 @@ export const AREAS: readonly Area[] = [
   // Cadastro de unidade é estrutura da rede: só a administração escreve,
   // e a tela não faz outra coisa.
   { rota: '/dashboard/unidades', rotulo: 'Unidades', icone: 'store', perfis: ['ADMIN'], grupo: 'operacao' },
+
+  // A área do aluno. Única que ele alcança, e nenhum outro perfil a vê:
+  // ela mostra as fichas de quem está autenticado, e para a recepção e o
+  // professor isso seria uma tela vazia — eles consultam a ficha do aluno
+  // pela tela de Alunos.
+  { rota: '/dashboard/meu-treino', rotulo: 'Meu treino', icone: 'fitness_center', perfis: ['ALUNO'] },
 ];
 
 export function areasDoPerfil(perfil: TipoPerfil | null | undefined): Area[] {
@@ -63,4 +69,43 @@ export function podeAcessar(rota: string, perfil: TipoPerfil | null | undefined)
  */
 export function rotaInicial(perfil: TipoPerfil | null | undefined): string | null {
   return areasDoPerfil(perfil)[0]?.rota ?? null;
+}
+
+/**
+ * Uma ação dentro de uma tela, quando ela exige mais que a tela.
+ *
+ * Alcançar a tela não é poder tudo nela: a secretaria opera a loja mas
+ * não mexe na tabela de preços, o professor abre chamado mas não cadastra
+ * aparelho. Sem isto, a tela oferece botões que a API recusa — o mesmo
+ * defeito do menu, uma camada abaixo.
+ *
+ * Agrupadas por conjunto de permissão, não por rota: "gerenciar produto"
+ * cobre cadastrar, editar, dar entrada e tirar de linha, que são a mesma
+ * autorização na API.
+ */
+export type Acao =
+  | 'gerenciar-aluno'
+  | 'gerenciar-equipamento'
+  | 'resolver-chamado'
+  | 'gerenciar-produto'
+  | 'gerenciar-plano'
+  | 'cancelar-matricula';
+
+const ACOES: Readonly<Record<Acao, readonly TipoPerfil[]>> = {
+  // Cadastrar, editar e ativar/inativar aluno. O professor alcança a tela
+  // para consultar e vincular ficha, mas o cadastro é da recepção.
+  'gerenciar-aluno': BALCAO,
+  // Cadastro do aparelho e baixa do reparo são da administração; abrir
+  // chamado, não — é quem está no salão que vê o aparelho quebrar.
+  'gerenciar-equipamento': ['ADMIN'],
+  'resolver-chamado': ['ADMIN'],
+  // Tabela de preços e estoque são da administração; vender é do balcão.
+  'gerenciar-produto': ['ADMIN'],
+  'gerenciar-plano': ['ADMIN'],
+  // Cancelar é irreversível: o aluno precisa ser matriculado de novo.
+  'cancelar-matricula': ['ADMIN'],
+};
+
+export function podeExecutar(acao: Acao, perfil: TipoPerfil | null | undefined): boolean {
+  return perfil ? ACOES[acao].includes(perfil) : false;
 }

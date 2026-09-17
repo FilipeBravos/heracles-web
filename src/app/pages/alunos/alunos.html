@@ -4,10 +4,12 @@
       <h1>Alunos</h1>
       <p>Cadastro, fichas vinculadas e liberação de acesso dos membros da unidade.</p>
     </div>
-    <button mat-flat-button color="primary" class="!h-11 !px-5" (click)="abrirModalNovoAluno()">
-      <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
-      Novo aluno
-    </button>
+    @if (podeGerenciar()) {
+      <button mat-flat-button color="primary" class="!h-11 !px-5" (click)="abrirModalNovoAluno()">
+        <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+        Novo aluno
+      </button>
+    }
   </header>
 
   @if (erro(); as mensagem) {
@@ -82,19 +84,21 @@
                     matTooltip="Vincular ficha" aria-label="Vincular ficha">
               <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="fitness_center"></mat-icon>
             </button>
-            <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
-                    (click)="abrirModalEditarAluno(aluno)"
-                    matTooltip="Editar dados" aria-label="Editar dados">
-              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="edit"></mat-icon>
-            </button>
-            <button mat-icon-button class="!h-9 !w-9"
-                    [class]="aluno.status === 'ATIVO'
-                      ? '!text-tinta-2 hover:!text-perigo-700' : '!text-tinta-2 hover:!text-ok-700'"
-                    (click)="alternarStatus(aluno)"
-                    [matTooltip]="aluno.status === 'ATIVO' ? 'Inativar aluno' : 'Reativar aluno'"
-                    [attr.aria-label]="aluno.status === 'ATIVO' ? 'Inativar aluno' : 'Reativar aluno'">
-              <mat-icon class="!h-5 !w-5 !text-[20px]" [svgIcon]="aluno.status === 'ATIVO' ? 'block' : 'check_circle'"></mat-icon>
-            </button>
+            @if (podeGerenciar()) {
+              <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
+                      (click)="abrirModalEditarAluno(aluno)"
+                      matTooltip="Editar dados" aria-label="Editar dados">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="edit"></mat-icon>
+              </button>
+              <button mat-icon-button class="!h-9 !w-9"
+                      [class]="aluno.status === 'ATIVO'
+                        ? '!text-tinta-2 hover:!text-perigo-700' : '!text-tinta-2 hover:!text-ok-700'"
+                      (click)="alternarStatus(aluno)"
+                      [matTooltip]="aluno.status === 'ATIVO' ? 'Inativar aluno' : 'Reativar aluno'"
+                      [attr.aria-label]="aluno.status === 'ATIVO' ? 'Inativar aluno' : 'Reativar aluno'">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" [svgIcon]="aluno.status === 'ATIVO' ? 'block' : 'check_circle'"></mat-icon>
+              </button>
+            }
           </td>
         </ng-container>
 
@@ -113,12 +117,18 @@
         <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="group_add"></mat-icon>
         <p class="text-[14px] font-semibold text-tinta">Nenhum aluno cadastrado</p>
         <p class="max-w-sm text-[13px] text-tinta-3">
-          Comece cadastrando o primeiro membro da unidade — depois você vincula as fichas de treino.
+          @if (podeGerenciar()) {
+            Comece cadastrando o primeiro membro da unidade — depois você vincula as fichas de treino.
+          } @else {
+            Nenhum aluno foi cadastrado nesta unidade ainda.
+          }
         </p>
-        <button mat-flat-button color="primary" class="!mt-1" (click)="abrirModalNovoAluno()">
-          <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
-          Novo aluno
-        </button>
+        @if (podeGerenciar()) {
+          <button mat-flat-button color="primary" class="!mt-1" (click)="abrirModalNovoAluno()">
+            <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+            Novo aluno
+          </button>
+        }
       </div>
     }
 

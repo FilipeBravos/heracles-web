@@ -89,11 +89,13 @@
                         <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="block"></mat-icon>
                       </button>
                     }
-                    <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-perigo-700"
-                            (click)="cancelar(a, $event)"
-                            matTooltip="Cancelar matrícula" aria-label="Cancelar matrícula">
-                      <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="delete"></mat-icon>
-                    </button>
+                    @if (podeCancelar()) {
+                      <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-perigo-700"
+                              (click)="cancelar(a, $event)"
+                              matTooltip="Cancelar matrícula" aria-label="Cancelar matrícula">
+                        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="delete"></mat-icon>
+                      </button>
+                    }
                   } @else {
                     <span class="text-[12px] text-tinta-3">
                       Cancelada em {{ a.dataCancelamento | date: 'dd/MM/yyyy' }}
@@ -136,12 +138,14 @@
     <!-- ============ Planos ============ -->
     <mat-tab label="Planos">
       <div class="pt-5">
-        <div class="mb-4 flex justify-end">
-          <button mat-stroked-button (click)="abrirFormularioPlano(null)">
-            <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
-            Novo plano
-          </button>
-        </div>
+        @if (podeGerenciarPlano()) {
+          <div class="mb-4 flex justify-end">
+            <button mat-stroked-button (click)="abrirFormularioPlano(null)">
+              <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+              Novo plano
+            </button>
+          </div>
+        }
 
         @if (erroPlanos(); as mensagem) {
           <div role="alert"
@@ -191,22 +195,24 @@
               <ng-container matColumnDef="acoes">
                 <th mat-header-cell *matHeaderCellDef class="!text-right">Ações</th>
                 <td mat-cell *matCellDef="let p" class="!text-right whitespace-nowrap">
-                  <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
-                          (click)="abrirFormularioPlano(p); $event.stopPropagation()"
-                          matTooltip="Editar plano" aria-label="Editar plano">
-                    <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="edit"></mat-icon>
-                  </button>
-                  <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-perigo-700"
-                          (click)="alternarAtivoPlano(p, $event)"
-                          [matTooltip]="p.ativo ? 'Tirar de linha' : 'Voltar a oferecer'"
-                          [attr.aria-label]="p.ativo ? 'Tirar de linha' : 'Voltar a oferecer'">
-                    <mat-icon class="!h-5 !w-5 !text-[20px]" [svgIcon]="p.ativo ? 'block' : 'check_circle'"></mat-icon>
-                  </button>
+                  @if (podeGerenciarPlano()) {
+                    <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
+                            (click)="abrirFormularioPlano(p); $event.stopPropagation()"
+                            matTooltip="Editar plano" aria-label="Editar plano">
+                      <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="edit"></mat-icon>
+                    </button>
+                    <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-perigo-700"
+                            (click)="alternarAtivoPlano(p, $event)"
+                            [matTooltip]="p.ativo ? 'Tirar de linha' : 'Voltar a oferecer'"
+                            [attr.aria-label]="p.ativo ? 'Tirar de linha' : 'Voltar a oferecer'">
+                      <mat-icon class="!h-5 !w-5 !text-[20px]" [svgIcon]="p.ativo ? 'block' : 'check_circle'"></mat-icon>
+                    </button>
+                  }
                 </td>
               </ng-container>
 
-              <tr mat-header-row *matHeaderRowDef="colunasPlano"></tr>
-              <tr mat-row *matRowDef="let row; columns: colunasPlano"></tr>
+              <tr mat-header-row *matHeaderRowDef="colunasPlano()"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasPlano()"></tr>
             </table>
           </div>
 
@@ -219,12 +225,18 @@
               <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="card_membership"></mat-icon>
               <p class="text-[14px] font-semibold text-tinta">Nenhum plano cadastrado</p>
               <p class="max-w-sm text-[13px] text-tinta-3">
-                O plano define o valor, o período de vencimento e as unidades em que o aluno pode treinar.
+                @if (podeGerenciarPlano()) {
+                  O plano define o valor, o período de vencimento e as unidades em que o aluno pode treinar.
+                } @else {
+                  Nenhum plano foi cadastrado ainda. O cadastro é da administração.
+                }
               </p>
-              <button mat-flat-button color="primary" class="!mt-1" (click)="abrirFormularioPlano(null)">
-                <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
-                Novo plano
-              </button>
+              @if (podeGerenciarPlano()) {
+                <button mat-flat-button color="primary" class="!mt-1" (click)="abrirFormularioPlano(null)">
+                  <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+                  Novo plano
+                </button>
+              }
             </div>
           }
 

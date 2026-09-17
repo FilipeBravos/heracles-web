@@ -11,6 +11,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { ChamadoManutencao, Equipamento } from '../../core/models';
 import { EquipamentoService } from '../../core/services/equipamento.service';
+import { podeExecutar } from '../../core/acesso';
+import { AuthService } from '../../core/services/auth.service';
 import { mensagemDeErro } from '../../core/services/erro-api';
 import { PaginadorIntl } from '../../core/paginador-intl';
 import { EquipamentoFormComponent } from './equipamento-form/equipamento-form';
@@ -34,6 +36,17 @@ import { ChamadoDialogComponent } from './chamado-dialog/chamado-dialog';
 })
 export class EquipamentosComponent implements OnInit {
   private readonly equipamentoService = inject(EquipamentoService);
+  private readonly auth = inject(AuthService);
+
+  /** A tela é alcançável por mais perfis do que esta ação. */
+  readonly podeGerenciar = computed(() =>
+    podeExecutar('gerenciar-equipamento', this.auth.usuario()?.tipoPerfil)
+  );
+
+  /** A tela é alcançável por mais perfis do que esta ação. */
+  readonly podeResolver = computed(() =>
+    podeExecutar('resolver-chamado', this.auth.usuario()?.tipoPerfil)
+  );
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
 

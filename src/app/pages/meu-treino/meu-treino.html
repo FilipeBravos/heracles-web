@@ -1,0 +1,104 @@
+<div class="mx-auto max-w-[840px] px-4 py-6 sm:px-6 lg:py-8">
+  <header class="h-cabecalho">
+    <div>
+      <h1>Meu treino</h1>
+      <p>
+        @if (primeiroNome()) {
+          Olá, {{ primeiroNome() }}. Sua ficha, como o professor prescreveu.
+        } @else {
+          Sua ficha, como o professor prescreveu.
+        }
+      </p>
+    </div>
+  </header>
+
+  @if (erro(); as mensagem) {
+    <div role="alert"
+         class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+      <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+      </span>
+      <button type="button" (click)="carregar()"
+              class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+    </div>
+  }
+
+  @if (carregando()) {
+    <div class="flex items-center gap-3 rounded-marca border border-linha bg-papel px-6 py-10 text-[13px] text-tinta-3">
+      <mat-spinner diameter="20"></mat-spinner><span>Carregando sua ficha…</span>
+    </div>
+  } @else if (fichas().length === 0 && !erro()) {
+    <div class="flex flex-col items-center gap-3 rounded-marca border border-linha bg-papel px-6 py-16 text-center">
+      <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="fitness_center"></mat-icon>
+      <p class="text-[14px] font-semibold text-tinta">Nenhuma ficha vinculada ainda</p>
+      <!-- Não ter ficha é estado normal de quem acabou de se matricular:
+           a tela diz o que fazer, não sugere que algo falhou. -->
+      <p class="max-w-sm text-[13px] text-tinta-3">
+        Seu professor ainda não montou sua ficha. Procure a equipe técnica da sua unidade.
+      </p>
+    </div>
+  } @else {
+    <!-- Seletor só quando há mais de uma ficha: com uma, não há escolha. -->
+    @if (fichas().length > 1) {
+      <div class="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Suas fichas">
+        @for (ficha of fichas(); track ficha.id; let i = $index) {
+          <button type="button" role="tab" [attr.aria-selected]="selecionada() === i"
+                  (click)="selecionada.set(i)"
+                  class="rounded-marca border px-4 py-2 text-[13px] font-semibold transition-colors"
+                  [class]="selecionada() === i
+                    ? 'border-bronze-600 bg-bronze-600 text-white'
+                    : 'border-linha-forte bg-papel text-tinta-2 hover:border-bronze-200 hover:text-tinta'">
+            {{ ficha.nome }}
+          </button>
+        }
+      </div>
+    }
+
+    @if (fichaAberta(); as ficha) {
+      <section class="rounded-marca border border-linha bg-papel">
+        <header class="border-b border-linha px-5 py-4 sm:px-6">
+          <h2 class="font-display text-[21px] font-bold leading-tight text-tinta">{{ ficha.nome }}</h2>
+          <p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px] text-tinta-3">
+            <span>{{ ficha.foco }}</span>
+            <span aria-hidden="true">·</span>
+            <span>{{ ficha.nivel }}</span>
+            @if (mostraVolume(ficha)) {
+              <span aria-hidden="true">·</span>
+              <span class="tabular-nums">{{ ficha.volumePrescritoMinimo }} repetições no mínimo</span>
+            }
+          </p>
+        </header>
+
+        @if (ficha.exercicios.length === 0) {
+          <p class="px-5 py-10 text-center text-[13px] text-tinta-3 sm:px-6">
+            Esta ficha ainda não tem exercícios.
+          </p>
+        } @else {
+          <ol class="m-0 list-none divide-y divide-linha p-0">
+            @for (exercicio of ficha.exercicios; track exercicio.id; let i = $index) {
+              <li class="flex items-start gap-4 px-5 py-4 sm:px-6">
+                <!-- A ordem é a do professor; numerar deixa claro que há
+                     uma sequência, e não uma lista solta. -->
+                <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-marca
+                             bg-fundo-2 text-[12px] font-bold tabular-nums text-tinta-2">{{ i + 1 }}</span>
+
+                <div class="min-w-0 flex-1">
+                  <p class="text-[15px] font-semibold leading-snug text-tinta">{{ exercicio.nome }}</p>
+                  @for (detalhe of detalhes(exercicio); track detalhe) {
+                    <p class="mt-1 text-[12.5px] leading-snug text-tinta-3">{{ detalhe }}</p>
+                  }
+                </div>
+
+                <!-- A prescrição é o que se lê entre uma série e outra:
+                     fica grande e à direita, onde o polegar não cobre. -->
+                <span class="h-etiqueta h-etiqueta--prescricao shrink-0 !text-[13px]">
+                  {{ prescricao(exercicio) }}
+                </span>
+              </li>
+            }
+          </ol>
+        }
+      </section>
+    }
+  }
+</div>

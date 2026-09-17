@@ -1,16 +1,30 @@
-import { AREAS, areasDoPerfil, podeAcessar, rotaInicial } from './acesso';
+import { AREAS, Acao, areasDoPerfil, podeAcessar, podeExecutar, rotaInicial } from './acesso';
 import { TipoPerfil } from './models';
 
 describe('tabela de acesso', () => {
-  it('dá ao admin todas as áreas', () => {
-    expect(areasDoPerfil('ADMIN').length).toBe(AREAS.length);
+  it('dá ao admin todas as áreas operacionais', () => {
+    // Todas menos a do aluno, que é da conta de quem está autenticado.
+    expect(areasDoPerfil('ADMIN').length).toBe(AREAS.length - 1);
   });
 
-  it('não dá área nenhuma ao aluno', () => {
-    // O sistema ainda não tem tela de aluno. Enquanto não tiver, é isto
-    // que impede ele de entrar e receber 403 em cada tela.
-    expect(areasDoPerfil('ALUNO')).toEqual([]);
-    expect(rotaInicial('ALUNO')).toBeNull();
+  it('dá ao aluno a sua área, e só ela', () => {
+    expect(areasDoPerfil('ALUNO').map((a) => a.rota)).toEqual(['/dashboard/meu-treino']);
+    expect(rotaInicial('ALUNO')).toBe('/dashboard/meu-treino');
+  });
+
+  it('a área do aluno não aparece para os perfis operacionais', () => {
+    // Ela mostra as fichas de quem está autenticado: para a recepção e o
+    // professor seria uma tela vazia. Eles consultam a ficha do aluno
+    // pela tela de Alunos.
+    for (const perfil of ['ADMIN', 'SECRETARIA', 'PROFESSOR'] as TipoPerfil[]) {
+      expect(podeAcessar('/dashboard/meu-treino', perfil)).toBeFalse();
+    }
+    expect(podeAcessar('/dashboard/meu-treino', 'ALUNO')).toBeTrue();
+  });
+
+  it('sem perfil não há rota inicial — é o laço que o guard precisa evitar', () => {
+    expect(rotaInicial(null)).toBeNull();
+    expect(rotaInicial(undefined)).toBeNull();
   });
 
   it('esconde da secretaria a prescrição de treino, e do professor o balcão', () => {
@@ -46,5 +60,43 @@ describe('tabela de acesso', () => {
       expect(inicial).not.toBeNull();
       expect(podeAcessar(inicial!, perfil)).toBeTrue();
     }
+  });
+});
+
+describe('ações dentro da tela', () => {
+  it('alcançar a tela não é poder tudo nela', () => {
+    // O professor alcança Equipamentos para abrir chamado, mas cadastrar
+    // aparelho e dar baixa no reparo são da administração.
+    expect(podeAcessar('/dashboard/equipamentos', 'PROFESSOR')).toBeTrue();
+    expect(podeExecutar('gerenciar-equipamento', 'PROFESSOR')).toBeFalse();
+    expect(podeExecutar('resolver-chamado', 'PROFESSOR')).toBeFalse();
+
+    // A secretaria opera a loja, mas não mexe na tabela de preços.
+    expect(podeAcessar('/dashboard/loja', 'SECRETARIA')).toBeTrue();
+    expect(podeExecutar('gerenciar-produto', 'SECRETARIA')).toBeFalse();
+
+    // E alcança Matrículas, mas não cadastra plano nem cancela.
+    expect(podeAcessar('/dashboard/matriculas', 'SECRETARIA')).toBeTrue();
+    expect(podeExecutar('gerenciar-plano', 'SECRETARIA')).toBeFalse();
+    expect(podeExecutar('cancelar-matricula', 'SECRETARIA')).toBeFalse();
+  });
+
+  it('o professor consulta aluno e vincula ficha, mas não cadastra', () => {
+    expect(podeAcessar('/dashboard/alunos', 'PROFESSOR')).toBeTrue();
+    expect(podeExecutar('gerenciar-aluno', 'PROFESSOR')).toBeFalse();
+    expect(podeExecutar('gerenciar-aluno', 'SECRETARIA')).toBeTrue();
+  });
+
+  it('o admin executa todas as ações', () => {
+    const acoes: Acao[] = [
+      'gerenciar-aluno', 'gerenciar-equipamento', 'resolver-chamado',
+      'gerenciar-produto', 'gerenciar-plano', 'cancelar-matricula',
+    ];
+    for (const acao of acoes) expect(podeExecutar(acao, 'ADMIN')).toBeTrue();
+  });
+
+  it('nega quem não tem perfil', () => {
+    expect(podeExecutar('gerenciar-aluno', null)).toBeFalse();
+    expect(podeExecutar('gerenciar-produto', undefined)).toBeFalse();
   });
 });
