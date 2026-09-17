@@ -42,6 +42,11 @@ export class AlunosComponent implements OnInit {
   readonly podeGerenciar = computed(() =>
     podeExecutar('gerenciar-aluno', this.auth.usuario()?.tipoPerfil)
   );
+
+  /** Cadastrar é mais restrito que editar: só a secretaria matricula. */
+  readonly podeCadastrar = computed(() =>
+    podeExecutar('cadastrar-aluno', this.auth.usuario()?.tipoPerfil)
+  );
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
 

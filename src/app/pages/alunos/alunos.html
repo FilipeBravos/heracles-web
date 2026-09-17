@@ -4,7 +4,7 @@
       <h1>Alunos</h1>
       <p>Cadastro, fichas vinculadas e liberação de acesso dos membros da unidade.</p>
     </div>
-    @if (podeGerenciar()) {
+    @if (podeCadastrar()) {
       <button mat-flat-button color="primary" class="!h-11 !px-5" (click)="abrirModalNovoAluno()">
         <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
         Novo aluno
@@ -117,13 +117,13 @@
         <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="group_add"></mat-icon>
         <p class="text-[14px] font-semibold text-tinta">Nenhum aluno cadastrado</p>
         <p class="max-w-sm text-[13px] text-tinta-3">
-          @if (podeGerenciar()) {
+          @if (podeCadastrar()) {
             Comece cadastrando o primeiro membro da unidade — depois você vincula as fichas de treino.
           } @else {
-            Nenhum aluno foi cadastrado nesta unidade ainda.
+            Nenhum aluno foi cadastrado nesta unidade ainda. O cadastro é da secretaria.
           }
         </p>
-        @if (podeGerenciar()) {
+        @if (podeCadastrar()) {
           <button mat-flat-button color="primary" class="!mt-1" (click)="abrirModalNovoAluno()">
             <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
             Novo aluno

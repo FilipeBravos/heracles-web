@@ -84,6 +84,7 @@ export function rotaInicial(perfil: TipoPerfil | null | undefined): string | nul
  * autorização na API.
  */
 export type Acao =
+  | 'cadastrar-aluno'
   | 'gerenciar-aluno'
   | 'gerenciar-equipamento'
   | 'resolver-chamado'
@@ -92,8 +93,12 @@ export type Acao =
   | 'cancelar-matricula';
 
 const ACOES: Readonly<Record<Acao, readonly TipoPerfil[]>> = {
-  // Cadastrar, editar e ativar/inativar aluno. O professor alcança a tela
-  // para consultar e vincular ficha, mas o cadastro é da recepção.
+  // Cadastrar aluno é só da secretaria — nem a administração faz. O
+  // cadastro acompanha a matrícula, e quem recebe o aluno no balcão é
+  // quem tem os documentos na mão.
+  'cadastrar-aluno': ['SECRETARIA'],
+  // Editar dados e ativar/inativar seguem com as duas: corrigir um
+  // telefone errado ou destravar um acesso não é matricular ninguém.
   'gerenciar-aluno': BALCAO,
   // Cadastro do aparelho e baixa do reparo são da administração; abrir
   // chamado, não — é quem está no salão que vê o aparelho quebrar.
