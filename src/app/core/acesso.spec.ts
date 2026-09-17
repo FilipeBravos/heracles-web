@@ -84,15 +84,30 @@ describe('ações dentro da tela', () => {
   it('o professor consulta aluno e vincula ficha, mas não cadastra', () => {
     expect(podeAcessar('/dashboard/alunos', 'PROFESSOR')).toBeTrue();
     expect(podeExecutar('gerenciar-aluno', 'PROFESSOR')).toBeFalse();
-    expect(podeExecutar('gerenciar-aluno', 'SECRETARIA')).toBeTrue();
+    expect(podeExecutar('cadastrar-aluno', 'PROFESSOR')).toBeFalse();
   });
 
-  it('o admin executa todas as ações', () => {
+  it('cadastrar aluno é só da secretaria — nem o admin faz', () => {
+    // Matricular é da recepção: o cadastro acompanha a matrícula, e quem
+    // recebe o aluno no balcão é quem tem os documentos na mão.
+    expect(podeExecutar('cadastrar-aluno', 'SECRETARIA')).toBeTrue();
+    expect(podeExecutar('cadastrar-aluno', 'ADMIN')).toBeFalse();
+  });
+
+  it('editar e inativar aluno seguem com as duas', () => {
+    // Corrigir um telefone errado ou destravar um acesso não é matricular.
+    for (const perfil of ['ADMIN', 'SECRETARIA'] as TipoPerfil[]) {
+      expect(podeExecutar('gerenciar-aluno', perfil)).toBeTrue();
+    }
+  });
+
+  it('o admin executa todas as ações menos cadastrar aluno', () => {
     const acoes: Acao[] = [
       'gerenciar-aluno', 'gerenciar-equipamento', 'resolver-chamado',
       'gerenciar-produto', 'gerenciar-plano', 'cancelar-matricula',
     ];
     for (const acao of acoes) expect(podeExecutar(acao, 'ADMIN')).toBeTrue();
+    expect(podeExecutar('cadastrar-aluno', 'ADMIN')).toBeFalse();
   });
 
   it('nega quem não tem perfil', () => {
