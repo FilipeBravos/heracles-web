@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { MinhaMatricula, Treino } from '../models';
+import { HistoricoTreino, MinhaMatricula, Treino } from '../models';
 
 /**
  * O que o aluno vê de si mesmo.
@@ -20,6 +20,15 @@ export class MinhaAreaService {
   /** As fichas vinculadas a quem está autenticado. */
   meusTreinos(): Observable<Treino[]> {
     return this.http.get<Treino[]>(`${this.url}/treinos`);
+  }
+
+  /**
+   * Fichas que já foram de quem está autenticado e não são mais.
+   *
+   * A atual não vem aqui — já sai em `meusTreinos()`.
+   */
+  historicoDeTreinos(): Observable<HistoricoTreino[]> {
+    return this.http.get<HistoricoTreino[]>(`${this.url}/treinos/historico`);
   }
 
   /**
