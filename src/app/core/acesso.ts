@@ -14,11 +14,17 @@ export interface Area {
   readonly rotulo: string;
   readonly icone: string;
   readonly perfis: readonly TipoPerfil[];
-  /** Separa a faixa "Operação" no menu. */
-  readonly grupo?: 'operacao';
+  /**
+   * Separa a faixa "Operação" no menu, ou põe o item no fim, sozinho e
+   * sem rótulo ("conta") — usado por quem é sobre a própria conta, não
+   * sobre a unidade, e por isso não cabe na faixa de operação mesmo
+   * quando o perfil tem uma.
+   */
+  readonly grupo?: 'operacao' | 'conta';
 }
 
 const TODOS_OPERACIONAIS: readonly TipoPerfil[] = ['ADMIN', 'SECRETARIA', 'PROFESSOR'];
+const TODOS_OS_PERFIS: readonly TipoPerfil[] = ['ADMIN', 'SECRETARIA', 'PROFESSOR', 'ALUNO'];
 const BALCAO: readonly TipoPerfil[] = ['ADMIN', 'SECRETARIA'];
 
 /**
@@ -41,14 +47,6 @@ export const AREAS: readonly Area[] = [
   // e a tela não faz outra coisa.
   { rota: '/dashboard/unidades', rotulo: 'Unidades', icone: 'store', perfis: ['ADMIN'], grupo: 'operacao' },
 
-  // Conta do próprio usuário — nome, telefone, senha, tema —, não
-  // trabalho de aluno ou de matrícula. `grupo: 'operacao'` aqui é so
-  // para ficar no fim do menu, longe do fluxo principal; a faixa
-  // "Operação" existe mesmo com só ela dentro. Só a administração a
-  // alcança por ora: os demais perfis ainda não têm autoatendimento
-  // nenhum na interface.
-  { rota: '/dashboard/configuracoes', rotulo: 'Configurações', icone: 'settings', perfis: ['ADMIN'], grupo: 'operacao' },
-
   // A área do aluno: as duas telas mostram o que é dele, e nenhum outro
   // perfil as vê — para a recepção e o professor seriam telas vazias, já
   // que eles consultam ficha e matrícula de aluno por Alunos e
@@ -57,6 +55,13 @@ export const AREAS: readonly Area[] = [
   // Separada do treino porque responde outra pergunta — "posso entrar
   // hoje?" —, e ele precisa dela sem depender da recepção.
   { rota: '/dashboard/minha-matricula', rotulo: 'Minha matrícula', icone: 'card_membership', perfis: ['ALUNO'] },
+
+  // Conta do próprio usuário — nome, telefone, senha, tema —, não
+  // trabalho de aluno ou de matrícula: todo perfil a alcança, o aluno
+  // inclusive. `grupo: 'conta'` a separa das duas faixas de cima — não
+  // é "Operação" nem uma área exclusiva de um perfil — e a mantém
+  // sempre no fim do menu, perto do cartão de usuário.
+  { rota: '/dashboard/configuracoes', rotulo: 'Configurações', icone: 'settings', perfis: TODOS_OS_PERFIS, grupo: 'conta' },
 ];
 
 export function areasDoPerfil(perfil: TipoPerfil | null | undefined): Area[] {
