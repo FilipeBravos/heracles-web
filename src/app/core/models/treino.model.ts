@@ -62,3 +62,43 @@ export function descreverPrescricao(exercicio: Pick<Exercicio, 'series' | 'repet
 
   return `${exercicio.series}x${repeticoes}`;
 }
+
+/**
+ * Uma ficha que o aluno já treinou e não treina mais.
+ *
+ * Nome, foco e nível vêm do registro histórico, não da ficha viva: ela
+ * pode ter sido renomeada ou apagada desde a troca — o histórico descreve
+ * o que o aluno treinou naquele período, não o que a ficha é hoje. Por
+ * isso não há `exercicios` aqui: a prescrição exata daquele período não
+ * fica guardada, só o nome, o foco e o nível que ele teve.
+ */
+export interface HistoricoTreino {
+  nome: string;
+  foco: string;
+  nivel: string;
+  /** yyyy-MM-dd */
+  vinculadoEm: string;
+  /** yyyy-MM-dd */
+  desvinculadoEm: string;
+}
+
+/**
+ * "de mar/26 a jun/26" — o período em que o aluno treinou a ficha.
+ *
+ * Ano abreviado nos dois lados: sem ele, uma troca em dezembro que vira
+ * janeiro leria "de dez a jan" sem dizer que atravessou o ano.
+ */
+export function descreverPeriodo(historico: Pick<HistoricoTreino, 'vinculadoEm' | 'desvinculadoEm'>): string {
+  return `de ${formatarMesAno(historico.vinculadoEm)} a ${formatarMesAno(historico.desvinculadoEm)}`;
+}
+
+const MESES_ABREVIADOS = [
+  'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
+  'jul', 'ago', 'set', 'out', 'nov', 'dez',
+];
+
+function formatarMesAno(dataIso: string): string {
+  const mes = Number(dataIso.slice(5, 7));
+  const ano = dataIso.slice(2, 4);
+  return `${MESES_ABREVIADOS[mes - 1] ?? dataIso}/${ano}`;
+}

@@ -101,4 +101,54 @@
       </section>
     }
   }
+
+  @if (!carregando()) {
+    <!-- Abaixo da ficha de hoje, e fechado por padrão: é informação para
+         consultar de vez em quando, não a que traz quem abre a tela no
+         meio de uma série. -->
+    <div class="mt-5 rounded-marca border border-linha bg-papel">
+      <button type="button" (click)="alternarHistorico()"
+              class="flex w-full items-center justify-between gap-3 px-5 py-4 text-left sm:px-6"
+              [attr.aria-expanded]="historicoAberto()">
+        <span class="text-[13px] font-semibold text-tinta">Treinos anteriores</span>
+        <mat-icon class="!h-5 !w-5 !text-[20px] text-tinta-3"
+                  [svgIcon]="historicoAberto() ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"></mat-icon>
+      </button>
+
+      @if (historicoAberto()) {
+        <div class="border-t border-linha px-5 py-4 sm:px-6">
+          @if (erroHistorico(); as mensagem) {
+            <div role="alert" class="flex flex-wrap items-center justify-between gap-3">
+              <span class="flex items-center gap-2 text-[13px] text-perigo-700">
+                <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="error"></mat-icon>{{ mensagem }}
+              </span>
+              <button type="button" (click)="recarregarHistorico()"
+                      class="text-[12.5px] font-semibold text-perigo-700 underline underline-offset-2">
+                Tentar novamente
+              </button>
+            </div>
+          } @else if (carregandoHistorico()) {
+            <div class="flex items-center gap-3 py-2 text-[13px] text-tinta-3">
+              <mat-spinner diameter="18"></mat-spinner><span>Carregando histórico…</span>
+            </div>
+          } @else if (historico().length === 0) {
+            <!-- Estado normal para quem nunca trocou de ficha, não falha. -->
+            <p class="py-2 text-[13px] text-tinta-3">Nenhuma ficha anterior ainda.</p>
+          } @else {
+            <ol class="m-0 list-none space-y-2 p-0">
+              @for (item of historico(); track item.nome + item.vinculadoEm) {
+                <li class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 rounded-marca bg-fundo-2 px-4 py-3">
+                  <div class="min-w-0">
+                    <p class="text-[13.5px] font-semibold leading-snug text-tinta">{{ item.nome }}</p>
+                    <p class="mt-0.5 text-[12px] text-tinta-3">{{ item.foco }} · {{ item.nivel }}</p>
+                  </div>
+                  <span class="shrink-0 text-[12px] tabular-nums text-tinta-3">{{ periodo(item) }}</span>
+                </li>
+              }
+            </ol>
+          }
+        </div>
+      }
+    </div>
+  }
 </div>

@@ -3,7 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-import { Exercicio, Treino, descreverPrescricao } from '../../core/models';
+import { Exercicio, HistoricoTreino, Treino, descreverPeriodo, descreverPrescricao } from '../../core/models';
 import { AuthService } from '../../core/services/auth.service';
 import { MinhaAreaService } from '../../core/services/minha-area.service';
 import { mensagemDeErro } from '../../core/services/erro-api';
@@ -41,6 +41,14 @@ export class MeuTreinoComponent implements OnInit {
   );
 
   readonly prescricao = descreverPrescricao;
+  readonly periodo = descreverPeriodo;
+
+  /** Fechado por padrão: quem abre a tela no meio da série quer a ficha, não a lista de fichas antigas. */
+  readonly historicoAberto = signal(false);
+  readonly carregandoHistorico = signal(false);
+  readonly erroHistorico = signal<string | null>(null);
+  readonly historico = signal<HistoricoTreino[]>([]);
+  private historicoCarregado = false;
 
   ngOnInit(): void {
     this.carregar();
@@ -90,5 +98,41 @@ export class MeuTreinoComponent implements OnInit {
     return [exercicio.carga, exercicio.observacoes].filter(
       (texto): texto is string => !!texto && texto.trim().length > 0
     );
+  }
+
+  /**
+   * Abre ou fecha a lista de fichas anteriores, carregando na primeira vez.
+   *
+   * Não entra em `carregar()`: é informação secundária, e pedi-la de
+   * saída atrasaria a ficha de hoje — a que importa para quem abriu a
+   * tela no meio de uma série — atrás de uma consulta que a maioria das
+   * vezes ninguém vai olhar.
+   */
+  alternarHistorico(): void {
+    this.historicoAberto.set(!this.historicoAberto());
+    if (this.historicoAberto() && !this.historicoCarregado) {
+      this.carregarHistorico();
+    }
+  }
+
+  recarregarHistorico(): void {
+    this.carregarHistorico();
+  }
+
+  private carregarHistorico(): void {
+    this.carregandoHistorico.set(true);
+    this.erroHistorico.set(null);
+
+    this.minhaArea.historicoDeTreinos().subscribe({
+      next: (historico) => {
+        this.historico.set(historico);
+        this.historicoCarregado = true;
+        this.carregandoHistorico.set(false);
+      },
+      error: (erro) => {
+        this.erroHistorico.set(mensagemDeErro(erro, 'Não foi possível carregar seu histórico.'));
+        this.carregandoHistorico.set(false);
+      },
+    });
   }
 }
