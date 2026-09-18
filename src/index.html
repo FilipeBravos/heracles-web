@@ -13,6 +13,21 @@
     em rede corporativa que bloqueie CDN externo, onde antes os icones
     apareciam como texto solto.
   -->
+  <script>
+    // Aplica o tema salvo antes do primeiro paint. Sem isto, a pagina
+    // sempre abriria clara e só escureceria depois que o Angular
+    // inicializasse o TemaService — um flash claro->escuro visivel a
+    // cada carregamento para quem escolheu o modo escuro.
+    (function () {
+      try {
+        var tema = localStorage.getItem('heracles.tema');
+        document.documentElement.style.colorScheme =
+          tema === 'escuro' ? 'dark' : tema === 'sistema' ? 'light dark' : 'light';
+      } catch (e) {
+        // Storage bloqueado (navegacao privada): fica no claro padrao.
+      }
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>

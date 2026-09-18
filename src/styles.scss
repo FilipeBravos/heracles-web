@@ -25,6 +25,14 @@ html {
     // mais alunos na tela sem prejudicar o alvo de clique.
     density: -1,
   ));
+
+  // Claro por padrao ate TemaService decidir algo diferente (ele escreve
+  // esta mesma propriedade via JS, antes do primeiro paint — ver
+  // index.html). O Material usa light-dark() nos proprios tokens quando
+  // o tema nao fixa theme-type; e o valor computado aqui, em <html>, que
+  // decide o lado que light-dark() escolhe em todo o documento —
+  // tanto para o Material quanto para as variaveis de tailwind.css.
+  color-scheme: light;
 }
 
 html,
@@ -34,7 +42,6 @@ body {
 
 body {
   margin: 0;
-  color-scheme: light;
   background-color: var(--color-fundo);
   color: var(--color-tinta);
   font-family: var(--font-sans);

@@ -91,4 +91,23 @@ export class AuthService {
     this.limparSessao();
     void this.router.navigate(['/login'], { queryParams: { sessaoExpirada: true } });
   }
+
+  /**
+   * Atualiza o nome exibido depois que a tela de Configurações salva um
+   * novo. Sem isto, o cartão de usuário na navegação mostraria o nome
+   * antigo até o próximo login — a sessão inteira já leu o token uma vez
+   * e guardou o retrato daquele momento.
+   */
+  atualizarNome(novoNome: string): void {
+    const atual = this.usuarioAtual();
+    if (!atual) return;
+
+    const atualizado: UsuarioAutenticado = { ...atual, nome: novoNome };
+    try {
+      localStorage.setItem(CHAVE_USUARIO, JSON.stringify(atualizado));
+    } catch {
+      // Sessao segue valida em memoria ate o recarregamento da pagina.
+    }
+    this.usuarioAtual.set(atualizado);
+  }
 }

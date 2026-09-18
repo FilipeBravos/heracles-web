@@ -66,6 +66,12 @@ export const routes: Routes = [
         canActivate: [perfilGuard],
         loadComponent: () => import('./pages/unidades/unidades').then((m) => m.UnidadesComponent),
       },
+      {
+        path: 'configuracoes',
+        canActivate: [perfilGuard],
+        loadComponent: () =>
+          import('./pages/configuracoes/configuracoes').then((m) => m.ConfiguracoesComponent),
+      },
     ],
   },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },

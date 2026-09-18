@@ -27,27 +27,39 @@
   --color-bronze-50: #fdf6ec;
 
   /* --- Neutros com leve vies quente, para conversarem com o bronze
-         em vez de brigarem com ele. --- */
-  --color-tinta: #16191d;
-  --color-tinta-2: #4f5259;
-  --color-tinta-3: #767a80;
-  --color-papel: #ffffff;
-  --color-fundo: #f4f4f2;
-  --color-fundo-2: #eaeae7;
-  --color-linha: #e3e3df;
-  --color-linha-forte: #d2d2cd;
+         em vez de brigarem com ele.
+
+         Cada um usa light-dark(claro, escuro): a mesma variavel resolve
+         para um valor ou outro conforme a propriedade CSS `color-scheme`
+         do documento, que TemaService escreve em <html> (claro, escuro
+         ou os dois, para seguir o sistema). Nenhuma classe deste app
+         precisa saber que o tema existe — bg-papel, text-tinta etc.
+         continuam sendo a unica forma de pintar a tela.
+
+         No escuro, "mais claro = mais elevado" (convencao M3): fundo e o
+         mais escuro, papel (cartao) e mais claro que fundo, fundo-2 mais
+         claro ainda. No claro e o oposto — papel branco sobre fundo
+         cinza —, e cada par abaixo respeita a leitura de cada modo. --- */
+  --color-tinta: light-dark(#16191d, #e8e9ea);
+  --color-tinta-2: light-dark(#4f5259, #a9adb3);
+  --color-tinta-3: light-dark(#767a80, #7c8189);
+  --color-papel: light-dark(#ffffff, #1c2026);
+  --color-fundo: light-dark(#f4f4f2, #0f1216);
+  --color-fundo-2: light-dark(#eaeae7, #262b32);
+  --color-linha: light-dark(#e3e3df, #2a2f36);
+  --color-linha-forte: light-dark(#d2d2cd, #3a4048);
 
   /* --- Semanticos: separados do acento de proposito. Estado do
          aluno nunca deve depender da cor da marca. --- */
-  --color-ok-700: #1a6b42;
-  --color-ok-200: #b5dcc6;
-  --color-ok-50: #e9f4ee;
-  --color-perigo-700: #a3231b;
-  --color-perigo-200: #f0c4bf;
-  --color-perigo-50: #fbeae8;
-  --color-alerta-700: #8a5a06;
-  --color-alerta-200: #efd9a4;
-  --color-alerta-50: #fdf5e3;
+  --color-ok-700: light-dark(#1a6b42, #6fcf9a);
+  --color-ok-200: light-dark(#b5dcc6, #275239);
+  --color-ok-50: light-dark(#e9f4ee, #16281f);
+  --color-perigo-700: light-dark(#a3231b, #f0938c);
+  --color-perigo-200: light-dark(#f0c4bf, #5c2b26);
+  --color-perigo-50: light-dark(#fbeae8, #341613);
+  --color-alerta-700: light-dark(#8a5a06, #e8bd5e);
+  --color-alerta-200: light-dark(#efd9a4, #55431d);
+  --color-alerta-50: light-dark(#fdf5e3, #2e2410);
 
   /* --- Geometria: um raio discreto, nao a mistura de
          rounded-none / rounded-lg / rounded-2xl de antes. --- */
