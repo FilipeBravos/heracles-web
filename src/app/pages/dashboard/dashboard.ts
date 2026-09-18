@@ -35,6 +35,8 @@ export class DashboardComponent {
 
   readonly areasPrincipais = computed(() => this.areas().filter((a) => !a.grupo));
   readonly areasDeOperacao = computed<Area[]>(() => this.areas().filter((a) => a.grupo === 'operacao'));
+  /** Configurações, sozinha no fim do menu — nenhum perfil fica sem ela. */
+  readonly areasDeConta = computed<Area[]>(() => this.areas().filter((a) => a.grupo === 'conta'));
 
   /**
    * Em telas estreitas a navegacao vira gaveta sobreposta. Antes ela era

@@ -9,9 +9,13 @@ describe('tabela de acesso', () => {
     expect(areasDoPerfil('ADMIN').length).toBe(AREAS.length - AREAS_DO_ALUNO.length);
   });
 
-  it('dá ao aluno as suas áreas, e só elas', () => {
-    expect(areasDoPerfil('ALUNO').map((a) => a.rota)).toEqual(AREAS_DO_ALUNO);
-    // Ele cai no treino ao entrar: é o que ele abre todo dia.
+  it('dá ao aluno as suas áreas, mais a própria conta', () => {
+    expect(areasDoPerfil('ALUNO').map((a) => a.rota)).toEqual([
+      ...AREAS_DO_ALUNO,
+      '/dashboard/configuracoes',
+    ]);
+    // Ele cai no treino ao entrar: é o que ele abre todo dia — não em
+    // Configurações, que fica no fim do menu para todo perfil.
     expect(rotaInicial('ALUNO')).toBe('/dashboard/meu-treino');
   });
 
@@ -50,11 +54,10 @@ describe('tabela de acesso', () => {
     expect(podeAcessar('/dashboard/unidades', 'ADMIN')).toBeTrue();
   });
 
-  it('deixa configurações só com a administração, nem o aluno vê a própria conta por lá', () => {
-    for (const perfil of ['SECRETARIA', 'PROFESSOR', 'ALUNO'] as TipoPerfil[]) {
-      expect(podeAcessar('/dashboard/configuracoes', perfil)).toBeFalse();
+  it('dá Configurações a todo perfil — é conta de quem está logado, não trabalho da unidade', () => {
+    for (const perfil of ['ADMIN', 'SECRETARIA', 'PROFESSOR', 'ALUNO'] as TipoPerfil[]) {
+      expect(podeAcessar('/dashboard/configuracoes', perfil)).toBeTrue();
     }
-    expect(podeAcessar('/dashboard/configuracoes', 'ADMIN')).toBeTrue();
   });
 
   it('nega rota sem área declarada, em vez de liberar por omissão', () => {

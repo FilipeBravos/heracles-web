@@ -54,6 +54,21 @@
         }
       }
 
+      @if (areasDeConta().length) {
+        <!-- Conta do próprio usuário: sem rótulo de faixa, porque não é
+             "Operação" nem uma área de um perfil só — só um espaço a mais
+             antes do cartão de usuário separa das faixas de cima. -->
+        <div class="mt-5 border-t border-grafite-800 pt-2">
+          @for (area of areasDeConta(); track area.rota) {
+            <a [routerLink]="area.rota" routerLinkActive="ativo" class="item-nav">
+              <span class="trilho"></span>
+              <mat-icon class="!h-5 !w-5 !text-[20px]" [svgIcon]="area.icone"></mat-icon>
+              <span>{{ area.rotulo }}</span>
+            </a>
+          }
+        </div>
+      }
+
     </nav>
 
     @if (usuario(); as u) {
