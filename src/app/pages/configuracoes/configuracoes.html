@@ -1,0 +1,157 @@
+<div class="mx-auto max-w-[640px] px-4 py-6 sm:px-6 lg:py-8">
+  <header class="h-cabecalho">
+    <div>
+      <h1>Configurações</h1>
+      <p>Seus dados de acesso e como o sistema aparece neste computador.</p>
+    </div>
+  </header>
+
+  <div class="flex flex-col gap-5">
+    <!-- ============ Meus dados ============ -->
+    <section class="rounded-marca border border-linha bg-papel">
+      <header class="border-b border-linha px-5 py-4 sm:px-6">
+        <h2 class="font-display text-[19px] font-bold leading-tight text-tinta">Meus dados</h2>
+        <p class="mt-1 text-[12.5px] text-tinta-3">Nome e telefone de contato.</p>
+      </header>
+
+      <div class="px-5 py-5 sm:px-6">
+        @if (erroDados(); as mensagem) {
+          <div role="alert"
+               class="mb-4 flex items-start gap-2.5 rounded-marca border border-perigo-200 bg-perigo-50 px-4 py-3">
+            <mat-icon class="!mt-px !h-[18px] !w-[18px] !text-[18px] text-perigo-700" svgIcon="error"></mat-icon>
+            <span class="text-[12.5px] leading-snug text-perigo-700">{{ mensagem }}</span>
+          </div>
+        }
+
+        @if (carregandoDados()) {
+          <div class="flex items-center gap-3 py-3 text-[13px] text-tinta-3">
+            <mat-spinner diameter="20"></mat-spinner><span>Carregando…</span>
+          </div>
+        } @else {
+          <form [formGroup]="formDados" class="flex flex-col gap-4" (ngSubmit)="salvarDados()">
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Nome</mat-label>
+              <input matInput id="nome" formControlName="nome">
+              @if (formDados.controls.nome.touched && formDados.controls.nome.invalid) {
+                <mat-error>Informe seu nome.</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- Só leitura: trocar o próprio e-mail mudaria o que o login
+                 usa para achar a conta, e isso não é dado que se corrige
+                 aqui. -->
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>E-mail</mat-label>
+              <input matInput [value]="email()" disabled>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Telefone</mat-label>
+              <input matInput id="telefone" formControlName="telefone" placeholder="(11) 99999-9999">
+            </mat-form-field>
+
+            <div class="flex justify-end">
+              <button mat-flat-button color="primary" type="submit" class="!px-5"
+                      [disabled]="formDados.invalid || salvandoDados()">
+                @if (salvandoDados()) { <mat-spinner diameter="20"></mat-spinner> }
+                @else { Salvar dados }
+              </button>
+            </div>
+          </form>
+        }
+      </div>
+    </section>
+
+    <!-- ============ Senha ============ -->
+    <section class="rounded-marca border border-linha bg-papel">
+      <header class="border-b border-linha px-5 py-4 sm:px-6">
+        <h2 class="font-display text-[19px] font-bold leading-tight text-tinta">Senha</h2>
+        <p class="mt-1 text-[12.5px] text-tinta-3">Confirme a senha atual para definir uma nova.</p>
+      </header>
+
+      <div class="px-5 py-5 sm:px-6">
+        @if (erroSenha(); as mensagem) {
+          <div role="alert"
+               class="mb-4 flex items-start gap-2.5 rounded-marca border border-perigo-200 bg-perigo-50 px-4 py-3">
+            <mat-icon class="!mt-px !h-[18px] !w-[18px] !text-[18px] text-perigo-700" svgIcon="error"></mat-icon>
+            <span class="text-[12.5px] leading-snug text-perigo-700">{{ mensagem }}</span>
+          </div>
+        }
+
+        <form [formGroup]="formSenha" class="flex flex-col gap-4" (ngSubmit)="salvarSenha()">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Senha atual</mat-label>
+            <input matInput id="senhaAtual" formControlName="senhaAtual"
+                   [type]="mostrarSenhaAtual() ? 'text' : 'password'" autocomplete="current-password">
+            <button matSuffix mat-icon-button type="button" class="!h-9 !w-9 !text-tinta-3"
+                    (click)="alternarSenhaAtual()"
+                    [attr.aria-label]="mostrarSenhaAtual() ? 'Ocultar senha atual' : 'Mostrar senha atual'">
+              <mat-icon class="!h-5 !w-5 !text-[20px]"
+                        [svgIcon]="mostrarSenhaAtual() ? 'visibility_off' : 'visibility'"></mat-icon>
+            </button>
+            @if (formSenha.controls.senhaAtual.touched && formSenha.controls.senhaAtual.invalid) {
+              <mat-error>Informe a senha atual.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Nova senha</mat-label>
+            <input matInput id="novaSenha" formControlName="novaSenha"
+                   [type]="mostrarNovaSenha() ? 'text' : 'password'" autocomplete="new-password">
+            <button matSuffix mat-icon-button type="button" class="!h-9 !w-9 !text-tinta-3"
+                    (click)="alternarNovaSenha()"
+                    [attr.aria-label]="mostrarNovaSenha() ? 'Ocultar nova senha' : 'Mostrar nova senha'">
+              <mat-icon class="!h-5 !w-5 !text-[20px]"
+                        [svgIcon]="mostrarNovaSenha() ? 'visibility_off' : 'visibility'"></mat-icon>
+            </button>
+            @if (formSenha.controls.novaSenha.touched && formSenha.controls.novaSenha.invalid) {
+              <mat-error>Mínimo de 8 caracteres.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Confirmar nova senha</mat-label>
+            <input matInput id="confirmarNovaSenha" formControlName="confirmarNovaSenha"
+                   [type]="mostrarNovaSenha() ? 'text' : 'password'" autocomplete="new-password">
+            @if (formSenha.controls.confirmarNovaSenha.touched
+                  && formSenha.controls.confirmarNovaSenha.hasError('confirmacaoNaoBate')) {
+              <mat-error>As senhas não coincidem.</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="flex justify-end">
+            <button mat-flat-button color="primary" type="submit" class="!px-5"
+                    [disabled]="formSenha.invalid || salvandoSenha()">
+              @if (salvandoSenha()) { <mat-spinner diameter="20"></mat-spinner> }
+              @else { Trocar senha }
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ============ Aparência ============ -->
+    <section class="rounded-marca border border-linha bg-papel">
+      <header class="border-b border-linha px-5 py-4 sm:px-6">
+        <h2 class="font-display text-[19px] font-bold leading-tight text-tinta">Aparência</h2>
+        <p class="mt-1 text-[12.5px] text-tinta-3">
+          Vale só para este computador — cada aparelho guarda a própria escolha.
+        </p>
+      </header>
+
+      <div class="flex flex-wrap gap-2 px-5 py-5 sm:px-6" role="radiogroup" aria-label="Aparência">
+        @for (opcao of opcoesTema; track opcao.valor) {
+          <button type="button" role="radio" [attr.aria-checked]="tema() === opcao.valor"
+                  (click)="escolherTema(opcao.valor)"
+                  class="flex items-center gap-2 rounded-marca border px-4 py-2.5 text-[13px] font-semibold transition-colors"
+                  [class]="tema() === opcao.valor
+                    ? 'border-bronze-600 bg-bronze-600 text-white'
+                    : 'border-linha-forte bg-papel text-tinta-2 hover:border-bronze-200 hover:text-tinta'">
+            <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" [svgIcon]="opcao.icone"></mat-icon>
+            {{ opcao.rotulo }}
+          </button>
+        }
+      </div>
+    </section>
+  </div>
+</div>

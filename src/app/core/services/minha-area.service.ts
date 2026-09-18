@@ -3,10 +3,17 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { HistoricoTreino, MinhaMatricula, Treino } from '../models';
+import {
+  AtualizarMeusDadosForm,
+  HistoricoTreino,
+  MeusDados,
+  MinhaMatricula,
+  Treino,
+  TrocarSenhaForm,
+} from '../models';
 
 /**
- * O que o aluno vê de si mesmo.
+ * O que qualquer usuário autenticado vê e edita de si mesmo.
  *
  * Nenhum método daqui manda id: o sujeito é quem o token identifica. Um
  * `/api/alunos/{id}/treinos` seria a mesma informação com uma porta a
@@ -39,5 +46,20 @@ export class MinhaAreaService {
    */
   minhaMatricula(): Observable<MinhaMatricula> {
     return this.http.get<MinhaMatricula>(`${this.url}/matricula`);
+  }
+
+  /** Nome, e-mail e telefone de quem está autenticado. */
+  meusDados(): Observable<MeusDados> {
+    return this.http.get<MeusDados>(`${this.url}/dados`);
+  }
+
+  /** Atualiza nome e telefone. E-mail e CPF não são editáveis por aqui. */
+  atualizarMeusDados(form: AtualizarMeusDadosForm): Observable<MeusDados> {
+    return this.http.put<MeusDados>(`${this.url}/dados`, form);
+  }
+
+  /** Troca a própria senha. A API exige a atual antes de aceitar a nova. */
+  trocarSenha(form: TrocarSenhaForm): Observable<void> {
+    return this.http.put<void>(`${this.url}/senha`, form);
   }
 }

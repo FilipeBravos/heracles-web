@@ -50,6 +50,13 @@ describe('tabela de acesso', () => {
     expect(podeAcessar('/dashboard/unidades', 'ADMIN')).toBeTrue();
   });
 
+  it('deixa configurações só com a administração, nem o aluno vê a própria conta por lá', () => {
+    for (const perfil of ['SECRETARIA', 'PROFESSOR', 'ALUNO'] as TipoPerfil[]) {
+      expect(podeAcessar('/dashboard/configuracoes', perfil)).toBeFalse();
+    }
+    expect(podeAcessar('/dashboard/configuracoes', 'ADMIN')).toBeTrue();
+  });
+
   it('nega rota sem área declarada, em vez de liberar por omissão', () => {
     expect(podeAcessar('/dashboard/relatorios', 'ADMIN')).toBeFalse();
   });

@@ -41,6 +41,14 @@ export const AREAS: readonly Area[] = [
   // e a tela não faz outra coisa.
   { rota: '/dashboard/unidades', rotulo: 'Unidades', icone: 'store', perfis: ['ADMIN'], grupo: 'operacao' },
 
+  // Conta do próprio usuário — nome, telefone, senha, tema —, não
+  // trabalho de aluno ou de matrícula. `grupo: 'operacao'` aqui é so
+  // para ficar no fim do menu, longe do fluxo principal; a faixa
+  // "Operação" existe mesmo com só ela dentro. Só a administração a
+  // alcança por ora: os demais perfis ainda não têm autoatendimento
+  // nenhum na interface.
+  { rota: '/dashboard/configuracoes', rotulo: 'Configurações', icone: 'settings', perfis: ['ADMIN'], grupo: 'operacao' },
+
   // A área do aluno: as duas telas mostram o que é dele, e nenhum outro
   // perfil as vê — para a recepção e o professor seriam telas vazias, já
   // que eles consultam ficha e matrícula de aluno por Alunos e
