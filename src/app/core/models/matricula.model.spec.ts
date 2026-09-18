@@ -1,5 +1,6 @@
 import {
   Assinatura,
+  LinhaInadimplencia,
   MinhaMatricula,
   avisoDaMinhaMatricula,
   descreverMes,
@@ -7,6 +8,7 @@ import {
   escalaDoGrafico,
   rotularAno,
   rotularMes,
+  situacaoDaLinhaInadimplencia,
   situacaoDaMatricula,
   situacaoDaMinhaMatricula,
   urgenciaDoPrazo,
@@ -22,6 +24,7 @@ function assinatura(parcial: Partial<Assinatura>): Assinatura {
     valorMensal: 129.9,
     origem: 'DIRETO',
     tokenParceiro: null,
+    formaPagamento: 'PIX',
     dataInicio: '2026-08-15',
     dataVencimento: '2026-09-15',
     status: 'ATIVA',
@@ -205,5 +208,44 @@ describe('avisoDaMinhaMatricula', () => {
     expect(aviso.situacao).toBeNull();
     expect(aviso.tom).toBe('neutro');
     expect(aviso.detalhe).toContain('recepção');
+  });
+});
+
+function linhaInadimplencia(parcial: Partial<LinhaInadimplencia>): LinhaInadimplencia {
+  return {
+    assinaturaId: 1,
+    alunoId: 1,
+    alunoNome: 'Marina Alves',
+    planoNome: 'Mensal Centro',
+    valorMensal: 129.9,
+    dataVencimento: '2026-09-15',
+    status: 'ATIVA',
+    vencida: false,
+    diasParaVencer: 3,
+    cobrancaPendenteId: 10,
+    formaPagamento: 'PIX',
+    codigoSimulado: 'PIX-SIMULADO-ABC123',
+    ...parcial,
+  };
+}
+
+describe('situacaoDaLinhaInadimplencia', () => {
+  it('lê a mesma régua que a tela de Matrículas, a partir de status e vencida', () => {
+    // Mesma regra central (`situacaoPor`) que `situacaoDaMatricula` usa —
+    // as duas telas precisam concordar sobre o mesmo aluno.
+    expect(situacaoDaLinhaInadimplencia(linhaInadimplencia({ diasParaVencer: 3 })))
+      .toBe('VENCE_EM_BREVE');
+    expect(situacaoDaLinhaInadimplencia(linhaInadimplencia({ vencida: true, diasParaVencer: -3 })))
+      .toBe('VENCIDA');
+    expect(situacaoDaLinhaInadimplencia(linhaInadimplencia({ status: 'INADIMPLENTE', diasParaVencer: -10 })))
+      .toBe('INADIMPLENTE');
+  });
+
+  it('sem cobrança pendente a régua não muda — só a ação de confirmar some da tela', () => {
+    const linha = linhaInadimplencia({
+      vencida: true, diasParaVencer: -1,
+      cobrancaPendenteId: null, formaPagamento: null, codigoSimulado: null,
+    });
+    expect(situacaoDaLinhaInadimplencia(linha)).toBe('VENCIDA');
   });
 });

@@ -1,6 +1,8 @@
 export type TipoCobranca = 'RECORRENTE' | 'PACOTE_ANUAL';
 export type OrigemAssinatura = 'DIRETO' | 'GYMPASS' | 'TOTALPASS';
 export type StatusAssinatura = 'ATIVA' | 'INADIMPLENTE' | 'CANCELADA';
+export type FormaPagamento = 'BOLETO' | 'PIX' | 'CARTAO';
+export type StatusCobranca = 'PENDENTE' | 'PAGA' | 'CANCELADA';
 
 export type MotivoAcesso =
   | 'LIBERADO'
@@ -41,12 +43,31 @@ export interface Assinatura {
   valorMensal: number;
   origem: OrigemAssinatura;
   tokenParceiro: string | null;
+  formaPagamento: FormaPagamento;
   dataInicio: string;
   dataVencimento: string;
   status: StatusAssinatura;
   dataCancelamento: string | null;
   /** Derivado da data pela API, não gravado: o status é o que o operador marcou. */
   vencida: boolean;
+}
+
+/**
+ * Uma cobrança de um ciclo da assinatura — boleto, PIX ou cartão.
+ *
+ * Simulada: não há gateway de pagamento integrado, então "paga" aqui é
+ * a secretaria confirmando o recebimento (o mesmo botão de renovar),
+ * não um webhook de verdade. `codigoSimulado` existe só para a tela
+ * parecer uma cobrança real; nulo no cartão, que não tem código copiável.
+ */
+export interface Cobranca {
+  id: number;
+  valor: number;
+  formaPagamento: FormaPagamento;
+  codigoSimulado: string | null;
+  dataVencimento: string;
+  status: StatusCobranca;
+  dataPagamento: string | null;
 }
 
 /**
@@ -62,6 +83,7 @@ export interface MatricularForm {
   origem: OrigemAssinatura;
   tokenParceiro: string | null;
   dataInicio: string | null;
+  formaPagamento: FormaPagamento;
 }
 
 /** Veredito da catraca, com o motivo — cada um leva a um encaminhamento. */
@@ -82,6 +104,18 @@ export const ORIGENS_ASSINATURA: { valor: OrigemAssinatura; rotulo: string }[] =
   { valor: 'GYMPASS', rotulo: 'Gympass' },
   { valor: 'TOTALPASS', rotulo: 'TotalPass' },
 ];
+
+export const FORMAS_PAGAMENTO: { valor: FormaPagamento; rotulo: string }[] = [
+  { valor: 'PIX', rotulo: 'PIX' },
+  { valor: 'BOLETO', rotulo: 'Boleto' },
+  { valor: 'CARTAO', rotulo: 'Cartão' },
+];
+
+export const ROTULO_FORMA_PAGAMENTO: Readonly<Record<FormaPagamento, string>> = {
+  PIX: 'PIX',
+  BOLETO: 'Boleto',
+  CARTAO: 'Cartão',
+};
 
 /** Dentro de quantos dias um vencimento já entra na fila de cobrança. */
 export const DIAS_PARA_VENCER = 7;
@@ -161,6 +195,46 @@ export interface FilaDeVencimentos {
   /** A fila inteira, não só o que veio na lista. */
   total: number;
   itens: Vencimento[];
+}
+
+/**
+ * Uma linha do relatório de inadimplência.
+ *
+ * `cobrancaPendenteId`/`formaPagamento`/`codigoSimulado` saem nulos
+ * quando não há cobrança em aberto para aquela assinatura (por exemplo,
+ * logo após cancelar) — a tela não oferece "confirmar pagamento" nesse caso.
+ */
+export interface LinhaInadimplencia {
+  assinaturaId: number;
+  alunoId: number;
+  alunoNome: string;
+  planoNome: string;
+  valorMensal: number;
+  dataVencimento: string;
+  status: StatusAssinatura;
+  vencida: boolean;
+  /** Mesma convenção de `Vencimento`: negativo quando já venceu. */
+  diasParaVencer: number;
+  cobrancaPendenteId: number | null;
+  formaPagamento: FormaPagamento | null;
+  codigoSimulado: string | null;
+}
+
+/** Contagem por etapa da régua, para o cabeçalho do relatório de inadimplência. */
+export interface ResumoInadimplencia {
+  venceEmBreve: number;
+  vencidas: number;
+  inadimplentes: number;
+}
+
+/**
+ * A régua de uma linha do relatório de inadimplência.
+ *
+ * Reaproveita a mesma regra de `situacaoDaMatricula`/`situacaoDaMinhaMatricula`
+ * — as três telas precisam ler o mesmo aluno do mesmo jeito.
+ */
+export function situacaoDaLinhaInadimplencia(linha: LinhaInadimplencia): SituacaoMatricula {
+  return situacaoPor(linha.status, linha.vencida, linha.diasParaVencer);
 }
 
 /**
