@@ -102,6 +102,15 @@ describe('ações dentro da tela', () => {
     expect(podeExecutar('cadastrar-aluno', 'PROFESSOR')).toBeFalse();
   });
 
+  it('o professor lê e preenche a anamnese, mesmo sem gerenciar o cadastro', () => {
+    // É a mesma regra que a API aplica em PUT /usuarios/*/anamnese: quem
+    // monta a ficha precisa poder preencher a anamnese que a libera.
+    for (const perfil of ['ADMIN', 'SECRETARIA', 'PROFESSOR'] as TipoPerfil[]) {
+      expect(podeExecutar('gerenciar-anamnese', perfil)).toBeTrue();
+    }
+    expect(podeExecutar('gerenciar-anamnese', 'ALUNO')).toBeFalse();
+  });
+
   it('cadastrar aluno é só da secretaria — nem o admin faz', () => {
     // Matricular é da recepção: o cadastro acompanha a matrícula, e quem
     // recebe o aluno no balcão é quem tem os documentos na mão.
@@ -118,7 +127,7 @@ describe('ações dentro da tela', () => {
 
   it('o admin executa todas as ações menos cadastrar aluno', () => {
     const acoes: Acao[] = [
-      'gerenciar-aluno', 'gerenciar-equipamento', 'resolver-chamado',
+      'gerenciar-aluno', 'gerenciar-anamnese', 'gerenciar-equipamento', 'resolver-chamado',
       'gerenciar-produto', 'gerenciar-plano', 'cancelar-matricula',
     ];
     for (const acao of acoes) expect(podeExecutar(acao, 'ADMIN')).toBeTrue();

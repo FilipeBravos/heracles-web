@@ -10,26 +10,89 @@ export interface Usuario {
   cpf: string;
   email: string;
   telefone: string | null;
+  endereco: string | null;
+  cep: string | null;
+  dataNascimento: string | null;
+  temFoto: boolean;
+  planoEscolhidoId: number | null;
+  planoEscolhidoNome: string | null;
+  anamnesePreenchida: boolean;
   tipoPerfil: TipoPerfil;
   status: StatusUsuario;
   dataCadastro: string;
   treinos: TreinoResumo[];
 }
 
-/** Espelha UsuarioRequests.Criar. */
+/**
+ * Espelha UsuarioRequests.Criar.
+ *
+ * Endereco, CEP, data de nascimento, foto e plano so existem de fato para
+ * o aluno — a API so os exige quando tipoPerfil e ALUNO. Aqui ficam
+ * opcionais porque o contrato tambem serve professor/secretaria/admin;
+ * o formulario de aluno e quem decide marca-los como obrigatorios.
+ */
 export interface NovoUsuario {
   nome: string;
   cpf: string;
   email: string;
   telefone: string | null;
+  endereco?: string | null;
+  cep?: string | null;
+  dataNascimento?: string | null;
+  /** Base64 puro, sem o prefixo "data:image/...;base64,". */
+  fotoBase64?: string | null;
+  fotoContentType?: string | null;
+  planoEscolhidoId?: number | null;
   tipoPerfil: TipoPerfil;
   senha: string;
 }
 
-/** Espelha UsuarioRequests.Atualizar — sem perfil e sem status, que nao sao editaveis por aqui. */
+/**
+ * Espelha UsuarioRequests.Atualizar — sem perfil e sem status, que nao sao
+ * editaveis por aqui.
+ *
+ * fotoBase64/fotoContentType so devem ir preenchidos quando o usuario
+ * escolhe uma foto nova: mandar os dois nulos preserva a foto que ja
+ * existe, e mandar so um dos dois e erro na API.
+ */
 export interface EdicaoUsuario {
   nome: string;
   cpf: string;
   email: string;
   telefone: string | null;
+  endereco?: string | null;
+  cep?: string | null;
+  dataNascimento?: string | null;
+  fotoBase64?: string | null;
+  fotoContentType?: string | null;
+  planoEscolhidoId?: number | null;
+}
+
+/**
+ * Espelha AnamneseDtos.Response.
+ *
+ * `preenchida` e o sinal de verdade: quando falso, todo o resto vem nulo
+ * porque o aluno simplesmente ainda nao respondeu — não é erro.
+ */
+export interface Anamnese {
+  preenchida: boolean;
+  objetivo: string | null;
+  condicoesSaude: string | null;
+  lesoesCirurgias: string | null;
+  medicamentosUso: string | null;
+  restricoesMedicas: string | null;
+  contatoEmergenciaNome: string | null;
+  contatoEmergenciaTelefone: string | null;
+  preenchidaEm: string | null;
+}
+
+/** Espelha AnamneseDtos.Salvar. */
+export interface AnamneseForm {
+  objetivo: string;
+  condicoesSaude: string | null;
+  lesoesCirurgias: string | null;
+  medicamentosUso: string | null;
+  restricoesMedicas: string | null;
+  contatoEmergenciaNome: string;
+  contatoEmergenciaTelefone: string;
 }

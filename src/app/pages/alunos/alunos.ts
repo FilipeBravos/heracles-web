@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -16,6 +16,7 @@ import { mensagemDeErro } from '../../core/services/erro-api';
 import { PaginadorIntl } from '../../core/paginador-intl';
 import { AlunoFormComponent } from './aluno-form/aluno-form';
 import { VincularTreinoComponent } from './vincular-treino/vincular-treino';
+import { AnamneseDialogComponent } from './anamnese-dialog/anamnese-dialog';
 
 @Component({
   selector: 'app-alunos',
@@ -34,7 +35,7 @@ import { VincularTreinoComponent } from './vincular-treino/vincular-treino';
   // o bundle inicial, que é carregado antes mesmo do login.
   providers: [{ provide: MatPaginatorIntl, useClass: PaginadorIntl }],
 })
-export class AlunosComponent implements OnInit {
+export class AlunosComponent implements OnInit, OnDestroy {
   private readonly usuarioService = inject(UsuarioService);
   private readonly auth = inject(AuthService);
 
@@ -46,6 +47,11 @@ export class AlunosComponent implements OnInit {
   /** Cadastrar é mais restrito que editar: só a secretaria matricula. */
   readonly podeCadastrar = computed(() =>
     podeExecutar('cadastrar-aluno', this.auth.usuario()?.tipoPerfil)
+  );
+
+  /** Ler e preencher a anamnese é do mesmo grupo que monta e vincula ficha. */
+  readonly podeVerAnamnese = computed(() =>
+    podeExecutar('gerenciar-anamnese', this.auth.usuario()?.tipoPerfil)
   );
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
@@ -59,8 +65,15 @@ export class AlunosComponent implements OnInit {
   readonly pagina = signal(0);
   readonly tamanhoPagina = signal(20);
 
+  /** Object URLs das fotos da página atual, por id de aluno. */
+  readonly fotoPorAluno = signal<Record<number, string>>({});
+
   ngOnInit(): void {
     this.listar();
+  }
+
+  ngOnDestroy(): void {
+    this.liberarFotos();
   }
 
   listar(): void {
@@ -72,12 +85,42 @@ export class AlunosComponent implements OnInit {
         this.alunos.set(pagina.content);
         this.total.set(pagina.totalElements);
         this.carregando.set(false);
+        this.carregarFotos(pagina.content);
       },
       error: (erro) => {
         this.erro.set(mensagemDeErro(erro, 'Não foi possível carregar os alunos.'));
         this.carregando.set(false);
       },
     });
+  }
+
+  /**
+   * Busca a foto de quem tem, uma a uma.
+   *
+   * Não dá para apontar um `<img src>` direto no endpoint: ele exige o
+   * bearer token, que só o HttpClient anexa — daí o object URL.
+   */
+  private carregarFotos(alunos: Usuario[]): void {
+    this.liberarFotos();
+
+    for (const aluno of alunos) {
+      if (!aluno.temFoto) continue;
+      this.usuarioService.buscarFoto(aluno.id).subscribe({
+        next: (blob) => {
+          const url = URL.createObjectURL(blob);
+          this.fotoPorAluno.update((atual) => ({ ...atual, [aluno.id]: url }));
+        },
+        // Sem foto na tabela não impede o resto da tela de funcionar.
+        error: () => {},
+      });
+    }
+  }
+
+  private liberarFotos(): void {
+    for (const url of Object.values(this.fotoPorAluno())) {
+      URL.revokeObjectURL(url);
+    }
+    this.fotoPorAluno.set({});
   }
 
   mudarPagina(evento: PageEvent): void {
@@ -113,6 +156,18 @@ export class AlunosComponent implements OnInit {
       .subscribe((salvou) => {
         if (salvou) {
           this.snackBar.open('Fichas atualizadas.', 'Fechar', { duration: 4000 });
+          this.listar();
+        }
+      });
+  }
+
+  abrirModalAnamnese(aluno: Usuario): void {
+    this.dialog
+      .open(AnamneseDialogComponent, { width: '600px', panelClass: '!rounded-none', data: { aluno } })
+      .afterClosed()
+      .subscribe((salvou) => {
+        if (salvou) {
+          this.snackBar.open('Anamnese salva.', 'Fechar', { duration: 4000 });
           this.listar();
         }
       });

@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { EdicaoUsuario, NovoUsuario, Pagina, Usuario } from '../models';
+import { Anamnese, AnamneseForm, EdicaoUsuario, NovoUsuario, Pagina, Usuario } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class UsuarioService {
@@ -29,5 +29,24 @@ export class UsuarioService {
 
   sincronizarTreinos(id: number, treinosIds: number[]): Observable<Usuario> {
     return this.http.put<Usuario>(`${this.url}/${id}/treinos`, { treinosIds });
+  }
+
+  buscarAnamnese(id: number): Observable<Anamnese> {
+    return this.http.get<Anamnese>(`${this.url}/${id}/anamnese`);
+  }
+
+  salvarAnamnese(id: number, anamnese: AnamneseForm): Observable<Anamnese> {
+    return this.http.put<Anamnese>(`${this.url}/${id}/anamnese`, anamnese);
+  }
+
+  /**
+   * Bytes da foto, para montar um object URL.
+   *
+   * Não dá para apontar um `<img src>` direto no endpoint: ele exige o
+   * bearer token, que uma tag de imagem comum não envia — só o
+   * HttpClient, via authInterceptor, faz isso.
+   */
+  buscarFoto(id: number): Observable<Blob> {
+    return this.http.get(`${this.url}/${id}/foto`, { responseType: 'blob' });
   }
 }
