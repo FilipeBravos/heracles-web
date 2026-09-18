@@ -6,10 +6,13 @@ import { environment } from '../../../environments/environment';
 import {
   Acesso,
   Assinatura,
+  Cobranca,
   FilaDeVencimentos,
   HistoricoMensal,
+  LinhaInadimplencia,
   MatricularForm,
   Pagina,
+  ResumoInadimplencia,
 } from '../models';
 
 @Injectable({ providedIn: 'root' })
@@ -64,5 +67,25 @@ export class AssinaturaService {
   conferirAcesso(alunoId: number, unidadeId: number): Observable<Acesso> {
     const params = new HttpParams().set('alunoId', alunoId).set('unidadeId', unidadeId);
     return this.http.get<Acesso>(`${this.url}/acesso`, { params });
+  }
+
+  /** Extrato de cobranças (simuladas) da assinatura, mais recente primeiro. */
+  historicoCobrancas(assinaturaId: number): Observable<Cobranca[]> {
+    return this.http.get<Cobranca[]>(`${this.url}/${assinaturaId}/cobrancas`);
+  }
+
+  /** Cabeçalho do relatório de inadimplência: quantos em cada etapa da régua. */
+  resumoInadimplencia(diasParaVencer = 7): Observable<ResumoInadimplencia> {
+    const params = new HttpParams().set('diasParaVencer', diasParaVencer);
+    return this.http.get<ResumoInadimplencia>(`${this.url}/inadimplencia/resumo`, { params });
+  }
+
+  /** O relatório de inadimplência: quem vence em breve, já venceu ou está inadimplente. */
+  inadimplencia(pagina = 0, tamanho = 20, diasParaVencer = 7): Observable<Pagina<LinhaInadimplencia>> {
+    const params = new HttpParams()
+      .set('page', pagina)
+      .set('size', tamanho)
+      .set('diasParaVencer', diasParaVencer);
+    return this.http.get<Pagina<LinhaInadimplencia>>(`${this.url}/inadimplencia`, { params });
   }
 }

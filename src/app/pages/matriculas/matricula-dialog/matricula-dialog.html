@@ -72,6 +72,16 @@
           </mat-form-field>
         </div>
 
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Forma de pagamento</mat-label>
+          <mat-select id="formaPagamento" formControlName="formaPagamento">
+            @for (f of formasPagamento; track f.valor) {
+              <mat-option [value]="f.valor">{{ f.rotulo }}</mat-option>
+            }
+          </mat-select>
+          <mat-hint>Cobrança simulada — não há gateway de pagamento integrado.</mat-hint>
+        </mat-form-field>
+
         <!-- Só aparece no parceiro: na matrícula direta o código não
              significa nada, e a API recusa se vier preenchido. -->
         @if (exigeToken()) {

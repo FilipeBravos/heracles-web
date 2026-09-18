@@ -9,7 +9,14 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 
-import { ORIGENS_ASSINATURA, OrigemAssinatura, Plano, Usuario } from '../../../core/models';
+import {
+  FORMAS_PAGAMENTO,
+  FormaPagamento,
+  ORIGENS_ASSINATURA,
+  OrigemAssinatura,
+  Plano,
+  Usuario,
+} from '../../../core/models';
 import { AssinaturaService } from '../../../core/services/assinatura.service';
 import { PlanoService } from '../../../core/services/plano.service';
 import { UsuarioService } from '../../../core/services/usuario.service';
@@ -53,6 +60,7 @@ export class MatriculaDialogComponent implements OnInit {
 
   readonly dialogRef = inject(MatDialogRef<MatriculaDialogComponent>);
   readonly origens = ORIGENS_ASSINATURA;
+  readonly formasPagamento = FORMAS_PAGAMENTO;
 
   readonly carregando = signal(true);
   readonly enviando = signal(false);
@@ -66,6 +74,7 @@ export class MatriculaDialogComponent implements OnInit {
     planoId: [null as number | null, Validators.required],
     origem: ['DIRETO' as OrigemAssinatura, Validators.required],
     tokenParceiro: [''],
+    formaPagamento: ['PIX' as FormaPagamento, Validators.required],
     // Input nativo de data: o valor ja chega como yyyy-MM-dd, o mesmo
     // formato que a API espera. O datepicker do Material custaria ~130 kB
     // no chunk desta tela por um campo que quase sempre fica no padrao.
@@ -166,6 +175,7 @@ export class MatriculaDialogComponent implements OnInit {
       origem: valores.origem,
       tokenParceiro: this.exigeToken() ? token : null,
       dataInicio: valores.dataInicio || null,
+      formaPagamento: valores.formaPagamento,
     }).subscribe({
       next: (assinatura) => this.dialogRef.close(assinatura),
       error: (erro) => {

@@ -247,5 +247,126 @@
         </div>
       </div>
     </mat-tab>
+
+    <!-- ============ Inadimplência ============ -->
+    <mat-tab label="Inadimplência">
+      <div class="pt-5">
+        @if (erroInadimplencia(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="listarInadimplencia()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        }
+
+        @if (resumoInadimplencia(); as resumo) {
+          <div class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div class="h-painel px-5 py-4">
+              <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Vencem em breve</p>
+              <p class="mt-1 text-[22px] font-bold tabular-nums text-alerta-700">{{ resumo.venceEmBreve }}</p>
+            </div>
+            <div class="h-painel px-5 py-4">
+              <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Vencidas</p>
+              <p class="mt-1 text-[22px] font-bold tabular-nums text-perigo-700">{{ resumo.vencidas }}</p>
+            </div>
+            <div class="h-painel px-5 py-4">
+              <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Inadimplentes</p>
+              <p class="mt-1 text-[22px] font-bold tabular-nums text-perigo-700">{{ resumo.inadimplentes }}</p>
+            </div>
+          </div>
+        }
+
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="linhasInadimplencia()" class="h-tabela">
+              <ng-container matColumnDef="aluno">
+                <th mat-header-cell *matHeaderCellDef>Aluno</th>
+                <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.alunoNome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="plano">
+                <th mat-header-cell *matHeaderCellDef>Plano</th>
+                <td mat-cell *matCellDef="let l">
+                  <p class="text-tinta">{{ l.planoNome }}</p>
+                  <p class="text-[12px] tabular-nums text-tinta-3">{{ l.valorMensal | currency: 'BRL' }} /mês</p>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="vencimento">
+                <th mat-header-cell *matHeaderCellDef>Vencimento</th>
+                <td mat-cell *matCellDef="let l" class="whitespace-nowrap text-tinta-2">
+                  <p class="tabular-nums">{{ l.dataVencimento | date: 'dd/MM/yyyy' }}</p>
+                  <p class="text-[12px] text-tinta-3">{{ prazoDaLinha(l) }}</p>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="situacao">
+                <th mat-header-cell *matHeaderCellDef>Situação</th>
+                <td mat-cell *matCellDef="let l">
+                  <span class="h-etiqueta" [class]="classeSituacaoInadimplencia(l)">
+                    {{ rotuloSituacaoInadimplencia(l) }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="cobranca">
+                <th mat-header-cell *matHeaderCellDef>Cobrança</th>
+                <td mat-cell *matCellDef="let l">
+                  @if (l.cobrancaPendenteId) {
+                    <p class="text-tinta-2">{{ rotuloFormaPagamento(l) }}</p>
+                    @if (l.codigoSimulado) {
+                      <p class="truncate text-[11.5px] text-tinta-3" [title]="l.codigoSimulado">
+                        {{ l.codigoSimulado }}
+                      </p>
+                    }
+                  } @else {
+                    <span class="text-[12.5px] italic text-tinta-3">Sem cobrança em aberto</span>
+                  }
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="acoes">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Ações</th>
+                <td mat-cell *matCellDef="let l" class="!text-right whitespace-nowrap">
+                  @if (l.cobrancaPendenteId) {
+                    <button mat-stroked-button class="!h-9"
+                            (click)="confirmarPagamento(l, $event)"
+                            matTooltip="Registrar pagamento e renovar" aria-label="Confirmar pagamento">
+                      <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="autorenew"></mat-icon>
+                      Confirmar pagamento
+                    </button>
+                  }
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasInadimplencia"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasInadimplencia"></tr>
+            </table>
+          </div>
+
+          @if (carregandoInadimplencia()) {
+            <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando relatório de inadimplência…</span>
+            </div>
+          } @else if (linhasInadimplencia().length === 0 && !erroInadimplencia()) {
+            <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <mat-icon class="!h-7 !w-7 !text-[28px] text-ok-700" svgIcon="check_circle"></mat-icon>
+              <p class="text-[14px] font-semibold text-tinta">Nenhuma pendência</p>
+              <p class="max-w-sm text-[13px] text-tinta-3">
+                Ninguém vence em breve, está vencido ou inadimplente no momento.
+              </p>
+            </div>
+          }
+
+          @if (totalInadimplencia() > 0) {
+            <mat-paginator [length]="totalInadimplencia()" [pageIndex]="paginaInadimplencia()" [pageSize]="20"
+                           [pageSizeOptions]="[10, 20, 50]" (page)="mudarPaginaInadimplencia($event)"></mat-paginator>
+          }
+        </div>
+      </div>
+    </mat-tab>
   </mat-tab-group>
 </div>

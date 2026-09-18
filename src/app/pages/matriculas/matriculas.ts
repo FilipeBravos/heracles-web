@@ -13,8 +13,13 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   Assinatura,
   CLASSE_SITUACAO,
+  LinhaInadimplencia,
   Plano,
+  ROTULO_FORMA_PAGAMENTO,
   ROTULO_SITUACAO,
+  ResumoInadimplencia,
+  descreverPrazo,
+  situacaoDaLinhaInadimplencia,
   situacaoDaMatricula,
 } from '../../core/models';
 import { AssinaturaService } from '../../core/services/assinatura.service';
@@ -82,6 +87,15 @@ export class MatriculasComponent implements OnInit {
   readonly paginaPlanos = signal(0);
   private planosCarregados = false;
 
+  readonly colunasInadimplencia = ['aluno', 'plano', 'vencimento', 'situacao', 'cobranca', 'acoes'];
+  readonly resumoInadimplencia = signal<ResumoInadimplencia | null>(null);
+  readonly linhasInadimplencia = signal<LinhaInadimplencia[]>([]);
+  readonly carregandoInadimplencia = signal(false);
+  readonly erroInadimplencia = signal<string | null>(null);
+  readonly totalInadimplencia = signal(0);
+  readonly paginaInadimplencia = signal(0);
+  private inadimplenciaCarregada = false;
+
   ngOnInit(): void {
     this.listarAssinaturas();
   }
@@ -121,10 +135,13 @@ export class MatriculasComponent implements OnInit {
     });
   }
 
-  /** Só busca os planos quando a aba é aberta pela primeira vez. */
+  /** Só busca os planos (e a inadimplência) quando a aba é aberta pela primeira vez. */
   aoTrocarAba(indice: number): void {
     if (indice === 1 && !this.planosCarregados) {
       this.listarPlanos();
+    }
+    if (indice === 2 && !this.inadimplenciaCarregada) {
+      this.listarInadimplencia();
     }
   }
 
@@ -136,6 +153,11 @@ export class MatriculasComponent implements OnInit {
   mudarPaginaPlanos(evento: PageEvent): void {
     this.paginaPlanos.set(evento.pageIndex);
     this.listarPlanos();
+  }
+
+  mudarPaginaInadimplencia(evento: PageEvent): void {
+    this.paginaInadimplencia.set(evento.pageIndex);
+    this.listarInadimplencia();
   }
 
   // ---------------------------------------------------------------
@@ -209,6 +231,73 @@ export class MatriculasComponent implements OnInit {
       },
       error: (erro) => this.snackBar.open(mensagemDeErro(erro), 'Fechar', { duration: 6000 }),
     });
+  }
+
+  // ---------------------------------------------------------------
+  // Inadimplência
+  // ---------------------------------------------------------------
+
+  listarInadimplencia(): void {
+    this.carregandoInadimplencia.set(true);
+    this.erroInadimplencia.set(null);
+
+    Promise.all([
+      new Promise<void>((ok, falha) => this.assinaturaService.resumoInadimplencia().subscribe({
+        next: (resumo) => { this.resumoInadimplencia.set(resumo); ok(); },
+        error: falha,
+      })),
+      new Promise<void>((ok, falha) => this.assinaturaService
+        .inadimplencia(this.paginaInadimplencia(), 20)
+        .subscribe({
+          next: (pagina) => {
+            this.linhasInadimplencia.set(pagina.content);
+            this.totalInadimplencia.set(pagina.totalElements);
+            ok();
+          },
+          error: falha,
+        })),
+    ]).then(
+      () => {
+        this.carregandoInadimplencia.set(false);
+        this.inadimplenciaCarregada = true;
+      },
+      (erro) => {
+        this.erroInadimplencia.set(
+          mensagemDeErro(erro, 'Não foi possível carregar o relatório de inadimplência.'));
+        this.carregandoInadimplencia.set(false);
+      }
+    );
+  }
+
+  /** Mesmo botão de renovar da aba Matrículas: quita a cobrança pendente e empurra o vencimento. */
+  confirmarPagamento(linha: LinhaInadimplencia, evento: Event): void {
+    evento.stopPropagation();
+
+    this.assinaturaService.renovar(linha.assinaturaId).subscribe({
+      next: (renovada) => {
+        this.snackBar.open(
+          `Pagamento confirmado. ${renovada.alunoNome} tem acesso até ${this.formatar(renovada.dataVencimento)}.`,
+          'Fechar', { duration: 5000 });
+        this.listarInadimplencia();
+      },
+      error: (erro) => this.snackBar.open(mensagemDeErro(erro), 'Fechar', { duration: 6000 }),
+    });
+  }
+
+  rotuloSituacaoInadimplencia(linha: LinhaInadimplencia): string {
+    return ROTULO_SITUACAO[situacaoDaLinhaInadimplencia(linha)];
+  }
+
+  classeSituacaoInadimplencia(linha: LinhaInadimplencia): string {
+    return CLASSE_SITUACAO[situacaoDaLinhaInadimplencia(linha)];
+  }
+
+  prazoDaLinha(linha: LinhaInadimplencia): string {
+    return descreverPrazo(linha.diasParaVencer);
+  }
+
+  rotuloFormaPagamento(linha: LinhaInadimplencia): string {
+    return linha.formaPagamento ? ROTULO_FORMA_PAGAMENTO[linha.formaPagamento] : '—';
   }
 
   // ---------------------------------------------------------------
