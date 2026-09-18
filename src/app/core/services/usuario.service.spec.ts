@@ -59,4 +59,40 @@ describe('UsuarioService', () => {
     expect(req.request.body).toEqual({ treinosIds: [] });
     req.flush({});
   });
+
+  it('busca a anamnese do aluno', () => {
+    service.buscarAnamnese(1).subscribe();
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/usuarios/1/anamnese`);
+    expect(req.request.method).toBe('GET');
+    req.flush({ preenchida: false });
+  });
+
+  it('salva a anamnese do aluno', () => {
+    service
+      .salvarAnamnese(1, {
+        objetivo: 'Hipertrofia',
+        condicoesSaude: null,
+        lesoesCirurgias: null,
+        medicamentosUso: null,
+        restricoesMedicas: null,
+        contatoEmergenciaNome: 'Joana',
+        contatoEmergenciaTelefone: '(11) 91234-5678',
+      })
+      .subscribe();
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/usuarios/1/anamnese`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body.objetivo).toBe('Hipertrofia');
+    req.flush({ preenchida: true });
+  });
+
+  it('busca a foto como blob, não como JSON', () => {
+    service.buscarFoto(1).subscribe();
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/usuarios/1/foto`);
+    expect(req.request.method).toBe('GET');
+    expect(req.request.responseType).toBe('blob');
+    req.flush(new Blob());
+  });
 });

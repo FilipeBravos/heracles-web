@@ -102,6 +102,7 @@ export function rotaInicial(perfil: TipoPerfil | null | undefined): string | nul
 export type Acao =
   | 'cadastrar-aluno'
   | 'gerenciar-aluno'
+  | 'gerenciar-anamnese'
   | 'gerenciar-equipamento'
   | 'resolver-chamado'
   | 'gerenciar-produto'
@@ -116,6 +117,10 @@ const ACOES: Readonly<Record<Acao, readonly TipoPerfil[]>> = {
   // Editar dados e ativar/inativar seguem com as duas: corrigir um
   // telefone errado ou destravar um acesso não é matricular ninguém.
   'gerenciar-aluno': BALCAO,
+  // Quem monta a ficha (professor) precisa poder ler e preencher a
+  // anamnese também, não só a secretaria e a administração — é a mesma
+  // regra que a API aplica em PUT /usuarios/*/anamnese.
+  'gerenciar-anamnese': TODOS_OPERACIONAIS,
   // Cadastro do aparelho e baixa do reparo são da administração; abrir
   // chamado, não — é quem está no salão que vê o aparelho quebrar.
   'gerenciar-equipamento': ['ADMIN'],
