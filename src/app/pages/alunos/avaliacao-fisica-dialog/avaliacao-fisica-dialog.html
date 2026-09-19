@@ -1,0 +1,154 @@
+<div>
+  <div class="flex items-start justify-between gap-4 border-b border-linha px-6 py-5">
+    <div>
+      <h2 mat-dialog-title class="!m-0 !p-0 font-display !text-[22px] !font-bold !leading-tight text-tinta">
+        Avaliação física
+      </h2>
+      <p class="mt-1 text-[12.5px] text-tinta-3">
+        Histórico de <strong class="font-semibold text-tinta-2">{{ data.aluno.nome }}</strong> — peso, medidas e evolução.
+      </p>
+    </div>
+    @if (podeRegistrar && !mostrarFormulario()) {
+      <button mat-flat-button color="primary" type="button" class="!h-9 !shrink-0 !px-4" (click)="abrirFormulario()">
+        <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+        Nova avaliação
+      </button>
+    }
+  </div>
+
+  <mat-dialog-content class="!px-6 !pt-5 !pb-2">
+    @if (erro(); as mensagem) {
+      <div role="alert"
+           class="mb-4 flex items-start gap-2.5 rounded-marca border border-perigo-200 bg-perigo-50 px-4 py-3">
+        <mat-icon class="!mt-px !h-[18px] !w-[18px] !text-[18px] text-perigo-700" svgIcon="error"></mat-icon>
+        <span class="text-[12.5px] leading-snug text-perigo-700">{{ mensagem }}</span>
+      </div>
+    }
+
+    @if (mostrarFormulario()) {
+      <form [formGroup]="form" class="mb-5 flex flex-col gap-4 rounded-marca border border-linha px-4 py-4"
+            (ngSubmit)="salvar()">
+        <div class="flex items-center gap-4">
+          <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-marca-sm
+                      bg-fundo-2 text-tinta-3">
+            @if (fotoPreviewUrl(); as url) {
+              <img [src]="url" alt="Foto da avaliação" class="h-full w-full object-cover">
+            } @else {
+              <mat-icon class="!h-7 !w-7 !text-[28px]" svgIcon="fitness_center"></mat-icon>
+            }
+          </div>
+          <div class="flex flex-col gap-1">
+            <label for="fotoAvaliacao"
+                   class="cursor-pointer text-[12.5px] font-semibold text-bronze-700 hover:underline">
+              {{ fotoPreviewUrl() ? 'Trocar foto' : 'Adicionar foto de evolução' }}
+            </label>
+            <input id="fotoAvaliacao" type="file" accept="image/jpeg,image/png,image/webp" class="hidden"
+                   (change)="aoSelecionarFoto($event)">
+            <span class="text-[11.5px] text-tinta-3">JPEG, PNG ou WebP, até 3 MB.</span>
+            @if (erroFoto(); as mensagem) {
+              <span class="text-[11.5px] text-perigo-700">{{ mensagem }}</span>
+            }
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Peso (kg)</mat-label>
+            <input matInput type="number" step="0.1" formControlName="pesoKg">
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Altura (cm)</mat-label>
+            <input matInput type="number" step="0.1" formControlName="alturaCm">
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Gordura (%)</mat-label>
+            <input matInput type="number" step="0.1" formControlName="percentualGordura">
+          </mat-form-field>
+          <div></div>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Cintura (cm)</mat-label>
+            <input matInput type="number" step="0.1" formControlName="circunferenciaCintura">
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Quadril (cm)</mat-label>
+            <input matInput type="number" step="0.1" formControlName="circunferenciaQuadril">
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Braço (cm)</mat-label>
+            <input matInput type="number" step="0.1" formControlName="circunferenciaBraco">
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Coxa (cm)</mat-label>
+            <input matInput type="number" step="0.1" formControlName="circunferenciaCoxa">
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Observações</mat-label>
+          <textarea matInput formControlName="observacoes" rows="2"
+                    placeholder="Deixe em branco se não houver"></textarea>
+        </mat-form-field>
+
+        <div class="flex justify-end gap-2">
+          <button mat-button type="button" class="!text-tinta-2" (click)="cancelarFormulario()">Cancelar</button>
+          <button mat-flat-button color="primary" type="button" class="!px-5"
+                  [disabled]="form.invalid || enviando()" (click)="salvar()">
+            @if (enviando()) { <mat-spinner diameter="20"></mat-spinner> }
+            @else { Salvar avaliação }
+          </button>
+        </div>
+      </form>
+    }
+
+    @if (carregando()) {
+      <div class="flex items-center gap-3 py-4 text-[13px] text-tinta-3">
+        <mat-spinner diameter="20"></mat-spinner>
+        <span>Carregando histórico…</span>
+      </div>
+    } @else if (historico().length === 0 && !erro()) {
+      <div class="flex flex-col items-center gap-2.5 px-4 py-10 text-center">
+        <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="fitness_center"></mat-icon>
+        <p class="text-[13px] text-tinta-3">Nenhuma avaliação registrada ainda.</p>
+      </div>
+    } @else {
+      <ul class="flex flex-col divide-y divide-linha">
+        @for (a of historico(); track a.id) {
+          <li class="flex items-start gap-3 py-4">
+            <div class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-marca-sm
+                        bg-fundo-2 text-tinta-3">
+              @if (fotoPorAvaliacao()[a.id]; as url) {
+                <img [src]="url" alt="" class="h-full w-full object-cover">
+              } @else {
+                <mat-icon class="!h-6 !w-6 !text-[24px]" svgIcon="fitness_center"></mat-icon>
+              }
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                <p class="text-[13px] font-semibold text-tinta">{{ a.data | date: 'dd/MM/yyyy' }}</p>
+                <p class="text-[12px] tabular-nums text-tinta-3">
+                  {{ a.pesoKg }} kg · {{ a.alturaCm }} cm
+                  @if (a.imc !== null) { · IMC {{ a.imc }} }
+                </p>
+              </div>
+              <div class="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[12px] text-tinta-3">
+                @if (a.percentualGordura !== null) { <span>Gordura: {{ a.percentualGordura }}%</span> }
+                @if (a.circunferenciaCintura !== null) { <span>Cintura: {{ a.circunferenciaCintura }} cm</span> }
+                @if (a.circunferenciaQuadril !== null) { <span>Quadril: {{ a.circunferenciaQuadril }} cm</span> }
+                @if (a.circunferenciaBraco !== null) { <span>Braço: {{ a.circunferenciaBraco }} cm</span> }
+                @if (a.circunferenciaCoxa !== null) { <span>Coxa: {{ a.circunferenciaCoxa }} cm</span> }
+              </div>
+              @if (a.observacoes; as obs) {
+                <p class="mt-1.5 text-[12.5px] leading-snug text-tinta-2">{{ obs }}</p>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="!gap-2 border-t border-linha !px-6 !py-4">
+    <button mat-button mat-dialog-close type="button" class="!text-tinta-2">Fechar</button>
+  </mat-dialog-actions>
+</div>

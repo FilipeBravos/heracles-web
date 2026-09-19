@@ -103,6 +103,7 @@ export type Acao =
   | 'cadastrar-aluno'
   | 'gerenciar-aluno'
   | 'gerenciar-anamnese'
+  | 'gerenciar-avaliacao-fisica'
   | 'gerenciar-equipamento'
   | 'resolver-chamado'
   | 'gerenciar-produto'
@@ -121,6 +122,11 @@ const ACOES: Readonly<Record<Acao, readonly TipoPerfil[]>> = {
   // anamnese também, não só a secretaria e a administração — é a mesma
   // regra que a API aplica em PUT /usuarios/*/anamnese.
   'gerenciar-anamnese': TODOS_OPERACIONAIS,
+  // Registrar avaliação física é de quem monta o treino a partir dela —
+  // administração e professor. A secretaria lê o histórico junto com o
+  // resto da ficha (a tela de Alunos alcança todo operacional), mas não
+  // registra: pesar e medir não é trabalho de balcão.
+  'gerenciar-avaliacao-fisica': ['ADMIN', 'PROFESSOR'],
   // Cadastro do aparelho e baixa do reparo são da administração; abrir
   // chamado, não — é quem está no salão que vê o aparelho quebrar.
   'gerenciar-equipamento': ['ADMIN'],

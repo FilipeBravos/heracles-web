@@ -3,7 +3,16 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { Anamnese, AnamneseForm, EdicaoUsuario, NovoUsuario, Pagina, Usuario } from '../models';
+import {
+  Anamnese,
+  AnamneseForm,
+  AvaliacaoFisica,
+  AvaliacaoFisicaForm,
+  EdicaoUsuario,
+  NovoUsuario,
+  Pagina,
+  Usuario,
+} from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class UsuarioService {
@@ -48,5 +57,20 @@ export class UsuarioService {
    */
   buscarFoto(id: number): Observable<Blob> {
     return this.http.get(`${this.url}/${id}/foto`, { responseType: 'blob' });
+  }
+
+  /** Histórico de avaliações físicas do aluno, mais recente primeiro. */
+  historicoAvaliacoesFisicas(id: number): Observable<AvaliacaoFisica[]> {
+    return this.http.get<AvaliacaoFisica[]>(`${this.url}/${id}/avaliacoes-fisicas`);
+  }
+
+  /** Registra uma avaliação nova — nunca edita uma existente. */
+  registrarAvaliacaoFisica(id: number, avaliacao: AvaliacaoFisicaForm): Observable<AvaliacaoFisica> {
+    return this.http.post<AvaliacaoFisica>(`${this.url}/${id}/avaliacoes-fisicas`, avaliacao);
+  }
+
+  /** Bytes da foto de evolução — mesmo motivo do object URL em buscarFoto(). */
+  buscarFotoAvaliacaoFisica(id: number, avaliacaoId: number): Observable<Blob> {
+    return this.http.get(`${this.url}/${id}/avaliacoes-fisicas/${avaliacaoId}/foto`, { responseType: 'blob' });
   }
 }
