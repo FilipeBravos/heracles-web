@@ -94,6 +94,29 @@ export interface Acesso {
   assinatura: Assinatura | null;
 }
 
+/**
+ * Uma linha do historico de frequencia do aluno.
+ *
+ * Nasce do mesmo veredito de `Acesso` — GET /assinaturas/acesso grava um
+ * check-in a cada chamada, liberado ou barrado.
+ */
+export interface Checkin {
+  id: number;
+  unidadeNome: string;
+  momento: string;
+  liberado: boolean;
+  motivo: MotivoAcesso;
+}
+
+/** Rótulo curto do motivo, para uma linha de histórico — não a frase de encaminhamento do balcão. */
+export const ROTULO_MOTIVO_ACESSO: Readonly<Record<MotivoAcesso, string>> = {
+  LIBERADO: 'Liberado',
+  SEM_MATRICULA: 'Sem matrícula',
+  INADIMPLENTE: 'Inadimplente',
+  VENCIDA: 'Matrícula vencida',
+  UNIDADE_NAO_COBERTA: 'Unidade não coberta',
+};
+
 export const TIPOS_COBRANCA: { valor: TipoCobranca; rotulo: string; periodo: string }[] = [
   { valor: 'RECORRENTE', rotulo: 'Mensal recorrente', periodo: 'vence a cada mês' },
   { valor: 'PACOTE_ANUAL', rotulo: 'Pacote anual', periodo: 'vence a cada 12 meses' },
