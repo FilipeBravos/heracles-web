@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 import {
   Acesso,
   Assinatura,
+  Checkin,
   Cobranca,
   FilaDeVencimentos,
   HistoricoMensal,
@@ -63,10 +64,22 @@ export class AssinaturaService {
     return this.http.get<FilaDeVencimentos>(`${this.url}/vencimentos`, { params });
   }
 
-  /** Este aluno pode treinar nesta unidade hoje? */
+  /**
+   * Este aluno pode treinar nesta unidade hoje?
+   *
+   * A própria API grava um check-in a cada chamada — é a mesma pergunta
+   * que a recepção faz na porta, então a resposta e o histórico de
+   * frequência são o mesmo evento.
+   */
   conferirAcesso(alunoId: number, unidadeId: number): Observable<Acesso> {
     const params = new HttpParams().set('alunoId', alunoId).set('unidadeId', unidadeId);
     return this.http.get<Acesso>(`${this.url}/acesso`, { params });
+  }
+
+  /** Histórico de frequência do aluno: cada check-in, liberado ou barrado. */
+  historicoCheckins(alunoId: number, pagina = 0, tamanho = 20): Observable<Pagina<Checkin>> {
+    const params = new HttpParams().set('page', pagina).set('size', tamanho);
+    return this.http.get<Pagina<Checkin>>(`${this.url}/checkins/aluno/${alunoId}`, { params });
   }
 
   /** Extrato de cobranças (simuladas) da assinatura, mais recente primeiro. */

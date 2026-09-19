@@ -127,11 +127,20 @@ describe('ações dentro da tela', () => {
 
   it('o admin executa todas as ações menos cadastrar aluno', () => {
     const acoes: Acao[] = [
-      'gerenciar-aluno', 'gerenciar-anamnese', 'gerenciar-equipamento', 'resolver-chamado',
-      'gerenciar-produto', 'gerenciar-plano', 'cancelar-matricula',
+      'gerenciar-aluno', 'gerenciar-anamnese', 'gerenciar-avaliacao-fisica', 'gerenciar-equipamento',
+      'resolver-chamado', 'gerenciar-produto', 'gerenciar-plano', 'cancelar-matricula',
     ];
     for (const acao of acoes) expect(podeExecutar(acao, 'ADMIN')).toBeTrue();
     expect(podeExecutar('cadastrar-aluno', 'ADMIN')).toBeFalse();
+  });
+
+  it('avaliação física é de quem monta o treino — admin e professor, não a secretaria', () => {
+    // Mesma regra da API: ler o histórico acompanha a tela de Alunos
+    // (todo operacional alcança), mas registrar é de quem prescreve.
+    expect(podeExecutar('gerenciar-avaliacao-fisica', 'ADMIN')).toBeTrue();
+    expect(podeExecutar('gerenciar-avaliacao-fisica', 'PROFESSOR')).toBeTrue();
+    expect(podeExecutar('gerenciar-avaliacao-fisica', 'SECRETARIA')).toBeFalse();
+    expect(podeExecutar('gerenciar-avaliacao-fisica', 'ALUNO')).toBeFalse();
   });
 
   it('nega quem não tem perfil', () => {
