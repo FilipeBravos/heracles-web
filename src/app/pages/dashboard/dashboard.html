@@ -72,20 +72,72 @@
     </nav>
 
     @if (usuario(); as u) {
-      <div class="flex items-center gap-3 border-t border-grafite-800 px-4 py-3.5">
-        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-marca bg-bronze-600
-                    text-[12.5px] font-bold tracking-wide text-white">
-          {{ iniciais() }}
+      <div class="relative border-t border-grafite-800 px-4 py-3.5">
+        @if (painelNotificacoesAberto()) {
+          <div class="fixed inset-0 z-40" (click)="fecharPainelNotificacoes()" aria-hidden="true"></div>
+
+          <div class="absolute bottom-full left-0 z-50 mb-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden
+                      rounded-marca border border-grafite-800 bg-grafite-900 shadow-xl">
+            <div class="flex items-center justify-between border-b border-grafite-800 px-4 py-2.5">
+              <p class="text-[12px] font-bold uppercase tracking-[0.08em] text-white">Notificações</p>
+              @if (naoLidas()) {
+                <button type="button" (click)="marcarTodasComoLidas()"
+                        class="text-[11px] font-semibold text-bronze-500 hover:text-bronze-400">
+                  Marcar todas como lidas
+                </button>
+              }
+            </div>
+
+            <div class="max-h-96 overflow-y-auto">
+              @for (n of notificacoes(); track n.id) {
+                <button type="button" (click)="marcarComoLida(n)"
+                        class="flex w-full items-start gap-2.5 border-b border-grafite-800/60 px-4 py-3 text-left
+                               last:border-b-0 hover:bg-grafite-800/60"
+                        [class.opacity-50]="n.lida">
+                  <mat-icon class="!h-5 !w-5 shrink-0 !text-[20px] !text-bronze-500"
+                            [svgIcon]="iconeTipoNotificacao[n.tipo]"></mat-icon>
+                  <span class="min-w-0 flex-1">
+                    <span class="block truncate text-[12.5px] font-semibold text-white">{{ n.titulo }}</span>
+                    <span class="block text-[11.5px] text-grafite-400">{{ n.mensagem }}</span>
+                    <span class="mt-0.5 block text-[10px] text-grafite-500">{{ n.criadaEm | date: 'dd/MM HH:mm' }}</span>
+                  </span>
+                  @if (!n.lida) {
+                    <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-bronze-500" aria-hidden="true"></span>
+                  }
+                </button>
+              } @empty {
+                <p class="px-4 py-6 text-center text-[12px] text-grafite-400">Nenhuma notificação por aqui.</p>
+              }
+            </div>
+          </div>
+        }
+
+        <div class="flex items-center gap-3">
+          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-marca bg-bronze-600
+                      text-[12.5px] font-bold tracking-wide text-white">
+            {{ iniciais() }}
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-[13px] font-semibold text-white">{{ u.nome }}</p>
+            <p class="truncate text-[11px] text-grafite-400">{{ perfilLegivel() }}</p>
+          </div>
+          <button mat-icon-button type="button" (click)="alternarPainelNotificacoes()"
+                  matTooltip="Notificações" aria-label="Abrir notificações"
+                  class="relative !z-50 !h-9 !w-9 shrink-0 !text-grafite-400 hover:!text-white">
+            <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="notifications"></mat-icon>
+            @if (naoLidas()) {
+              <span class="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full
+                           bg-bronze-600 px-1 text-[9px] font-bold leading-none text-white">
+                {{ naoLidas() > 9 ? '9+' : naoLidas() }}
+              </span>
+            }
+          </button>
+          <button mat-icon-button type="button" (click)="sair()"
+                  matTooltip="Sair" aria-label="Sair do sistema"
+                  class="!h-9 !w-9 shrink-0 !text-grafite-400 hover:!text-white">
+            <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="logout"></mat-icon>
+          </button>
         </div>
-        <div class="min-w-0 flex-1">
-          <p class="truncate text-[13px] font-semibold text-white">{{ u.nome }}</p>
-          <p class="truncate text-[11px] text-grafite-400">{{ perfilLegivel() }}</p>
-        </div>
-        <button mat-icon-button type="button" (click)="sair()"
-                matTooltip="Sair" aria-label="Sair do sistema"
-                class="!h-9 !w-9 shrink-0 !text-grafite-400 hover:!text-white">
-          <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="logout"></mat-icon>
-        </button>
       </div>
     }
   </aside>

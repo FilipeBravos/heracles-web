@@ -65,6 +65,8 @@ export const ICONES: Readonly<Record<string, string>> = {
     '<svg fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M180-120q-24 0-42-18t-18-42v-600q0-24 18-42t42-18h299v60H180v600h299v60H180Zm486-185-43-43 102-102H360v-60h363L621-612l43-43 176 176-174 174Z"/></svg>',
   'menu':
     '<svg fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M120-240v-60h720v60H120Zm0-210v-60h720v60H120Zm0-210v-60h720v60H120Z"/></svg>',
+  'notifications':
+    '<svg fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M160-200v-60h80v-320q0-83 50-147.5T420-810v-20q0-25 17.5-42.5T480-890q25 0 42.5 17.5T540-830v20q80 20 130 84.5T720-580v320h80v60H160Zm320 100q-33 0-56.5-23.5T400-180h160q0 33-23.5 56.5T480-100ZM300-260h360v-320q0-75-52.5-127.5T480-760q-75 0-127.5 52.5T300-580v320Z"/></svg>',
   'person':
     '<svg fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Zm60-60h520v-52q0-16-9.5-31T707-329q-54-27-109.5-40.5T480-383q-62 0-117.5 13.5T253-329q-15 7-24 21.5t-9 31v52Zm260-320q42 0 71-29t29-71q0-42-29-71t-71-29q-42 0-71 29t-29 71q0 42 29 71t71 29Zm0-100Zm0 420Z"/></svg>',
   'person_off':
