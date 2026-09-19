@@ -92,6 +92,16 @@
                       matTooltip="Anamnese" aria-label="Anamnese">
                 <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="assignment_turned_in"></mat-icon>
               </button>
+              <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
+                      (click)="abrirModalFrequencia(aluno)"
+                      matTooltip="Frequência" aria-label="Frequência">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="how_to_reg"></mat-icon>
+              </button>
+              <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
+                      (click)="abrirModalAvaliacaoFisica(aluno)"
+                      matTooltip="Avaliação física" aria-label="Avaliação física">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="show_chart"></mat-icon>
+              </button>
             }
             <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
                     (click)="abrirModalVinculo(aluno)"

@@ -17,6 +17,8 @@ import { PaginadorIntl } from '../../core/paginador-intl';
 import { AlunoFormComponent } from './aluno-form/aluno-form';
 import { VincularTreinoComponent } from './vincular-treino/vincular-treino';
 import { AnamneseDialogComponent } from './anamnese-dialog/anamnese-dialog';
+import { FrequenciaDialogComponent } from './frequencia-dialog/frequencia-dialog';
+import { AvaliacaoFisicaDialogComponent } from './avaliacao-fisica-dialog/avaliacao-fisica-dialog';
 
 @Component({
   selector: 'app-alunos',
@@ -171,6 +173,19 @@ export class AlunosComponent implements OnInit, OnDestroy {
           this.listar();
         }
       });
+  }
+
+  abrirModalFrequencia(aluno: Usuario): void {
+    this.dialog.open(FrequenciaDialogComponent, { width: '520px', panelClass: '!rounded-none', data: { aluno } });
+  }
+
+  abrirModalAvaliacaoFisica(aluno: Usuario): void {
+    this.dialog.open(AvaliacaoFisicaDialogComponent, {
+      width: '760px',
+      maxWidth: '760px',
+      panelClass: '!rounded-none',
+      data: { aluno },
+    });
   }
 
   alternarStatus(aluno: Usuario): void {
