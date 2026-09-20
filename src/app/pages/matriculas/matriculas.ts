@@ -15,8 +15,10 @@ import {
   CLASSE_SITUACAO,
   LinhaInadimplencia,
   LinhaIndicacao,
+  LinhaMotivoCancelamento,
   Plano,
   ROTULO_FORMA_PAGAMENTO,
+  ROTULO_MOTIVO_CANCELAMENTO,
   ROTULO_SITUACAO,
   ResumoInadimplencia,
   descreverPrazo,
@@ -32,6 +34,7 @@ import { PaginadorIntl } from '../../core/paginador-intl';
 import { MatriculaDialogComponent } from './matricula-dialog/matricula-dialog';
 import { PlanoFormComponent } from './plano-form/plano-form';
 import { AcessoDialogComponent } from './acesso-dialog/acesso-dialog';
+import { CancelarMatriculaDialogComponent } from './cancelar-matricula-dialog/cancelar-matricula-dialog';
 
 @Component({
   selector: 'app-matriculas',
@@ -103,6 +106,12 @@ export class MatriculasComponent implements OnInit {
   readonly erroIndicacoes = signal<string | null>(null);
   private indicacoesCarregadas = false;
 
+  readonly colunasMotivosCancelamento = ['posicao', 'motivo', 'quantidade'];
+  readonly motivosCancelamento = signal<LinhaMotivoCancelamento[]>([]);
+  readonly carregandoMotivosCancelamento = signal(false);
+  readonly erroMotivosCancelamento = signal<string | null>(null);
+  private motivosCancelamentoCarregados = false;
+
   ngOnInit(): void {
     this.listarAssinaturas();
   }
@@ -152,6 +161,9 @@ export class MatriculasComponent implements OnInit {
     }
     if (indice === 3 && !this.indicacoesCarregadas) {
       this.listarIndicacoes();
+    }
+    if (indice === 4 && !this.motivosCancelamentoCarregados) {
+      this.listarMotivosCancelamento();
     }
   }
 
@@ -229,18 +241,17 @@ export class MatriculasComponent implements OnInit {
   cancelar(assinatura: Assinatura, evento: Event): void {
     evento.stopPropagation();
 
-    if (!confirm(`Cancelar a matrícula de ${assinatura.alunoNome} no plano "${assinatura.planoNome}"?\n\n` +
-                 'Cancelar é definitivo: para voltar, o aluno precisa ser matriculado de novo.')) {
-      return;
-    }
-
-    this.assinaturaService.cancelar(assinatura.id).subscribe({
-      next: () => {
-        this.snackBar.open('Matrícula cancelada.', 'Fechar', { duration: 5000 });
-        this.listarAssinaturas();
-      },
-      error: (erro) => this.snackBar.open(mensagemDeErro(erro), 'Fechar', { duration: 6000 }),
-    });
+    this.dialog
+      .open(CancelarMatriculaDialogComponent, { width: '520px', maxWidth: '94vw', data: { assinatura } })
+      .afterClosed()
+      .subscribe((cancelada: Assinatura | undefined) => {
+        if (cancelada) {
+          this.snackBar.open('Matrícula cancelada.', 'Fechar', { duration: 5000 });
+          this.listarAssinaturas();
+          // O motivo acabou de mudar o ranking; refaz na próxima vez que a aba abrir.
+          this.motivosCancelamentoCarregados = false;
+        }
+      });
   }
 
   // ---------------------------------------------------------------
@@ -334,6 +345,32 @@ export class MatriculasComponent implements OnInit {
         this.carregandoIndicacoes.set(false);
       },
     });
+  }
+
+  // ---------------------------------------------------------------
+  // Motivos de cancelamento
+  // ---------------------------------------------------------------
+
+  listarMotivosCancelamento(): void {
+    this.carregandoMotivosCancelamento.set(true);
+    this.erroMotivosCancelamento.set(null);
+
+    this.assinaturaService.motivosCancelamento().subscribe({
+      next: (linhas) => {
+        this.motivosCancelamento.set(linhas);
+        this.carregandoMotivosCancelamento.set(false);
+        this.motivosCancelamentoCarregados = true;
+      },
+      error: (erro) => {
+        this.erroMotivosCancelamento.set(
+          mensagemDeErro(erro, 'Não foi possível carregar os motivos de cancelamento.'));
+        this.carregandoMotivosCancelamento.set(false);
+      },
+    });
+  }
+
+  rotuloMotivoCancelamento(linha: LinhaMotivoCancelamento): string {
+    return ROTULO_MOTIVO_CANCELAMENTO[linha.motivo];
   }
 
   // ---------------------------------------------------------------

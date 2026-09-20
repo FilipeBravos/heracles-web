@@ -6,6 +6,15 @@ export type StatusCobranca = 'PENDENTE' | 'PAGA' | 'CANCELADA';
 export type EstagioLembrete = 'VENCE_EM_BREVE' | 'VENCIDA' | 'INADIMPLENTE';
 export type CanalLembrete = 'WHATSAPP' | 'EMAIL';
 
+export type MotivoCancelamento =
+  | 'PRECO'
+  | 'MUDANCA'
+  | 'INSATISFACAO'
+  | 'FALTA_TEMPO'
+  | 'SAUDE'
+  | 'CONCORRENCIA'
+  | 'OUTRO';
+
 export type MotivoAcesso =
   | 'LIBERADO'
   | 'SEM_MATRICULA'
@@ -53,6 +62,9 @@ export interface Assinatura {
   dataVencimento: string;
   status: StatusAssinatura;
   dataCancelamento: string | null;
+  /** Preenchido pela secretaria no ato do cancelamento — nulo em qualquer outro status. */
+  motivoCancelamento: MotivoCancelamento | null;
+  comentarioCancelamento: string | null;
   /** Derivado da data pela API, não gravado: o status é o que o operador marcou. */
   vencida: boolean;
 }
@@ -91,6 +103,37 @@ export interface MatricularForm {
   indicadoPorAlunoId: number | null;
   dataInicio: string | null;
   formaPagamento: FormaPagamento;
+}
+
+/**
+ * Corpo do cancelamento: o motivo, preenchido pela secretaria no próprio
+ * ato — não uma pesquisa enviada depois, que dificilmente alguém que já
+ * saiu responderia.
+ */
+export interface CancelarForm {
+  motivo: MotivoCancelamento;
+  comentario: string | null;
+}
+
+export const MOTIVOS_CANCELAMENTO: { valor: MotivoCancelamento; rotulo: string }[] = [
+  { valor: 'PRECO', rotulo: 'Preço' },
+  { valor: 'MUDANCA', rotulo: 'Mudança de cidade/bairro' },
+  { valor: 'INSATISFACAO', rotulo: 'Insatisfação com o serviço' },
+  { valor: 'FALTA_TEMPO', rotulo: 'Falta de tempo' },
+  { valor: 'SAUDE', rotulo: 'Motivo de saúde' },
+  { valor: 'CONCORRENCIA', rotulo: 'Foi para outra academia' },
+  { valor: 'OUTRO', rotulo: 'Outro' },
+];
+
+export const ROTULO_MOTIVO_CANCELAMENTO: Readonly<Record<MotivoCancelamento, string>> =
+  Object.fromEntries(MOTIVOS_CANCELAMENTO.map((m) => [m.valor, m.rotulo])) as Readonly<
+    Record<MotivoCancelamento, string>
+  >;
+
+/** Uma linha do ranking de motivos de cancelamento: do mais comum para o menos comum. */
+export interface LinhaMotivoCancelamento {
+  motivo: MotivoCancelamento;
+  quantidade: number;
 }
 
 /** Veredito da catraca, com o motivo — cada um leva a um encaminhamento. */

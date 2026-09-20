@@ -92,6 +92,9 @@ export class MatriculaDialogComponent implements OnInit {
   readonly exigeToken = computed(() => this.valores().origem === 'GYMPASS' || this.valores().origem === 'TOTALPASS');
   readonly exigeIndicador = computed(() => this.valores().origem === 'INDICACAO');
 
+  /** Só o cartão tem cobrança automática de verdade — boleto e PIX exigem uma ação de pagamento de quem paga. */
+  readonly pagamentoNoCartao = computed(() => this.valores().formaPagamento === 'CARTAO');
+
   /** O próprio aluno não aparece na lista de quem pode tê-lo indicado. */
   readonly alunosParaIndicar = computed(() =>
     this.alunos().filter((a) => a.id !== this.valores().alunoId)

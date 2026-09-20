@@ -82,6 +82,18 @@
           <mat-hint>Cobrança simulada — não há gateway de pagamento integrado.</mat-hint>
         </mat-form-field>
 
+        <!-- Só o cartão renova sozinho: é o único caso em que uma cobrança
+             automática de verdade faz sentido sem um gateway integrado. -->
+        @if (pagamentoNoCartao()) {
+          <div class="flex items-start gap-2.5 rounded-marca border border-linha bg-fundo px-4 py-3">
+            <mat-icon class="!mt-px !h-[18px] !w-[18px] !text-[18px] text-tinta-3" svgIcon="autorenew"></mat-icon>
+            <span class="text-[12.5px] leading-snug text-tinta-2">
+              No cartão, a mensalidade é cobrada e a matrícula renovada automaticamente no vencimento —
+              sem precisar de "Confirmar pagamento" no balcão.
+            </span>
+          </div>
+        }
+
         <!-- Só aparece no parceiro: na matrícula direta o código não
              significa nada, e a API recusa se vier preenchido. -->
         @if (exigeToken()) {
