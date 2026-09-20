@@ -74,6 +74,7 @@ export class MatriculaDialogComponent implements OnInit {
     planoId: [null as number | null, Validators.required],
     origem: ['DIRETO' as OrigemAssinatura, Validators.required],
     tokenParceiro: [''],
+    indicadoPorAlunoId: [null as number | null],
     formaPagamento: ['PIX' as FormaPagamento, Validators.required],
     // Input nativo de data: o valor ja chega como yyyy-MM-dd, o mesmo
     // formato que a API espera. O datepicker do Material custaria ~130 kB
@@ -88,7 +89,13 @@ export class MatriculaDialogComponent implements OnInit {
     () => this.planos().find((p) => p.id === this.valores().planoId) ?? null
   );
 
-  readonly exigeToken = computed(() => this.valores().origem !== 'DIRETO');
+  readonly exigeToken = computed(() => this.valores().origem === 'GYMPASS' || this.valores().origem === 'TOTALPASS');
+  readonly exigeIndicador = computed(() => this.valores().origem === 'INDICACAO');
+
+  /** O próprio aluno não aparece na lista de quem pode tê-lo indicado. */
+  readonly alunosParaIndicar = computed(() =>
+    this.alunos().filter((a) => a.id !== this.valores().alunoId)
+  );
 
   /** A data de início como Date, para sair pelo pipe em pt-BR. */
   readonly inicioEscolhido = computed(() => {
@@ -120,6 +127,7 @@ export class MatriculaDialogComponent implements OnInit {
     this.form.valueChanges.subscribe(() => {
       this.valores.set(this.form.getRawValue());
       this.ajustarToken();
+      this.ajustarIndicador();
     });
 
     Promise.all([
@@ -157,6 +165,21 @@ export class MatriculaDialogComponent implements OnInit {
     }
   }
 
+  /** Quem indicou é obrigatório na indicação e não existe nas demais origens. */
+  private ajustarIndicador(): void {
+    const controle = this.form.controls.indicadoPorAlunoId;
+    const precisa = this.exigeIndicador();
+
+    if (precisa && !controle.hasValidator(Validators.required)) {
+      controle.addValidators(Validators.required);
+      controle.updateValueAndValidity({ emitEvent: false });
+    } else if (!precisa && controle.hasValidator(Validators.required)) {
+      controle.removeValidators(Validators.required);
+      controle.setValue(null, { emitEvent: false });
+      controle.updateValueAndValidity({ emitEvent: false });
+    }
+  }
+
   matricular(): void {
     if (this.form.invalid || this.enviando()) {
       this.form.markAllAsTouched();
@@ -174,6 +197,7 @@ export class MatriculaDialogComponent implements OnInit {
       planoId: valores.planoId!,
       origem: valores.origem,
       tokenParceiro: this.exigeToken() ? token : null,
+      indicadoPorAlunoId: this.exigeIndicador() ? valores.indicadoPorAlunoId : null,
       dataInicio: valores.dataInicio || null,
       formaPagamento: valores.formaPagamento,
     }).subscribe({

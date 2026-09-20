@@ -95,6 +95,22 @@
           </mat-form-field>
         }
 
+        <!-- Só aparece na indicação: nas demais origens não há quem creditar. -->
+        @if (exigeIndicador()) {
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Quem indicou</mat-label>
+            <mat-select id="indicadoPorAlunoId" formControlName="indicadoPorAlunoId">
+              @for (a of alunosParaIndicar(); track a.id) {
+                <mat-option [value]="a.id">{{ a.nome }}</mat-option>
+              }
+            </mat-select>
+            <mat-hint>O aluno já matriculado que trouxe este aluno novo.</mat-hint>
+            @if (form.controls.indicadoPorAlunoId.touched && form.controls.indicadoPorAlunoId.invalid) {
+              <mat-error>Escolha quem indicou.</mat-error>
+            }
+          </mat-form-field>
+        }
+
         <!-- Conferência para o operador: quem calcula o vencimento é a API. -->
         @if (planoEscolhido(); as plano) {
           <div class="rounded-marca border border-linha bg-fundo px-4 py-3">

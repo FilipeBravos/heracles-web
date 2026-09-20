@@ -24,6 +24,8 @@ function assinatura(parcial: Partial<Assinatura>): Assinatura {
     valorMensal: 129.9,
     origem: 'DIRETO',
     tokenParceiro: null,
+    indicadoPorAlunoId: null,
+    indicadoPorNome: null,
     formaPagamento: 'PIX',
     dataInicio: '2026-08-15',
     dataVencimento: '2026-09-15',
@@ -225,6 +227,8 @@ function linhaInadimplencia(parcial: Partial<LinhaInadimplencia>): LinhaInadimpl
     cobrancaPendenteId: 10,
     formaPagamento: 'PIX',
     codigoSimulado: 'PIX-SIMULADO-ABC123',
+    ultimoLembreteCanal: null,
+    ultimoLembreteEnviadoEm: null,
     ...parcial,
   };
 }

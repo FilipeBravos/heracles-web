@@ -1,8 +1,10 @@
 export type TipoCobranca = 'RECORRENTE' | 'PACOTE_ANUAL';
-export type OrigemAssinatura = 'DIRETO' | 'GYMPASS' | 'TOTALPASS';
+export type OrigemAssinatura = 'DIRETO' | 'GYMPASS' | 'TOTALPASS' | 'INDICACAO';
 export type StatusAssinatura = 'ATIVA' | 'INADIMPLENTE' | 'CANCELADA';
 export type FormaPagamento = 'BOLETO' | 'PIX' | 'CARTAO';
 export type StatusCobranca = 'PENDENTE' | 'PAGA' | 'CANCELADA';
+export type EstagioLembrete = 'VENCE_EM_BREVE' | 'VENCIDA' | 'INADIMPLENTE';
+export type CanalLembrete = 'WHATSAPP' | 'EMAIL';
 
 export type MotivoAcesso =
   | 'LIBERADO'
@@ -43,6 +45,9 @@ export interface Assinatura {
   valorMensal: number;
   origem: OrigemAssinatura;
   tokenParceiro: string | null;
+  /** Só preenchido quando origem = INDICACAO. */
+  indicadoPorAlunoId: number | null;
+  indicadoPorNome: string | null;
   formaPagamento: FormaPagamento;
   dataInicio: string;
   dataVencimento: string;
@@ -82,6 +87,8 @@ export interface MatricularForm {
   planoId: number;
   origem: OrigemAssinatura;
   tokenParceiro: string | null;
+  /** Só faz sentido quando origem = INDICACAO. */
+  indicadoPorAlunoId: number | null;
   dataInicio: string | null;
   formaPagamento: FormaPagamento;
 }
@@ -126,6 +133,7 @@ export const ORIGENS_ASSINATURA: { valor: OrigemAssinatura; rotulo: string }[] =
   { valor: 'DIRETO', rotulo: 'Matrícula direta' },
   { valor: 'GYMPASS', rotulo: 'Gympass' },
   { valor: 'TOTALPASS', rotulo: 'TotalPass' },
+  { valor: 'INDICACAO', rotulo: 'Indicação de aluno' },
 ];
 
 export const FORMAS_PAGAMENTO: { valor: FormaPagamento; rotulo: string }[] = [
@@ -241,6 +249,25 @@ export interface LinhaInadimplencia {
   cobrancaPendenteId: number | null;
   formaPagamento: FormaPagamento | null;
   codigoSimulado: string | null;
+  /** Nulo quando o job diário ainda não gerou lembrete para o estágio atual. */
+  ultimoLembreteCanal: CanalLembrete | null;
+  ultimoLembreteEnviadoEm: string | null;
+}
+
+/** Um lembrete (simulado) já enviado para uma assinatura. */
+export interface Lembrete {
+  id: number;
+  estagio: EstagioLembrete;
+  canal: CanalLembrete;
+  destinatario: string;
+  dataEnvio: string;
+}
+
+/** Uma linha do ranking de indicações: quantas matrículas o aluno trouxe. */
+export interface LinhaIndicacao {
+  id: number;
+  nome: string;
+  quantidade: number;
 }
 
 /** Contagem por etapa da régua, para o cabeçalho do relatório de inadimplência. */
