@@ -50,6 +50,11 @@ export const routes: Routes = [
           import('./pages/equipamentos/equipamentos').then((m) => m.EquipamentosComponent),
       },
       {
+        path: 'agenda',
+        canActivate: [perfilGuard],
+        loadComponent: () => import('./pages/agenda/agenda').then((m) => m.AgendaComponent),
+      },
+      {
         path: 'meu-treino',
         canActivate: [perfilGuard],
         loadComponent: () =>
@@ -60,6 +65,12 @@ export const routes: Routes = [
         canActivate: [perfilGuard],
         loadComponent: () =>
           import('./pages/minha-matricula/minha-matricula').then((m) => m.MinhaMatriculaComponent),
+      },
+      {
+        path: 'minhas-aulas',
+        canActivate: [perfilGuard],
+        loadComponent: () =>
+          import('./pages/minhas-aulas/minhas-aulas').then((m) => m.MinhasAulasComponent),
       },
       {
         path: 'unidades',

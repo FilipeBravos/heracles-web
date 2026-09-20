@@ -1,5 +1,7 @@
+export * from './agenda.model';
 export * from './auth.model';
 export * from './avaliacao-fisica.model';
+export * from './contrato.model';
 export * from './dashboard.model';
 export * from './erro-api.model';
 export * from './matricula.model';

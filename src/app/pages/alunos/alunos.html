@@ -103,6 +103,13 @@
                 <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="show_chart"></mat-icon>
               </button>
             }
+            @if (podeVerContrato() && aluno.tipoPerfil === 'ALUNO') {
+              <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
+                      (click)="abrirModalContrato(aluno)"
+                      matTooltip="Contrato" aria-label="Contrato">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="description"></mat-icon>
+              </button>
+            }
             <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
                     (click)="abrirModalVinculo(aluno)"
                     matTooltip="Vincular ficha" aria-label="Vincular ficha">

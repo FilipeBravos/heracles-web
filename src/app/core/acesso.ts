@@ -43,6 +43,7 @@ export const AREAS: readonly Area[] = [
   { rota: '/dashboard/matriculas', rotulo: 'Matrículas', icone: 'card_membership', perfis: BALCAO },
   { rota: '/dashboard/loja', rotulo: 'Loja', icone: 'point_of_sale', perfis: BALCAO, grupo: 'operacao' },
   { rota: '/dashboard/equipamentos', rotulo: 'Equipamentos', icone: 'build', perfis: TODOS_OPERACIONAIS, grupo: 'operacao' },
+  { rota: '/dashboard/agenda', rotulo: 'Agenda', icone: 'schedule', perfis: TODOS_OPERACIONAIS, grupo: 'operacao' },
   // Cadastro de unidade é estrutura da rede: só a administração escreve,
   // e a tela não faz outra coisa.
   { rota: '/dashboard/unidades', rotulo: 'Unidades', icone: 'store', perfis: ['ADMIN'], grupo: 'operacao' },
@@ -55,6 +56,9 @@ export const AREAS: readonly Area[] = [
   // Separada do treino porque responde outra pergunta — "posso entrar
   // hoje?" —, e ele precisa dela sem depender da recepção.
   { rota: '/dashboard/minha-matricula', rotulo: 'Minha matrícula', icone: 'card_membership', perfis: ['ALUNO'] },
+  // Aulas em grupo são self-service; personal é só leitura aqui — quem
+  // agenda continua sendo o balcão, a pedido do aluno.
+  { rota: '/dashboard/minhas-aulas', rotulo: 'Minhas aulas', icone: 'schedule', perfis: ['ALUNO'] },
 
   // Conta do próprio usuário — nome, telefone, senha, tema —, não
   // trabalho de aluno ou de matrícula: todo perfil a alcança, o aluno
@@ -104,6 +108,11 @@ export type Acao =
   | 'gerenciar-aluno'
   | 'gerenciar-anamnese'
   | 'gerenciar-avaliacao-fisica'
+  | 'ver-contrato'
+  | 'gerenciar-aula-grupo'
+  | 'marcar-vaga-aula'
+  | 'gerenciar-personal'
+  | 'gerenciar-horario-professor'
   | 'gerenciar-equipamento'
   | 'resolver-chamado'
   | 'gerenciar-produto'
@@ -127,6 +136,21 @@ const ACOES: Readonly<Record<Acao, readonly TipoPerfil[]>> = {
   // resto da ficha (a tela de Alunos alcança todo operacional), mas não
   // registra: pesar e medir não é trabalho de balcão.
   'gerenciar-avaliacao-fisica': ['ADMIN', 'PROFESSOR'],
+  // Contrato assinado é documento administrativo/legal — mesma regra da
+  // API: admin e secretaria, não o professor.
+  'ver-contrato': BALCAO,
+  // Quem monta a agenda de aulas em grupo é o mesmo grupo que monta a
+  // ficha de treino — professor e administração.
+  'gerenciar-aula-grupo': ['ADMIN', 'PROFESSOR'],
+  // Marcar/desmarcar vaga em nome de outro aluno é do balcão — o próprio
+  // aluno reserva pela área dele, sem passar por aqui.
+  'marcar-vaga-aula': BALCAO,
+  // Personal nunca é self-service: quem agenda é sempre o balcão, a
+  // pedido do aluno.
+  'gerenciar-personal': BALCAO,
+  // Horário de professor é estrutura de escala, como cadastro de
+  // unidade — só a administração escreve.
+  'gerenciar-horario-professor': ['ADMIN'],
   // Cadastro do aparelho e baixa do reparo são da administração; abrir
   // chamado, não — é quem está no salão que vê o aparelho quebrar.
   'gerenciar-equipamento': ['ADMIN'],

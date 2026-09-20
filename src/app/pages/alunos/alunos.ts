@@ -19,6 +19,7 @@ import { VincularTreinoComponent } from './vincular-treino/vincular-treino';
 import { AnamneseDialogComponent } from './anamnese-dialog/anamnese-dialog';
 import { FrequenciaDialogComponent } from './frequencia-dialog/frequencia-dialog';
 import { AvaliacaoFisicaDialogComponent } from './avaliacao-fisica-dialog/avaliacao-fisica-dialog';
+import { ContratoDialogComponent } from './contrato-dialog/contrato-dialog';
 
 @Component({
   selector: 'app-alunos',
@@ -54,6 +55,11 @@ export class AlunosComponent implements OnInit, OnDestroy {
   /** Ler e preencher a anamnese é do mesmo grupo que monta e vincula ficha. */
   readonly podeVerAnamnese = computed(() =>
     podeExecutar('gerenciar-anamnese', this.auth.usuario()?.tipoPerfil)
+  );
+
+  /** Contrato assinado é documento administrativo/legal — admin e secretaria, não o professor. */
+  readonly podeVerContrato = computed(() =>
+    podeExecutar('ver-contrato', this.auth.usuario()?.tipoPerfil)
   );
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
@@ -186,6 +192,10 @@ export class AlunosComponent implements OnInit, OnDestroy {
       panelClass: '!rounded-none',
       data: { aluno },
     });
+  }
+
+  abrirModalContrato(aluno: Usuario): void {
+    this.dialog.open(ContratoDialogComponent, { width: '560px', panelClass: '!rounded-none', data: { aluno } });
   }
 
   alternarStatus(aluno: Usuario): void {
