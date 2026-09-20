@@ -59,6 +59,8 @@ export const AREAS: readonly Area[] = [
   // Aulas em grupo são self-service; personal é só leitura aqui — quem
   // agenda continua sendo o balcão, a pedido do aluno.
   { rota: '/dashboard/minhas-aulas', rotulo: 'Minhas aulas', icone: 'schedule', perfis: ['ALUNO'] },
+  // Só leitura: quem mede e fotografa é o professor, presencialmente.
+  { rota: '/dashboard/minha-evolucao-fisica', rotulo: 'Minha evolução física', icone: 'show_chart', perfis: ['ALUNO'] },
 
   // Conta do próprio usuário — nome, telefone, senha, tema —, não
   // trabalho de aluno ou de matrícula: todo perfil a alcança, o aluno

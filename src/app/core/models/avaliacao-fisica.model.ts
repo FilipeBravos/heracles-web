@@ -17,16 +17,23 @@ export interface AvaliacaoFisica {
   circunferenciaQuadril: number | null;
   circunferenciaBraco: number | null;
   circunferenciaCoxa: number | null;
+  circunferenciaPeito: number | null;
   observacoes: string | null;
-  temFoto: boolean;
+  /** Ids das fotos da galeria, na ordem de upload — cada uma se busca à parte. */
+  fotoIds: number[];
   dataCriacao: string;
+}
+
+/** Uma foto da galeria, em base64 puro (sem o prefixo "data:image/...;base64,"). */
+export interface FotoAvaliacaoForm {
+  base64: string;
+  contentType: string;
 }
 
 /**
  * Corpo de uma avaliacao nova.
  *
- * `fotoBase64`/`fotoContentType` sao opcionais e sempre vem juntos — a
- * API recusa um sem o outro.
+ * `fotos` e opcional (galeria vazia é uma avaliação sem foto).
  */
 export interface AvaliacaoFisicaForm {
   data: string | null;
@@ -37,7 +44,37 @@ export interface AvaliacaoFisicaForm {
   circunferenciaQuadril: number | null;
   circunferenciaBraco: number | null;
   circunferenciaCoxa: number | null;
+  circunferenciaPeito: number | null;
   observacoes: string | null;
-  fotoBase64: string | null;
-  fotoContentType: string | null;
+  fotos: FotoAvaliacaoForm[];
+}
+
+/**
+ * A diferença entre duas avaliações, campo a campo (mais recente menos
+ * mais antiga). `null` quando falta a medida em um dos dois lados.
+ */
+export interface DeltaFisico {
+  pesoKg: number | null;
+  alturaCm: number | null;
+  imc: number | null;
+  percentualGordura: number | null;
+  circunferenciaCintura: number | null;
+  circunferenciaQuadril: number | null;
+  circunferenciaBraco: number | null;
+  circunferenciaCoxa: number | null;
+  circunferenciaPeito: number | null;
+}
+
+/**
+ * O comparativo entre duas avaliações — a mais antiga e a mais recente
+ * por padrão, ou duas escolhidas.
+ *
+ * `disponivel: false` quando há menos de duas avaliações: não há o que
+ * comparar ainda, e isso é normal, não erro.
+ */
+export interface ComparativoFisico {
+  disponivel: boolean;
+  de: AvaliacaoFisica | null;
+  para: AvaliacaoFisica | null;
+  delta: DeltaFisico | null;
 }

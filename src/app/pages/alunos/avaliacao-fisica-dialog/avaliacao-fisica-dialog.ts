@@ -8,7 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-import { AvaliacaoFisica, Usuario } from '../../../core/models';
+import { AvaliacaoFisica, ComparativoFisico, FotoAvaliacaoForm, Usuario } from '../../../core/models';
 import { AuthService } from '../../../core/services/auth.service';
 import { UsuarioService } from '../../../core/services/usuario.service';
 import { mensagemDeErro } from '../../../core/services/erro-api';
@@ -20,6 +20,7 @@ export interface AvaliacaoFisicaDialogData {
 
 const TAMANHO_MAXIMO_FOTO_BYTES = 3 * 1024 * 1024;
 const TIPOS_DE_FOTO_ACEITOS = ['image/jpeg', 'image/png', 'image/webp'];
+const MAXIMO_DE_FOTOS = 6;
 
 /**
  * Avaliação física periódica — complementar à anamnese, que é só o
@@ -50,6 +51,7 @@ export class AvaliacaoFisicaDialogComponent implements OnInit, OnDestroy {
   readonly data = inject<AvaliacaoFisicaDialogData>(MAT_DIALOG_DATA);
 
   readonly podeRegistrar = podeExecutar('gerenciar-avaliacao-fisica', this.auth.usuario()?.tipoPerfil);
+  readonly maximoDeFotos = MAXIMO_DE_FOTOS;
 
   readonly carregando = signal(true);
   readonly enviando = signal(false);
@@ -58,12 +60,14 @@ export class AvaliacaoFisicaDialogComponent implements OnInit, OnDestroy {
   readonly historico = signal<AvaliacaoFisica[]>([]);
   readonly mostrarFormulario = signal(false);
 
-  /** Object URLs das fotos já buscadas, por id de avaliação. */
-  readonly fotoPorAvaliacao = signal<Record<number, string>>({});
+  readonly comparativo = signal<ComparativoFisico | null>(null);
+  readonly mostrarComparativo = signal(false);
 
-  readonly fotoPreviewUrl = signal<string | null>(null);
-  private novaFotoBase64: string | null = null;
-  private novaFotoContentType: string | null = null;
+  /** Object URLs das fotos já buscadas, por "avaliacaoId:fotoId". */
+  readonly fotoPorChave = signal<Record<string, string>>({});
+
+  readonly novasFotosPreviewUrls = signal<string[]>([]);
+  private novasFotos: FotoAvaliacaoForm[] = [];
 
   readonly form = this.fb.nonNullable.group({
     pesoKg: [null as number | null, [Validators.required, Validators.min(1)]],
@@ -73,6 +77,7 @@ export class AvaliacaoFisicaDialogComponent implements OnInit, OnDestroy {
     circunferenciaQuadril: [null as number | null],
     circunferenciaBraco: [null as number | null],
     circunferenciaCoxa: [null as number | null],
+    circunferenciaPeito: [null as number | null],
     observacoes: ['', Validators.maxLength(1000)],
   });
 
@@ -81,12 +86,10 @@ export class AvaliacaoFisicaDialogComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    for (const url of Object.values(this.fotoPorAvaliacao())) {
+    for (const url of Object.values(this.fotoPorChave())) {
       URL.revokeObjectURL(url);
     }
-    if (this.fotoPreviewUrl()) {
-      URL.revokeObjectURL(this.fotoPreviewUrl()!);
-    }
+    this.limparPreviewsNovasFotos();
   }
 
   private carregar(): void {
@@ -104,20 +107,48 @@ export class AvaliacaoFisicaDialogComponent implements OnInit, OnDestroy {
         this.carregando.set(false);
       },
     });
+
+    this.usuarioService.compararAvaliacoesFisicas(this.data.aluno.id).subscribe({
+      next: (comparativo) => this.comparativo.set(comparativo),
+      // Sem comparativo não impede o resto da tela de aparecer.
+      error: () => {},
+    });
   }
 
   private carregarFotos(historico: AvaliacaoFisica[]): void {
     for (const avaliacao of historico) {
-      if (!avaliacao.temFoto) continue;
-      this.usuarioService.buscarFotoAvaliacaoFisica(this.data.aluno.id, avaliacao.id).subscribe({
-        next: (blob) => {
-          const url = URL.createObjectURL(blob);
-          this.fotoPorAvaliacao.update((atual) => ({ ...atual, [avaliacao.id]: url }));
-        },
-        // Sem foto na lista não impede o resto do histórico de aparecer.
-        error: () => {},
-      });
+      for (const fotoId of avaliacao.fotoIds) {
+        this.usuarioService.buscarFotoAvaliacaoFisica(this.data.aluno.id, avaliacao.id, fotoId).subscribe({
+          next: (blob) => {
+            const url = URL.createObjectURL(blob);
+            this.fotoPorChave.update((atual) => ({ ...atual, [`${avaliacao.id}:${fotoId}`]: url }));
+          },
+          // Sem uma foto na lista não impede o resto do histórico de aparecer.
+          error: () => {},
+        });
+      }
     }
+  }
+
+  fotoUrl(avaliacaoId: number, fotoId: number): string | null {
+    return this.fotoPorChave()[`${avaliacaoId}:${fotoId}`] ?? null;
+  }
+
+  /** A primeira foto da avaliação, para o comparativo lado a lado. */
+  primeiraFotoUrl(avaliacao: AvaliacaoFisica | null): string | null {
+    if (!avaliacao || avaliacao.fotoIds.length === 0) return null;
+    return this.fotoUrl(avaliacao.id, avaliacao.fotoIds[0]);
+  }
+
+  alternarComparativo(): void {
+    this.mostrarComparativo.update((atual) => !atual);
+  }
+
+  /** "+2,5 kg" ou "-1,3 kg" — o sinal fala mais rápido que a cor aqui, e funciona em texto puro. */
+  formatarDelta(valor: number | null, sufixo = ''): string {
+    if (valor === null) return '—';
+    const sinal = valor > 0 ? '+' : '';
+    return `${sinal}${valor}${sufixo}`;
   }
 
   abrirFormulario(): void {
@@ -127,45 +158,54 @@ export class AvaliacaoFisicaDialogComponent implements OnInit, OnDestroy {
   cancelarFormulario(): void {
     this.mostrarFormulario.set(false);
     this.form.reset();
-    if (this.fotoPreviewUrl()) {
-      URL.revokeObjectURL(this.fotoPreviewUrl()!);
-    }
-    this.fotoPreviewUrl.set(null);
-    this.novaFotoBase64 = null;
-    this.novaFotoContentType = null;
+    this.limparPreviewsNovasFotos();
     this.erroFoto.set(null);
   }
 
-  aoSelecionarFoto(evento: Event): void {
+  private limparPreviewsNovasFotos(): void {
+    for (const url of this.novasFotosPreviewUrls()) {
+      URL.revokeObjectURL(url);
+    }
+    this.novasFotosPreviewUrls.set([]);
+    this.novasFotos = [];
+  }
+
+  aoSelecionarFotos(evento: Event): void {
     const input = evento.target as HTMLInputElement;
-    const arquivo = input.files?.[0];
-    if (!arquivo) return;
+    const arquivos = Array.from(input.files ?? []);
+    input.value = '';
+    if (arquivos.length === 0) return;
 
-    if (!TIPOS_DE_FOTO_ACEITOS.includes(arquivo.type)) {
-      this.erroFoto.set('A foto precisa ser JPEG, PNG ou WebP.');
-      input.value = '';
-      return;
-    }
-    if (arquivo.size > TAMANHO_MAXIMO_FOTO_BYTES) {
-      this.erroFoto.set('A foto excede o tamanho máximo de 3 MB.');
-      input.value = '';
+    if (this.novasFotos.length + arquivos.length > this.maximoDeFotos) {
+      this.erroFoto.set(`No máximo ${this.maximoDeFotos} fotos por avaliação.`);
       return;
     }
 
-    const leitor = new FileReader();
-    leitor.onload = () => {
-      const resultado = leitor.result as string;
-      const separador = resultado.indexOf(',');
-      this.novaFotoBase64 = resultado.slice(separador + 1);
-      this.novaFotoContentType = arquivo.type;
-
-      if (this.fotoPreviewUrl()) {
-        URL.revokeObjectURL(this.fotoPreviewUrl()!);
+    for (const arquivo of arquivos) {
+      if (!TIPOS_DE_FOTO_ACEITOS.includes(arquivo.type)) {
+        this.erroFoto.set('As fotos precisam ser JPEG, PNG ou WebP.');
+        continue;
       }
-      this.fotoPreviewUrl.set(resultado);
-      this.erroFoto.set(null);
-    };
-    leitor.readAsDataURL(arquivo);
+      if (arquivo.size > TAMANHO_MAXIMO_FOTO_BYTES) {
+        this.erroFoto.set('Cada foto tem até 3 MB.');
+        continue;
+      }
+
+      const leitor = new FileReader();
+      leitor.onload = () => {
+        const resultado = leitor.result as string;
+        const separador = resultado.indexOf(',');
+        this.novasFotos = [...this.novasFotos, { base64: resultado.slice(separador + 1), contentType: arquivo.type }];
+        this.novasFotosPreviewUrls.update((atual) => [...atual, resultado]);
+        this.erroFoto.set(null);
+      };
+      leitor.readAsDataURL(arquivo);
+    }
+  }
+
+  removerNovaFoto(indice: number): void {
+    this.novasFotos = this.novasFotos.filter((_, i) => i !== indice);
+    this.novasFotosPreviewUrls.update((atual) => atual.filter((_, i) => i !== indice));
   }
 
   salvar(): void {
@@ -188,9 +228,9 @@ export class AvaliacaoFisicaDialogComponent implements OnInit, OnDestroy {
         circunferenciaQuadril: valores.circunferenciaQuadril,
         circunferenciaBraco: valores.circunferenciaBraco,
         circunferenciaCoxa: valores.circunferenciaCoxa,
+        circunferenciaPeito: valores.circunferenciaPeito,
         observacoes: valores.observacoes.trim() || null,
-        fotoBase64: this.novaFotoBase64,
-        fotoContentType: this.novaFotoContentType,
+        fotos: this.novasFotos,
       })
       .subscribe({
         next: () => {

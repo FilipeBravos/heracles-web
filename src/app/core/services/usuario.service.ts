@@ -8,6 +8,7 @@ import {
   AnamneseForm,
   AvaliacaoFisica,
   AvaliacaoFisicaForm,
+  ComparativoFisico,
   Contrato,
   EdicaoUsuario,
   NovoUsuario,
@@ -70,9 +71,18 @@ export class UsuarioService {
     return this.http.post<AvaliacaoFisica>(`${this.url}/${id}/avaliacoes-fisicas`, avaliacao);
   }
 
-  /** Bytes da foto de evolução — mesmo motivo do object URL em buscarFoto(). */
-  buscarFotoAvaliacaoFisica(id: number, avaliacaoId: number): Observable<Blob> {
-    return this.http.get(`${this.url}/${id}/avaliacoes-fisicas/${avaliacaoId}/foto`, { responseType: 'blob' });
+  /** Bytes de uma foto da galeria — mesmo motivo do object URL em buscarFoto(). */
+  buscarFotoAvaliacaoFisica(id: number, avaliacaoId: number, fotoId: number): Observable<Blob> {
+    return this.http.get(
+      `${this.url}/${id}/avaliacoes-fisicas/${avaliacaoId}/fotos/${fotoId}`, { responseType: 'blob' });
+  }
+
+  /** A primeira avaliação contra a mais recente, ou duas escolhidas via deId/paraId. */
+  compararAvaliacoesFisicas(id: number, deId?: number, paraId?: number): Observable<ComparativoFisico> {
+    let params = new HttpParams();
+    if (deId != null) params = params.set('deId', deId);
+    if (paraId != null) params = params.set('paraId', paraId);
+    return this.http.get<ComparativoFisico>(`${this.url}/${id}/avaliacoes-fisicas/comparativo`, { params });
   }
 
   /** O contrato assinado no cadastro — só leitura, não há edição. */

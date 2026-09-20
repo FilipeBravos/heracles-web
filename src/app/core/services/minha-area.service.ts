@@ -1,10 +1,12 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import {
   AtualizarMeusDadosForm,
+  AvaliacaoFisica,
+  ComparativoFisico,
   HistoricoTreino,
   MeusDados,
   MinhaMatricula,
@@ -61,5 +63,24 @@ export class MinhaAreaService {
   /** Troca a própria senha. A API exige a atual antes de aceitar a nova. */
   trocarSenha(form: TrocarSenhaForm): Observable<void> {
     return this.http.put<void>(`${this.url}/senha`, form);
+  }
+
+  /** O histórico de avaliações físicas de quem está autenticado — só leitura, quem registra é o professor. */
+  minhasAvaliacoesFisicas(): Observable<AvaliacaoFisica[]> {
+    return this.http.get<AvaliacaoFisica[]>(`${this.url}/avaliacoes-fisicas`);
+  }
+
+  /** A primeira avaliação contra a mais recente, ou duas escolhidas via deId/paraId. */
+  meuComparativoFisico(deId?: number, paraId?: number): Observable<ComparativoFisico> {
+    let params = new HttpParams();
+    if (deId != null) params = params.set('deId', deId);
+    if (paraId != null) params = params.set('paraId', paraId);
+    return this.http.get<ComparativoFisico>(`${this.url}/avaliacoes-fisicas/comparativo`, { params });
+  }
+
+  /** Bytes de uma foto da galeria de evolução. */
+  minhaFotoAvaliacaoFisica(avaliacaoId: number, fotoId: number): Observable<Blob> {
+    return this.http.get(
+      `${this.url}/avaliacoes-fisicas/${avaliacaoId}/fotos/${fotoId}`, { responseType: 'blob' });
   }
 }

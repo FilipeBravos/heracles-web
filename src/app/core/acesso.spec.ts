@@ -2,7 +2,10 @@ import { AREAS, Acao, areasDoPerfil, podeAcessar, podeExecutar, rotaInicial } fr
 import { TipoPerfil } from './models';
 
 describe('tabela de acesso', () => {
-  const AREAS_DO_ALUNO = ['/dashboard/meu-treino', '/dashboard/minha-matricula', '/dashboard/minhas-aulas'];
+  const AREAS_DO_ALUNO = [
+    '/dashboard/meu-treino', '/dashboard/minha-matricula', '/dashboard/minhas-aulas',
+    '/dashboard/minha-evolucao-fisica',
+  ];
 
   it('dá ao admin todas as áreas operacionais', () => {
     // Todas menos as do aluno, que são da conta de quem está autenticado.
