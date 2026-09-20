@@ -9,11 +9,14 @@ import { RouterLink } from '@angular/router';
 import {
   FilaDeVencimentos,
   HistoricoMensal,
+  Retencao,
   ResumoDashboard,
   Vencimento,
+  descreverMes,
   descreverPrazo,
   urgenciaDoPrazo,
 } from '../../core/models';
+import { GraficoChurnComponent } from './grafico-churn/grafico-churn';
 import { GraficoMatriculasComponent } from './grafico-matriculas/grafico-matriculas';
 import { AssinaturaService } from '../../core/services/assinatura.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -39,6 +42,7 @@ interface CartaoEstatistica {
     DatePipe,
     RouterLink,
     GraficoMatriculasComponent,
+    GraficoChurnComponent,
   ],
   templateUrl: './dashboard-home.html',
 })
@@ -69,6 +73,10 @@ export class DashboardHomeComponent implements OnInit {
   readonly carregandoFila = signal(true);
   readonly erroFila = signal<string | null>(null);
 
+  readonly retencao = signal<Retencao | null>(null);
+  readonly carregandoRetencao = signal(true);
+  readonly erroRetencao = signal<string | null>(null);
+
   /**
    * A carteira de matrículas é da recepção e da administração: o professor
    * não cobra ninguém, e a situação de pagamento de um aluno não é dado
@@ -93,6 +101,7 @@ export class DashboardHomeComponent implements OnInit {
 
   readonly prazo = descreverPrazo;
   readonly urgencia = urgenciaDoPrazo;
+  readonly mesPorExtenso = descreverMes;
 
   // Os numeros vem da API. Antes eram literais ("128", "42", "12", "5") que
   // apareciam iguais com tres ou tres mil alunos na base.
@@ -191,9 +200,11 @@ export class DashboardHomeComponent implements OnInit {
     if (this.podeVerMatriculas()) {
       this.carregarHistorico();
       this.carregarFila();
+      this.carregarRetencao();
     } else {
       this.carregandoHistorico.set(false);
       this.carregandoFila.set(false);
+      this.carregandoRetencao.set(false);
     }
   }
 
@@ -225,6 +236,22 @@ export class DashboardHomeComponent implements OnInit {
       error: (erro) => {
         this.erroFila.set(mensagemDeErro(erro, 'Não foi possível carregar os vencimentos.'));
         this.carregandoFila.set(false);
+      },
+    });
+  }
+
+  carregarRetencao(): void {
+    this.carregandoRetencao.set(true);
+    this.erroRetencao.set(null);
+
+    this.assinaturaService.retencao(this.MESES_DO_GRAFICO).subscribe({
+      next: (retencao) => {
+        this.retencao.set(retencao);
+        this.carregandoRetencao.set(false);
+      },
+      error: (erro) => {
+        this.erroRetencao.set(mensagemDeErro(erro, 'Não foi possível carregar a retenção.'));
+        this.carregandoRetencao.set(false);
       },
     });
   }

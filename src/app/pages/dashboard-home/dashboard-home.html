@@ -234,6 +234,105 @@
           }
         </section>
       </div>
+
+      <!-- ============ Retenção: churn por mês, por plano e por unidade ============ -->
+      <h2 class="h-rotulo mt-8 mb-3">Retenção</h2>
+      <div class="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+        <section class="rounded-marca border border-linha bg-papel" aria-labelledby="titulo-churn">
+          <header class="flex flex-wrap items-baseline justify-between gap-3 border-b border-linha px-5 py-4">
+            <div>
+              <h2 id="titulo-churn" class="h-rotulo">Churn por mês</h2>
+              <p class="mt-1 text-[12px] text-tinta-3">
+                Cancelamentos no mês sobre assinaturas ativas no início dele.
+              </p>
+            </div>
+          </header>
+
+          @if (carregandoRetencao()) {
+            <div class="flex items-center gap-3 px-5 py-14 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando retenção…</span>
+            </div>
+          } @else if (erroRetencao(); as mensagem) {
+            <div role="alert" class="flex flex-wrap items-center justify-between gap-3 px-5 py-10">
+              <span class="flex items-center gap-2.5 text-[13px] text-perigo-700">
+                <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="error"></mat-icon>{{ mensagem }}
+              </span>
+              <button type="button" (click)="carregarRetencao()"
+                      class="text-[12.5px] font-semibold text-perigo-700 underline underline-offset-2">
+                Tentar novamente
+              </button>
+            </div>
+          } @else if (retencao(); as r) {
+            <app-grafico-churn [historico]="r.historico"></app-grafico-churn>
+          }
+        </section>
+
+        @if (retencao(); as r) {
+          <!-- ============ Detalhamento do último mês fechado ============ -->
+          <section class="rounded-marca border border-linha bg-papel" aria-labelledby="titulo-churn-detalhe">
+            <header class="border-b border-linha px-5 py-4">
+              <h2 id="titulo-churn-detalhe" class="h-rotulo">Por plano e por unidade</h2>
+              <p class="mt-1 text-[12px] text-tinta-3">
+                Dados de {{ mesPorExtenso(r.mesReferencia) }}, o último mês fechado.
+              </p>
+            </header>
+
+            <div class="grid grid-cols-1 gap-5 px-5 py-4 sm:grid-cols-2">
+              <div>
+                <h3 class="text-[12px] font-semibold text-tinta-2">Por plano</h3>
+                @if (r.porPlano.length) {
+                  <table class="mt-2 w-full text-[12.5px]">
+                    <thead>
+                      <tr class="border-b border-linha">
+                        <th scope="col" class="py-1.5 text-left font-semibold text-tinta-3">Plano</th>
+                        <th scope="col" class="py-1.5 text-right font-semibold text-tinta-3">Churn</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (linha of r.porPlano; track linha.id) {
+                        <tr class="border-b border-linha last:border-0">
+                          <td class="py-1.5 pr-2 text-tinta">{{ linha.nome }}</td>
+                          <td class="py-1.5 text-right tabular-nums font-semibold text-tinta">
+                            {{ (linha.taxaChurn * 100).toFixed(1).replace('.', ',') }}%
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                } @else {
+                  <p class="mt-2 text-[12.5px] text-tinta-3">Nenhum plano com assinatura ativa no período.</p>
+                }
+              </div>
+
+              <div>
+                <h3 class="text-[12px] font-semibold text-tinta-2">Por unidade</h3>
+                @if (r.porUnidade.length) {
+                  <table class="mt-2 w-full text-[12.5px]">
+                    <thead>
+                      <tr class="border-b border-linha">
+                        <th scope="col" class="py-1.5 text-left font-semibold text-tinta-3">Unidade</th>
+                        <th scope="col" class="py-1.5 text-right font-semibold text-tinta-3">Churn</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (linha of r.porUnidade; track linha.id) {
+                        <tr class="border-b border-linha last:border-0">
+                          <td class="py-1.5 pr-2 text-tinta">{{ linha.nome }}</td>
+                          <td class="py-1.5 text-right tabular-nums font-semibold text-tinta">
+                            {{ (linha.taxaChurn * 100).toFixed(1).replace('.', ',') }}%
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                } @else {
+                  <p class="mt-2 text-[12.5px] text-tinta-3">Nenhuma unidade com assinatura ativa no período.</p>
+                }
+              </div>
+            </div>
+          </section>
+        }
+      </div>
     }
   }
 </div>
