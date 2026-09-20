@@ -18,6 +18,7 @@ import {
   MatricularForm,
   Pagina,
   PainelFinanceiro,
+  PainelOcupacao,
   Retencao,
   ResumoInadimplencia,
 } from '../models';
@@ -135,5 +136,11 @@ export class AssinaturaService {
   /** Painel financeiro: MRR, ticket médio, inadimplência em R$ e a projeção de caixa do mês. */
   financeiro(): Observable<PainelFinanceiro> {
     return this.http.get<PainelFinanceiro>(`${this.url}/financeiro`);
+  }
+
+  /** Ocupação por hora do dia, por unidade, nos últimos `dias` dias. */
+  ocupacao(dias = 30): Observable<PainelOcupacao> {
+    const params = new HttpParams().set('dias', dias);
+    return this.http.get<PainelOcupacao>(`${this.url}/ocupacao`, { params });
   }
 }

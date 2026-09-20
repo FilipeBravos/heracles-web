@@ -551,6 +551,34 @@ export interface PainelFinanceiro {
   projecaoDoMes: number;
 }
 
+/** Um ponto do gráfico de ocupação: quantos check-ins liberados nesta hora do dia. */
+export interface PontoOcupacao {
+  hora: number;
+  quantidade: number;
+}
+
+/** A série de 24 horas (0-23) de uma unidade, sem buracos. */
+export interface OcupacaoPorUnidade {
+  unidadeId: number;
+  unidadeNome: string;
+  pontos: PontoOcupacao[];
+}
+
+/**
+ * O painel de ocupação inteiro: uma série por hora do dia, por unidade,
+ * nos últimos `dias` dias — em que horário a casa costuma lotar, pra
+ * dimensionar equipamento e horário de aula em grupo.
+ */
+export interface PainelOcupacao {
+  dias: number;
+  unidades: OcupacaoPorUnidade[];
+}
+
+/** "8h", "19h" — o rótulo do eixo de horas. */
+export function rotularHora(hora: number): string {
+  return `${hora}h`;
+}
+
 const MESES_ABREVIADOS = [
   'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
   'jul', 'ago', 'set', 'out', 'nov', 'dez',

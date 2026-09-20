@@ -10,6 +10,7 @@ import {
   FilaDeVencimentos,
   HistoricoMensal,
   PainelFinanceiro,
+  PainelOcupacao,
   Retencao,
   ResumoDashboard,
   Vencimento,
@@ -19,6 +20,7 @@ import {
 } from '../../core/models';
 import { GraficoChurnComponent } from './grafico-churn/grafico-churn';
 import { GraficoMatriculasComponent } from './grafico-matriculas/grafico-matriculas';
+import { GraficoOcupacaoComponent } from './grafico-ocupacao/grafico-ocupacao';
 import { AssinaturaService } from '../../core/services/assinatura.service';
 import { AuthService } from '../../core/services/auth.service';
 import { DashboardService } from '../../core/services/dashboard.service';
@@ -44,6 +46,7 @@ interface CartaoEstatistica {
     RouterLink,
     GraficoMatriculasComponent,
     GraficoChurnComponent,
+    GraficoOcupacaoComponent,
   ],
   templateUrl: './dashboard-home.html',
 })
@@ -57,6 +60,9 @@ export class DashboardHomeComponent implements OnInit {
 
   /** Quantos meses o gráfico cobre. */
   private readonly MESES_DO_GRAFICO = 12;
+
+  /** Janela do painel de ocupação — recente o bastante para refletir o uso atual, não sazonalidade antiga. */
+  private readonly DIAS_DA_OCUPACAO = 30;
 
   private readonly moeda = new Intl.NumberFormat('pt-BR', {
     style: 'currency', currency: 'BRL', maximumFractionDigits: 0,
@@ -81,6 +87,10 @@ export class DashboardHomeComponent implements OnInit {
   readonly financeiro = signal<PainelFinanceiro | null>(null);
   readonly carregandoFinanceiro = signal(true);
   readonly erroFinanceiro = signal<string | null>(null);
+
+  readonly ocupacao = signal<PainelOcupacao | null>(null);
+  readonly carregandoOcupacao = signal(true);
+  readonly erroOcupacao = signal<string | null>(null);
 
   /**
    * A carteira de matrículas é da recepção e da administração: o professor
@@ -242,11 +252,13 @@ export class DashboardHomeComponent implements OnInit {
       this.carregarFila();
       this.carregarRetencao();
       this.carregarFinanceiro();
+      this.carregarOcupacao();
     } else {
       this.carregandoHistorico.set(false);
       this.carregandoFila.set(false);
       this.carregandoRetencao.set(false);
       this.carregandoFinanceiro.set(false);
+      this.carregandoOcupacao.set(false);
     }
   }
 
@@ -310,6 +322,22 @@ export class DashboardHomeComponent implements OnInit {
       error: (erro) => {
         this.erroFinanceiro.set(mensagemDeErro(erro, 'Não foi possível carregar o financeiro.'));
         this.carregandoFinanceiro.set(false);
+      },
+    });
+  }
+
+  carregarOcupacao(): void {
+    this.carregandoOcupacao.set(true);
+    this.erroOcupacao.set(null);
+
+    this.assinaturaService.ocupacao(this.DIAS_DA_OCUPACAO).subscribe({
+      next: (ocupacao) => {
+        this.ocupacao.set(ocupacao);
+        this.carregandoOcupacao.set(false);
+      },
+      error: (erro) => {
+        this.erroOcupacao.set(mensagemDeErro(erro, 'Não foi possível carregar a ocupação.'));
+        this.carregandoOcupacao.set(false);
       },
     });
   }
