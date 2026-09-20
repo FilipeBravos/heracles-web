@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 import {
   Acesso,
   Assinatura,
+  CancelarForm,
   Checkin,
   Cobranca,
   FilaDeVencimentos,
@@ -13,6 +14,7 @@ import {
   Lembrete,
   LinhaInadimplencia,
   LinhaIndicacao,
+  LinhaMotivoCancelamento,
   MatricularForm,
   Pagina,
   Retencao,
@@ -47,9 +49,9 @@ export class AssinaturaService {
     return this.http.put<Assinatura>(`${this.url}/${id}/inadimplencia`, {});
   }
 
-  /** Cancelar não apaga: a assinatura vira CANCELADA com data. */
-  cancelar(id: number): Observable<Assinatura> {
-    return this.http.delete<Assinatura>(`${this.url}/${id}`);
+  /** Cancelar não apaga: a assinatura vira CANCELADA com data e motivo. */
+  cancelar(id: number, motivo: CancelarForm): Observable<Assinatura> {
+    return this.http.delete<Assinatura>(`${this.url}/${id}`, { body: motivo });
   }
 
   /** Série do gráfico de matrículas por mês, do mais antigo ao atual. */
@@ -98,6 +100,11 @@ export class AssinaturaService {
   /** Ranking do programa de indicação: quantas matrículas cada aluno trouxe. */
   indicacoes(): Observable<LinhaIndicacao[]> {
     return this.http.get<LinhaIndicacao[]>(`${this.url}/indicacoes`);
+  }
+
+  /** Quantos cancelamentos por motivo, do mais comum para o menos comum. */
+  motivosCancelamento(): Observable<LinhaMotivoCancelamento[]> {
+    return this.http.get<LinhaMotivoCancelamento[]>(`${this.url}/motivos-cancelamento`);
   }
 
   /** Cabeçalho do relatório de inadimplência: quantos em cada etapa da régua. */

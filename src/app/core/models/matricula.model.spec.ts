@@ -31,6 +31,8 @@ function assinatura(parcial: Partial<Assinatura>): Assinatura {
     dataVencimento: '2026-09-15',
     status: 'ATIVA',
     dataCancelamento: null,
+    motivoCancelamento: null,
+    comentarioCancelamento: null,
     vencida: false,
     ...parcial,
   };
