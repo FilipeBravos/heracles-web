@@ -1,0 +1,88 @@
+<div>
+  <div class="border-b border-linha px-6 py-5">
+    <h2 mat-dialog-title class="!m-0 !p-0 font-display !text-[22px] !font-bold !leading-tight text-tinta">
+      Nova aula em grupo
+    </h2>
+    <p class="mt-1 text-[12.5px] text-tinta-3">Data, professor e vagas disponíveis.</p>
+  </div>
+
+  <mat-dialog-content class="!px-6 !pt-5 !pb-2">
+    @if (erro(); as mensagem) {
+      <div role="alert"
+           class="mb-4 flex items-start gap-2.5 rounded-marca border border-perigo-200 bg-perigo-50 px-4 py-3">
+        <mat-icon class="!mt-px !h-[18px] !w-[18px] !text-[18px] text-perigo-700" svgIcon="error"></mat-icon>
+        <span class="text-[12.5px] leading-snug text-perigo-700">{{ mensagem }}</span>
+      </div>
+    }
+
+    @if (carregando()) {
+      <div class="flex items-center gap-3 py-4 text-[13px] text-tinta-3">
+        <mat-spinner diameter="20"></mat-spinner><span>Carregando professores e unidades…</span>
+      </div>
+    } @else {
+      <form [formGroup]="form" class="flex flex-col gap-4" (ngSubmit)="salvar()">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Nome da aula</mat-label>
+          <input matInput formControlName="nome" placeholder="Ex: Spinning, Yoga, CrossFit">
+          @if (form.controls.nome.touched && form.controls.nome.invalid) {
+            <mat-error>Informe o nome da aula.</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Professor</mat-label>
+            <mat-select formControlName="professorId">
+              @for (p of professores(); track p.id) {
+                <mat-option [value]="p.id">{{ p.nome }}</mat-option>
+              }
+            </mat-select>
+            @if (form.controls.professorId.touched && form.controls.professorId.invalid) {
+              <mat-error>Escolha o professor.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Unidade</mat-label>
+            <mat-select formControlName="unidadeId">
+              @for (u of unidades(); track u.id) {
+                <mat-option [value]="u.id">{{ u.nome }}</mat-option>
+              }
+            </mat-select>
+            @if (form.controls.unidadeId.touched && form.controls.unidadeId.invalid) {
+              <mat-error>Escolha a unidade.</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Data e hora</mat-label>
+          <input matInput type="datetime-local" formControlName="dataHora">
+          @if (form.controls.dataHora.touched && form.controls.dataHora.invalid) {
+            <mat-error>Informe a data e hora da aula.</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="grid grid-cols-2 gap-4">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Duração (min)</mat-label>
+            <input matInput type="number" formControlName="duracaoMinutos">
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Capacidade</mat-label>
+            <input matInput type="number" formControlName="capacidadeMaxima">
+          </mat-form-field>
+        </div>
+      </form>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="!gap-2 border-t border-linha !px-6 !py-4">
+    <button mat-button mat-dialog-close type="button" class="!text-tinta-2">Cancelar</button>
+    <button mat-flat-button color="primary" type="button" class="!px-5"
+            [disabled]="carregando() || form.invalid || enviando()" (click)="salvar()">
+      @if (enviando()) { <mat-spinner diameter="20"></mat-spinner> }
+      @else { Criar aula }
+    </button>
+  </mat-dialog-actions>
+</div>

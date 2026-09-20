@@ -2,7 +2,7 @@ import { AREAS, Acao, areasDoPerfil, podeAcessar, podeExecutar, rotaInicial } fr
 import { TipoPerfil } from './models';
 
 describe('tabela de acesso', () => {
-  const AREAS_DO_ALUNO = ['/dashboard/meu-treino', '/dashboard/minha-matricula'];
+  const AREAS_DO_ALUNO = ['/dashboard/meu-treino', '/dashboard/minha-matricula', '/dashboard/minhas-aulas'];
 
   it('dá ao admin todas as áreas operacionais', () => {
     // Todas menos as do aluno, que são da conta de quem está autenticado.
@@ -127,8 +127,9 @@ describe('ações dentro da tela', () => {
 
   it('o admin executa todas as ações menos cadastrar aluno', () => {
     const acoes: Acao[] = [
-      'gerenciar-aluno', 'gerenciar-anamnese', 'gerenciar-avaliacao-fisica', 'gerenciar-equipamento',
-      'resolver-chamado', 'gerenciar-produto', 'gerenciar-plano', 'cancelar-matricula',
+      'gerenciar-aluno', 'gerenciar-anamnese', 'gerenciar-avaliacao-fisica', 'ver-contrato',
+      'gerenciar-aula-grupo', 'marcar-vaga-aula', 'gerenciar-personal', 'gerenciar-horario-professor',
+      'gerenciar-equipamento', 'resolver-chamado', 'gerenciar-produto', 'gerenciar-plano', 'cancelar-matricula',
     ];
     for (const acao of acoes) expect(podeExecutar(acao, 'ADMIN')).toBeTrue();
     expect(podeExecutar('cadastrar-aluno', 'ADMIN')).toBeFalse();
@@ -146,5 +147,33 @@ describe('ações dentro da tela', () => {
   it('nega quem não tem perfil', () => {
     expect(podeExecutar('gerenciar-aluno', null)).toBeFalse();
     expect(podeExecutar('gerenciar-produto', undefined)).toBeFalse();
+  });
+
+  it('contrato assinado é do balcão — admin e secretaria, não o professor', () => {
+    // Mesma regra da API: documento administrativo/legal, diferente da
+    // anamnese, que é informação de treino.
+    expect(podeExecutar('ver-contrato', 'ADMIN')).toBeTrue();
+    expect(podeExecutar('ver-contrato', 'SECRETARIA')).toBeTrue();
+    expect(podeExecutar('ver-contrato', 'PROFESSOR')).toBeFalse();
+  });
+
+  it('aula em grupo é agendada por quem monta o treino, mas a vaga é marcada pelo balcão', () => {
+    expect(podeExecutar('gerenciar-aula-grupo', 'ADMIN')).toBeTrue();
+    expect(podeExecutar('gerenciar-aula-grupo', 'PROFESSOR')).toBeTrue();
+    expect(podeExecutar('gerenciar-aula-grupo', 'SECRETARIA')).toBeFalse();
+
+    expect(podeExecutar('marcar-vaga-aula', 'SECRETARIA')).toBeTrue();
+    expect(podeExecutar('marcar-vaga-aula', 'PROFESSOR')).toBeFalse();
+  });
+
+  it('personal nunca é self-service, e horário de professor é só da administração', () => {
+    expect(podeExecutar('gerenciar-personal', 'ADMIN')).toBeTrue();
+    expect(podeExecutar('gerenciar-personal', 'SECRETARIA')).toBeTrue();
+    expect(podeExecutar('gerenciar-personal', 'PROFESSOR')).toBeFalse();
+    expect(podeExecutar('gerenciar-personal', 'ALUNO')).toBeFalse();
+
+    expect(podeExecutar('gerenciar-horario-professor', 'ADMIN')).toBeTrue();
+    expect(podeExecutar('gerenciar-horario-professor', 'SECRETARIA')).toBeFalse();
+    expect(podeExecutar('gerenciar-horario-professor', 'PROFESSOR')).toBeFalse();
   });
 });

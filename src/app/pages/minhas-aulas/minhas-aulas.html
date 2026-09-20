@@ -1,0 +1,113 @@
+<div class="mx-auto max-w-[840px] px-4 py-6 sm:px-6 lg:py-8">
+  <header class="h-cabecalho">
+    <div>
+      <h1>Minhas aulas</h1>
+      <p>Reserve sua vaga nas aulas em grupo e acompanhe suas sessões de personal.</p>
+    </div>
+  </header>
+
+  <section>
+    <h2 class="font-display text-[17px] font-bold leading-tight text-tinta">Aulas em grupo</h2>
+
+    @if (erroAulas(); as mensagem) {
+      <div role="alert"
+           class="mt-3 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+        <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+          <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+        </span>
+        <button type="button" (click)="listarAulas()"
+                class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+      </div>
+    }
+
+    @if (carregandoAulas()) {
+      <div class="mt-3 flex items-center gap-3 rounded-marca border border-linha bg-papel px-6 py-10 text-[13px] text-tinta-3">
+        <mat-spinner diameter="20"></mat-spinner><span>Carregando aulas…</span>
+      </div>
+    } @else if (aulas().length === 0 && !erroAulas()) {
+      <div class="mt-3 flex flex-col items-center gap-2.5 rounded-marca border border-linha bg-papel px-6 py-10 text-center">
+        <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="schedule"></mat-icon>
+        <p class="text-[13px] text-tinta-3">Nenhuma aula agendada no momento.</p>
+      </div>
+    } @else {
+      <ul class="mt-3 flex flex-col gap-3">
+        @for (a of aulas(); track a.id) {
+          <li class="flex flex-wrap items-center justify-between gap-3 rounded-marca border border-linha bg-papel px-5 py-4">
+            <div class="min-w-0">
+              <p class="font-semibold text-tinta">{{ a.nome }}</p>
+              <p class="text-[12.5px] text-tinta-3">
+                {{ a.professorNome }} · {{ a.unidadeNome }} · {{ a.dataHora | date: 'dd/MM/yyyy HH:mm' }}
+              </p>
+              <p class="mt-1 text-[12px] tabular-nums text-tinta-3">
+                {{ a.vagasOcupadas }} / {{ a.capacidadeMaxima }} vagas ocupadas
+              </p>
+            </div>
+            <div class="shrink-0">
+              @if (a.inscrito) {
+                <button mat-stroked-button class="!h-10"
+                        [disabled]="processando() === a.id"
+                        (click)="cancelarReserva(a)">
+                  @if (processando() === a.id) { <mat-spinner diameter="18"></mat-spinner> }
+                  @else { Cancelar vaga }
+                </button>
+              } @else if (podeReservar(a)) {
+                <button mat-flat-button color="primary" class="!h-10"
+                        [disabled]="processando() === a.id"
+                        (click)="reservar(a)">
+                  @if (processando() === a.id) { <mat-spinner diameter="18"></mat-spinner> }
+                  @else { Reservar vaga }
+                </button>
+              } @else {
+                <span class="h-etiqueta h-etiqueta--neutra">Lotada</span>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <section class="mt-8">
+    <h2 class="font-display text-[17px] font-bold leading-tight text-tinta">Sessões de personal</h2>
+    <p class="text-[12.5px] text-tinta-3">Agendadas pela recepção — fale com o balcão para marcar ou remarcar.</p>
+
+    @if (erroPersonal(); as mensagem) {
+      <div role="alert"
+           class="mt-3 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+        <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+          <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+        </span>
+      </div>
+    }
+
+    @if (carregandoPersonal()) {
+      <div class="mt-3 flex items-center gap-3 rounded-marca border border-linha bg-papel px-6 py-10 text-[13px] text-tinta-3">
+        <mat-spinner diameter="20"></mat-spinner><span>Carregando sessões de personal…</span>
+      </div>
+    } @else if (sessoesPersonal().length === 0 && !erroPersonal()) {
+      <div class="mt-3 flex flex-col items-center gap-2.5 rounded-marca border border-linha bg-papel px-6 py-10 text-center">
+        <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="fitness_center"></mat-icon>
+        <p class="text-[13px] text-tinta-3">Nenhuma sessão de personal agendada.</p>
+      </div>
+    } @else {
+      <ul class="mt-3 flex flex-col gap-3">
+        @for (s of sessoesPersonal(); track s.id) {
+          <li class="flex flex-wrap items-center justify-between gap-3 rounded-marca border border-linha bg-papel px-5 py-4">
+            <div class="min-w-0">
+              <p class="font-semibold text-tinta">{{ s.professorNome }}</p>
+              <p class="text-[12.5px] text-tinta-3">
+                {{ s.unidadeNome }} · {{ s.dataHora | date: 'dd/MM/yyyy HH:mm' }} · {{ s.duracaoMinutos }} min
+              </p>
+              @if (s.observacoes) {
+                <p class="mt-1 text-[12px] text-tinta-3">{{ s.observacoes }}</p>
+              }
+            </div>
+            <span class="h-etiqueta shrink-0" [class]="s.status === 'AGENDADO' ? 'h-etiqueta--ok' : 'h-etiqueta--neutra'">
+              {{ s.status === 'AGENDADO' ? 'Agendada' : 'Cancelada' }}
+            </span>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</div>
