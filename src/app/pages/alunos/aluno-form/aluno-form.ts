@@ -2,13 +2,14 @@ import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 
-import { Plano, Usuario } from '../../../core/models';
+import { Plano, TEXTO_CONTRATO_PADRAO, Usuario } from '../../../core/models';
 import { PlanoService } from '../../../core/services/plano.service';
 import { UsuarioService } from '../../../core/services/usuario.service';
 import { mensagemDeErro } from '../../../core/services/erro-api';
@@ -30,6 +31,7 @@ const TIPOS_DE_FOTO_ACEITOS = ['image/jpeg', 'image/png', 'image/webp'];
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
+    MatCheckboxModule,
     MatIconModule,
     MatProgressSpinnerModule,
   ],
@@ -48,6 +50,7 @@ export class AlunoFormComponent implements OnInit, OnDestroy {
   readonly carregando = signal(true);
   readonly enviando = signal(false);
   readonly erro = signal<string | null>(null);
+  readonly textoContrato = TEXTO_CONTRATO_PADRAO;
 
   readonly planos = signal<Plano[]>([]);
 
@@ -71,6 +74,10 @@ export class AlunoFormComponent implements OnInit, OnDestroy {
     // Só no cadastro. A senha é enviada em claro sobre HTTPS e cifrada com
     // BCrypt no servidor — o formulário não monta mais nenhum hash.
     senha: ['', this.aluno ? [] : [Validators.required, Validators.minLength(8)]],
+    // O "clique para assinar" do contrato — só no cadastro. Editar dados
+    // depois não reabre um contrato já assinado.
+    nomeAssinaturaContrato: ['', this.aluno ? [] : [Validators.required, Validators.maxLength(100)]],
+    aceiteContrato: [false, this.aluno ? [] : [Validators.requiredTrue]],
   });
 
   ngOnInit(): void {
@@ -191,6 +198,8 @@ export class AlunoFormComponent implements OnInit, OnDestroy {
           // só ADMIN e SECRETARIA conseguem chamar esta rota.
           tipoPerfil: 'ALUNO',
           senha: valores.senha,
+          nomeAssinaturaContrato: valores.nomeAssinaturaContrato,
+          aceiteContrato: valores.aceiteContrato,
         });
 
     requisicao.subscribe({

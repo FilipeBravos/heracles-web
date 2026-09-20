@@ -8,6 +8,7 @@ import {
   AnamneseForm,
   AvaliacaoFisica,
   AvaliacaoFisicaForm,
+  Contrato,
   EdicaoUsuario,
   NovoUsuario,
   Pagina,
@@ -72,5 +73,10 @@ export class UsuarioService {
   /** Bytes da foto de evolução — mesmo motivo do object URL em buscarFoto(). */
   buscarFotoAvaliacaoFisica(id: number, avaliacaoId: number): Observable<Blob> {
     return this.http.get(`${this.url}/${id}/avaliacoes-fisicas/${avaliacaoId}/foto`, { responseType: 'blob' });
+  }
+
+  /** O contrato assinado no cadastro — só leitura, não há edição. */
+  buscarContrato(id: number): Observable<Contrato> {
+    return this.http.get<Contrato>(`${this.url}/${id}/contrato`);
   }
 }

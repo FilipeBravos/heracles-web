@@ -45,6 +45,13 @@ export interface NovoUsuario {
   planoEscolhidoId?: number | null;
   tipoPerfil: TipoPerfil;
   senha: string;
+  /**
+   * O "clique para assinar" do contrato — nome digitado e aceite. Só
+   * exigido pela API quando tipoPerfil é ALUNO, mesmo motivo de
+   * endereco/cep/plano.
+   */
+  nomeAssinaturaContrato?: string | null;
+  aceiteContrato?: boolean | null;
 }
 
 /**
