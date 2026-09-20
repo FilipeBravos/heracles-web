@@ -423,6 +423,44 @@ export interface HistoricoMensal {
   pontos: PontoMensal[];
 }
 
+/**
+ * Um mês da série de churn. `taxaChurn` já vem calculada (0 a 1) — o
+ * front só formata como porcentagem, nunca recalcula.
+ */
+export interface PontoChurn {
+  mes: string;
+  ativosNoInicio: number;
+  cancelados: number;
+  taxaChurn: number;
+}
+
+export interface HistoricoChurn {
+  meses: number;
+  pontos: PontoChurn[];
+}
+
+/** Uma linha do detalhamento de churn por plano ou por unidade, no mês de referência. */
+export interface LinhaChurn {
+  id: number;
+  nome: string;
+  ativosNoInicio: number;
+  cancelados: number;
+  taxaChurn: number;
+}
+
+/**
+ * O painel de retenção inteiro: a tendência mensal e o detalhamento do
+ * último mês fechado — o mês corrente fica de fora por estar
+ * incompleto, e mostraria uma taxa artificialmente baixa.
+ */
+export interface Retencao {
+  historico: HistoricoChurn;
+  /** `yyyy-MM` do último mês fechado — o mesmo formato de PontoMensal.mes. */
+  mesReferencia: string;
+  porPlano: LinhaChurn[];
+  porUnidade: LinhaChurn[];
+}
+
 const MESES_ABREVIADOS = [
   'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
   'jul', 'ago', 'set', 'out', 'nov', 'dez',

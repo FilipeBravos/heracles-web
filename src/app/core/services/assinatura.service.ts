@@ -13,6 +13,7 @@ import {
   LinhaInadimplencia,
   MatricularForm,
   Pagina,
+  Retencao,
   ResumoInadimplencia,
 } from '../models';
 
@@ -100,5 +101,14 @@ export class AssinaturaService {
       .set('size', tamanho)
       .set('diasParaVencer', diasParaVencer);
     return this.http.get<Pagina<LinhaInadimplencia>>(`${this.url}/inadimplencia`, { params });
+  }
+
+  /**
+   * Painel de retenção: tendência de churn mensal, e o detalhamento por
+   * plano e por unidade do último mês fechado.
+   */
+  retencao(meses = 12): Observable<Retencao> {
+    const params = new HttpParams().set('meses', meses);
+    return this.http.get<Retencao>(`${this.url}/retencao`, { params });
   }
 }
