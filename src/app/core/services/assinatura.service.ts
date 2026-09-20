@@ -10,7 +10,9 @@ import {
   Cobranca,
   FilaDeVencimentos,
   HistoricoMensal,
+  Lembrete,
   LinhaInadimplencia,
+  LinhaIndicacao,
   MatricularForm,
   Pagina,
   Retencao,
@@ -86,6 +88,16 @@ export class AssinaturaService {
   /** Extrato de cobranças (simuladas) da assinatura, mais recente primeiro. */
   historicoCobrancas(assinaturaId: number): Observable<Cobranca[]> {
     return this.http.get<Cobranca[]>(`${this.url}/${assinaturaId}/cobrancas`);
+  }
+
+  /** Extrato de lembretes (simulados) da assinatura, mais recente primeiro. */
+  historicoLembretes(assinaturaId: number): Observable<Lembrete[]> {
+    return this.http.get<Lembrete[]>(`${this.url}/${assinaturaId}/lembretes`);
+  }
+
+  /** Ranking do programa de indicação: quantas matrículas cada aluno trouxe. */
+  indicacoes(): Observable<LinhaIndicacao[]> {
+    return this.http.get<LinhaIndicacao[]>(`${this.url}/indicacoes`);
   }
 
   /** Cabeçalho do relatório de inadimplência: quantos em cada etapa da régua. */

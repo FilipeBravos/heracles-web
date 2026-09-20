@@ -14,6 +14,7 @@ import {
   Assinatura,
   CLASSE_SITUACAO,
   LinhaInadimplencia,
+  LinhaIndicacao,
   Plano,
   ROTULO_FORMA_PAGAMENTO,
   ROTULO_SITUACAO,
@@ -87,7 +88,8 @@ export class MatriculasComponent implements OnInit {
   readonly paginaPlanos = signal(0);
   private planosCarregados = false;
 
-  readonly colunasInadimplencia = ['aluno', 'plano', 'vencimento', 'situacao', 'cobranca', 'acoes'];
+  readonly colunasInadimplencia = ['aluno', 'plano', 'vencimento', 'situacao', 'cobranca', 'lembrete', 'acoes'];
+  readonly colunasIndicacoes = ['posicao', 'aluno', 'quantidade'];
   readonly resumoInadimplencia = signal<ResumoInadimplencia | null>(null);
   readonly linhasInadimplencia = signal<LinhaInadimplencia[]>([]);
   readonly carregandoInadimplencia = signal(false);
@@ -95,6 +97,11 @@ export class MatriculasComponent implements OnInit {
   readonly totalInadimplencia = signal(0);
   readonly paginaInadimplencia = signal(0);
   private inadimplenciaCarregada = false;
+
+  readonly indicacoes = signal<LinhaIndicacao[]>([]);
+  readonly carregandoIndicacoes = signal(false);
+  readonly erroIndicacoes = signal<string | null>(null);
+  private indicacoesCarregadas = false;
 
   ngOnInit(): void {
     this.listarAssinaturas();
@@ -135,13 +142,16 @@ export class MatriculasComponent implements OnInit {
     });
   }
 
-  /** Só busca os planos (e a inadimplência) quando a aba é aberta pela primeira vez. */
+  /** Só busca os planos (a inadimplência, as indicações) quando a aba é aberta pela primeira vez. */
   aoTrocarAba(indice: number): void {
     if (indice === 1 && !this.planosCarregados) {
       this.listarPlanos();
     }
     if (indice === 2 && !this.inadimplenciaCarregada) {
       this.listarInadimplencia();
+    }
+    if (indice === 3 && !this.indicacoesCarregadas) {
+      this.listarIndicacoes();
     }
   }
 
@@ -300,6 +310,32 @@ export class MatriculasComponent implements OnInit {
     return linha.formaPagamento ? ROTULO_FORMA_PAGAMENTO[linha.formaPagamento] : '—';
   }
 
+  /** "WhatsApp" ou "E-mail" — o rótulo que a tela mostra, não o valor cru do enum. */
+  rotuloCanalLembrete(linha: LinhaInadimplencia): string {
+    return linha.ultimoLembreteCanal === 'WHATSAPP' ? 'WhatsApp' : 'E-mail';
+  }
+
+  // ---------------------------------------------------------------
+  // Programa de indicação
+  // ---------------------------------------------------------------
+
+  listarIndicacoes(): void {
+    this.carregandoIndicacoes.set(true);
+    this.erroIndicacoes.set(null);
+
+    this.assinaturaService.indicacoes().subscribe({
+      next: (linhas) => {
+        this.indicacoes.set(linhas);
+        this.carregandoIndicacoes.set(false);
+        this.indicacoesCarregadas = true;
+      },
+      error: (erro) => {
+        this.erroIndicacoes.set(mensagemDeErro(erro, 'Não foi possível carregar o ranking de indicações.'));
+        this.carregandoIndicacoes.set(false);
+      },
+    });
+  }
+
   // ---------------------------------------------------------------
   // Planos
   // ---------------------------------------------------------------
@@ -347,7 +383,7 @@ export class MatriculasComponent implements OnInit {
   }
 
   rotuloOrigem(assinatura: Assinatura): string {
-    return { DIRETO: 'Direta', GYMPASS: 'Gympass', TOTALPASS: 'TotalPass' }[assinatura.origem];
+    return { DIRETO: 'Direta', GYMPASS: 'Gympass', TOTALPASS: 'TotalPass', INDICACAO: 'Indicação' }[assinatura.origem];
   }
 
   rotuloCobranca(plano: Plano): string {
