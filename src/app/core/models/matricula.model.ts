@@ -531,6 +531,26 @@ export interface Retencao {
   porUnidade: LinhaChurn[];
 }
 
+/**
+ * O painel financeiro: o dinheiro, onde o painel de retenção mede alunos.
+ *
+ * `mrr` conta só quem está ATIVA — é a receita recorrente saudável; o que
+ * está atrasado aparece à parte, em `inadimplenciaEmReais`, para as duas
+ * perguntas não se misturarem num número só. `projecaoDoMes` é a soma das
+ * cobranças (pagas e pendentes) com vencimento dentro do mês corrente —
+ * uma previsão de caixa a partir de cobranças reais, não uma extrapolação
+ * do MRR.
+ */
+export interface PainelFinanceiro {
+  /** `yyyy-MM` do mês corrente — mesmo formato de PontoMensal.mes. */
+  mesReferencia: string;
+  mrr: number;
+  assinaturasAtivas: number;
+  ticketMedio: number;
+  inadimplenciaEmReais: number;
+  projecaoDoMes: number;
+}
+
 const MESES_ABREVIADOS = [
   'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
   'jul', 'ago', 'set', 'out', 'nov', 'dez',

@@ -235,6 +235,52 @@
         </section>
       </div>
 
+      <!-- ============ Financeiro: o dinheiro, onde as faixas de cima medem alunos ============ -->
+      <h2 class="h-rotulo mt-8 mb-3">Financeiro</h2>
+      @if (erroFinanceiro(); as mensagem) {
+        <div role="alert"
+             class="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+          <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+            <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+          </span>
+          <button type="button" (click)="carregarFinanceiro()"
+                  class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">
+            Tentar novamente
+          </button>
+        </div>
+      } @else if (carregandoFinanceiro()) {
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          @for (i of [1, 2, 3, 4]; track i) {
+            <div class="h-[116px] animate-pulse rounded-marca border border-linha bg-papel"></div>
+          }
+        </div>
+      } @else {
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          @for (item of cartoesFinanceiro(); track item.titulo) {
+            <article class="relative overflow-hidden rounded-marca border border-linha bg-papel p-5">
+              @if (item.tom === 'acento') {
+                <span class="absolute inset-x-0 top-0 h-[3px] bg-bronze-500"></span>
+              } @else if (item.tom === 'perigo') {
+                <span class="absolute inset-x-0 top-0 h-[3px] bg-perigo-700"></span>
+              }
+
+              <div class="flex items-start justify-between gap-3">
+                <p class="h-rotulo">{{ item.titulo }}</p>
+                <mat-icon class="!h-[18px] !w-[18px] !text-[18px]"
+                          [class]="item.tom === 'acento' ? 'text-bronze-600'
+                                 : item.tom === 'perigo' ? 'text-perigo-700' : 'text-tinta-3'"
+                          [svgIcon]="item.icon"></mat-icon>
+              </div>
+
+              <p class="mt-3 font-display text-[28px] font-bold leading-none tracking-tight tabular-nums text-tinta">
+                {{ item.valor }}
+              </p>
+              <p class="mt-2 text-[12px] leading-snug text-tinta-3">{{ item.nota }}</p>
+            </article>
+          }
+        </div>
+      }
+
       <!-- ============ Retenção: churn por mês, por plano e por unidade ============ -->
       <h2 class="h-rotulo mt-8 mb-3">Retenção</h2>
       <div class="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
