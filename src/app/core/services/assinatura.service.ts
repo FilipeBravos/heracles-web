@@ -17,6 +17,7 @@ import {
   LinhaMotivoCancelamento,
   MatricularForm,
   Pagina,
+  PainelFinanceiro,
   Retencao,
   ResumoInadimplencia,
 } from '../models';
@@ -129,5 +130,10 @@ export class AssinaturaService {
   retencao(meses = 12): Observable<Retencao> {
     const params = new HttpParams().set('meses', meses);
     return this.http.get<Retencao>(`${this.url}/retencao`, { params });
+  }
+
+  /** Painel financeiro: MRR, ticket médio, inadimplência em R$ e a projeção de caixa do mês. */
+  financeiro(): Observable<PainelFinanceiro> {
+    return this.http.get<PainelFinanceiro>(`${this.url}/financeiro`);
   }
 }

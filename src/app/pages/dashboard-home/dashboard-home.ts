@@ -9,6 +9,7 @@ import { RouterLink } from '@angular/router';
 import {
   FilaDeVencimentos,
   HistoricoMensal,
+  PainelFinanceiro,
   Retencao,
   ResumoDashboard,
   Vencimento,
@@ -76,6 +77,10 @@ export class DashboardHomeComponent implements OnInit {
   readonly retencao = signal<Retencao | null>(null);
   readonly carregandoRetencao = signal(true);
   readonly erroRetencao = signal<string | null>(null);
+
+  readonly financeiro = signal<PainelFinanceiro | null>(null);
+  readonly carregandoFinanceiro = signal(true);
+  readonly erroFinanceiro = signal<string | null>(null);
 
   /**
    * A carteira de matrículas é da recepção e da administração: o professor
@@ -194,6 +199,41 @@ export class DashboardHomeComponent implements OnInit {
     ];
   });
 
+  /**
+   * Quarta faixa: o dinheiro, onde as faixas de cima medem alunos.
+   *
+   * Mesma restrição de acesso da retenção: dado de faturamento não é do
+   * professor, e vem do mesmo `/api/assinaturas` que o perfil dele não
+   * pode consultar.
+   */
+  readonly cartoesFinanceiro = computed<CartaoEstatistica[]>(() => {
+    const dados = this.financeiro();
+    if (!dados) return [];
+
+    return [
+      {
+        titulo: 'MRR', valor: this.moeda.format(dados.mrr), icon: 'trending_up',
+        tom: 'neutro', nota: `${dados.assinaturasAtivas} assinatura(s) ativa(s)`,
+      },
+      {
+        titulo: 'Ticket médio', valor: this.moeda.format(dados.ticketMedio),
+        icon: 'point_of_sale', tom: 'neutro', nota: 'por assinatura ativa',
+      },
+      {
+        titulo: 'Inadimplência em R$', valor: this.moeda.format(dados.inadimplenciaEmReais),
+        icon: 'block', tom: dados.inadimplenciaEmReais > 0 ? 'perigo' : 'neutro',
+        nota: dados.inadimplenciaEmReais > 0
+          ? 'vencida ou marcada inadimplente'
+          : 'nada vencido ou inadimplente',
+      },
+      {
+        titulo: 'Projeção do mês', valor: this.moeda.format(dados.projecaoDoMes),
+        icon: 'event_upcoming', tom: 'neutro',
+        nota: `cobranças com vencimento em ${this.mesPorExtenso(dados.mesReferencia)}`,
+      },
+    ];
+  });
+
   ngOnInit(): void {
     this.carregar();
 
@@ -201,10 +241,12 @@ export class DashboardHomeComponent implements OnInit {
       this.carregarHistorico();
       this.carregarFila();
       this.carregarRetencao();
+      this.carregarFinanceiro();
     } else {
       this.carregandoHistorico.set(false);
       this.carregandoFila.set(false);
       this.carregandoRetencao.set(false);
+      this.carregandoFinanceiro.set(false);
     }
   }
 
@@ -252,6 +294,22 @@ export class DashboardHomeComponent implements OnInit {
       error: (erro) => {
         this.erroRetencao.set(mensagemDeErro(erro, 'Não foi possível carregar a retenção.'));
         this.carregandoRetencao.set(false);
+      },
+    });
+  }
+
+  carregarFinanceiro(): void {
+    this.carregandoFinanceiro.set(true);
+    this.erroFinanceiro.set(null);
+
+    this.assinaturaService.financeiro().subscribe({
+      next: (financeiro) => {
+        this.financeiro.set(financeiro);
+        this.carregandoFinanceiro.set(false);
+      },
+      error: (erro) => {
+        this.erroFinanceiro.set(mensagemDeErro(erro, 'Não foi possível carregar o financeiro.'));
+        this.carregandoFinanceiro.set(false);
       },
     });
   }
