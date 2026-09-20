@@ -28,27 +28,34 @@
     @if (mostrarFormulario()) {
       <form [formGroup]="form" class="mb-5 flex flex-col gap-4 rounded-marca border border-linha px-4 py-4"
             (ngSubmit)="salvar()">
-        <div class="flex items-center gap-4">
-          <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-marca-sm
-                      bg-fundo-2 text-tinta-3">
-            @if (fotoPreviewUrl(); as url) {
-              <img [src]="url" alt="Foto da avaliação" class="h-full w-full object-cover">
-            } @else {
-              <mat-icon class="!h-7 !w-7 !text-[28px]" svgIcon="fitness_center"></mat-icon>
+        <div class="flex flex-col gap-2">
+          <div class="flex flex-wrap gap-2">
+            @for (url of novasFotosPreviewUrls(); track $index) {
+              <div class="group relative h-16 w-16 shrink-0 overflow-hidden rounded-marca-sm bg-fundo-2">
+                <img [src]="url" alt="Nova foto de evolução" class="h-full w-full object-cover">
+                <button type="button" (click)="removerNovaFoto($index)"
+                        class="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full
+                               bg-tinta/70 text-papel opacity-0 transition-opacity group-hover:opacity-100">
+                  <mat-icon class="!h-3.5 !w-3.5 !text-[14px]" svgIcon="close"></mat-icon>
+                </button>
+              </div>
+            }
+            @if (novasFotosPreviewUrls().length < maximoDeFotos) {
+              <label for="fotosAvaliacao"
+                     class="flex h-16 w-16 shrink-0 cursor-pointer flex-col items-center justify-center gap-1
+                            rounded-marca-sm border border-dashed border-linha-forte text-tinta-3 hover:border-bronze-600">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="add"></mat-icon>
+              </label>
             }
           </div>
-          <div class="flex flex-col gap-1">
-            <label for="fotoAvaliacao"
-                   class="cursor-pointer text-[12.5px] font-semibold text-bronze-700 hover:underline">
-              {{ fotoPreviewUrl() ? 'Trocar foto' : 'Adicionar foto de evolução' }}
-            </label>
-            <input id="fotoAvaliacao" type="file" accept="image/jpeg,image/png,image/webp" class="hidden"
-                   (change)="aoSelecionarFoto($event)">
-            <span class="text-[11.5px] text-tinta-3">JPEG, PNG ou WebP, até 3 MB.</span>
-            @if (erroFoto(); as mensagem) {
-              <span class="text-[11.5px] text-perigo-700">{{ mensagem }}</span>
-            }
-          </div>
+          <input id="fotosAvaliacao" type="file" accept="image/jpeg,image/png,image/webp" multiple class="hidden"
+                 (change)="aoSelecionarFotos($event)">
+          <span class="text-[11.5px] text-tinta-3">
+            JPEG, PNG ou WebP, até 3 MB cada — no máximo {{ maximoDeFotos }} fotos (frente, lado, costas...).
+          </span>
+          @if (erroFoto(); as mensagem) {
+            <span class="text-[11.5px] text-perigo-700">{{ mensagem }}</span>
+          }
         </div>
 
         <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -82,6 +89,10 @@
             <mat-label>Coxa (cm)</mat-label>
             <input matInput type="number" step="0.1" formControlName="circunferenciaCoxa">
           </mat-form-field>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Peito (cm)</mat-label>
+            <input matInput type="number" step="0.1" formControlName="circunferenciaPeito">
+          </mat-form-field>
         </div>
 
         <mat-form-field appearance="outline" class="w-full">
@@ -101,6 +112,100 @@
       </form>
     }
 
+    @if (comparativo(); as c) {
+      @if (c.disponivel) {
+        <div class="mb-5 rounded-marca border border-linha px-4 py-4">
+          <button type="button" (click)="alternarComparativo()"
+                  class="flex w-full items-center justify-between gap-2 text-left">
+            <span class="text-[13px] font-semibold text-tinta">
+              Comparativo: {{ c.de!.data | date: 'dd/MM/yyyy' }} → {{ c.para!.data | date: 'dd/MM/yyyy' }}
+            </span>
+            <mat-icon class="!h-5 !w-5 !text-[20px] text-tinta-3"
+                      [svgIcon]="mostrarComparativo() ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"></mat-icon>
+          </button>
+
+          @if (mostrarComparativo()) {
+            <div class="mt-4 flex flex-col gap-4">
+              @if (primeiraFotoUrl(c.de) || primeiraFotoUrl(c.para)) {
+                <div class="flex items-center justify-center gap-4">
+                  <div class="flex flex-col items-center gap-1.5">
+                    <div class="h-32 w-24 overflow-hidden rounded-marca-sm bg-fundo-2">
+                      @if (primeiraFotoUrl(c.de); as url) {
+                        <img [src]="url" alt="Foto da primeira avaliação" class="h-full w-full object-cover">
+                      }
+                    </div>
+                    <span class="text-[11px] text-tinta-3">{{ c.de!.data | date: 'dd/MM/yyyy' }}</span>
+                  </div>
+                  <span class="text-[18px] text-tinta-3" aria-hidden="true">→</span>
+                  <div class="flex flex-col items-center gap-1.5">
+                    <div class="h-32 w-24 overflow-hidden rounded-marca-sm bg-fundo-2">
+                      @if (primeiraFotoUrl(c.para); as url) {
+                        <img [src]="url" alt="Foto da avaliação mais recente" class="h-full w-full object-cover">
+                      }
+                    </div>
+                    <span class="text-[11px] text-tinta-3">{{ c.para!.data | date: 'dd/MM/yyyy' }}</span>
+                  </div>
+                </div>
+              }
+
+              <table class="w-full text-[12.5px]">
+                <tbody>
+                  <tr class="border-b border-linha">
+                    <td class="py-1.5 text-tinta-3">Peso</td>
+                    <td class="py-1.5 text-right tabular-nums font-semibold text-tinta">
+                      {{ formatarDelta(c.delta!.pesoKg, ' kg') }}
+                    </td>
+                  </tr>
+                  <tr class="border-b border-linha">
+                    <td class="py-1.5 text-tinta-3">IMC</td>
+                    <td class="py-1.5 text-right tabular-nums font-semibold text-tinta">
+                      {{ formatarDelta(c.delta!.imc) }}
+                    </td>
+                  </tr>
+                  <tr class="border-b border-linha">
+                    <td class="py-1.5 text-tinta-3">Gordura</td>
+                    <td class="py-1.5 text-right tabular-nums font-semibold text-tinta">
+                      {{ formatarDelta(c.delta!.percentualGordura, ' %') }}
+                    </td>
+                  </tr>
+                  <tr class="border-b border-linha">
+                    <td class="py-1.5 text-tinta-3">Cintura</td>
+                    <td class="py-1.5 text-right tabular-nums font-semibold text-tinta">
+                      {{ formatarDelta(c.delta!.circunferenciaCintura, ' cm') }}
+                    </td>
+                  </tr>
+                  <tr class="border-b border-linha">
+                    <td class="py-1.5 text-tinta-3">Quadril</td>
+                    <td class="py-1.5 text-right tabular-nums font-semibold text-tinta">
+                      {{ formatarDelta(c.delta!.circunferenciaQuadril, ' cm') }}
+                    </td>
+                  </tr>
+                  <tr class="border-b border-linha">
+                    <td class="py-1.5 text-tinta-3">Braço</td>
+                    <td class="py-1.5 text-right tabular-nums font-semibold text-tinta">
+                      {{ formatarDelta(c.delta!.circunferenciaBraco, ' cm') }}
+                    </td>
+                  </tr>
+                  <tr class="border-b border-linha">
+                    <td class="py-1.5 text-tinta-3">Coxa</td>
+                    <td class="py-1.5 text-right tabular-nums font-semibold text-tinta">
+                      {{ formatarDelta(c.delta!.circunferenciaCoxa, ' cm') }}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="py-1.5 text-tinta-3">Peito</td>
+                    <td class="py-1.5 text-right tabular-nums font-semibold text-tinta">
+                      {{ formatarDelta(c.delta!.circunferenciaPeito, ' cm') }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      }
+    }
+
     @if (carregando()) {
       <div class="flex items-center gap-3 py-4 text-[13px] text-tinta-3">
         <mat-spinner diameter="20"></mat-spinner>
@@ -114,34 +219,49 @@
     } @else {
       <ul class="flex flex-col divide-y divide-linha">
         @for (a of historico(); track a.id) {
-          <li class="flex items-start gap-3 py-4">
-            <div class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-marca-sm
-                        bg-fundo-2 text-tinta-3">
-              @if (fotoPorAvaliacao()[a.id]; as url) {
-                <img [src]="url" alt="" class="h-full w-full object-cover">
-              } @else {
-                <mat-icon class="!h-6 !w-6 !text-[24px]" svgIcon="fitness_center"></mat-icon>
-              }
-            </div>
-            <div class="min-w-0 flex-1">
-              <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-                <p class="text-[13px] font-semibold text-tinta">{{ a.data | date: 'dd/MM/yyyy' }}</p>
-                <p class="text-[12px] tabular-nums text-tinta-3">
-                  {{ a.pesoKg }} kg · {{ a.alturaCm }} cm
-                  @if (a.imc !== null) { · IMC {{ a.imc }} }
-                </p>
+          <li class="flex flex-col gap-3 py-4">
+            <div class="flex items-start gap-3">
+              <div class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-marca-sm
+                          bg-fundo-2 text-tinta-3">
+                @if (fotoUrl(a.id, a.fotoIds[0]); as url) {
+                  <img [src]="url" alt="" class="h-full w-full object-cover">
+                } @else {
+                  <mat-icon class="!h-6 !w-6 !text-[24px]" svgIcon="fitness_center"></mat-icon>
+                }
               </div>
-              <div class="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[12px] text-tinta-3">
-                @if (a.percentualGordura !== null) { <span>Gordura: {{ a.percentualGordura }}%</span> }
-                @if (a.circunferenciaCintura !== null) { <span>Cintura: {{ a.circunferenciaCintura }} cm</span> }
-                @if (a.circunferenciaQuadril !== null) { <span>Quadril: {{ a.circunferenciaQuadril }} cm</span> }
-                @if (a.circunferenciaBraco !== null) { <span>Braço: {{ a.circunferenciaBraco }} cm</span> }
-                @if (a.circunferenciaCoxa !== null) { <span>Coxa: {{ a.circunferenciaCoxa }} cm</span> }
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                  <p class="text-[13px] font-semibold text-tinta">{{ a.data | date: 'dd/MM/yyyy' }}</p>
+                  <p class="text-[12px] tabular-nums text-tinta-3">
+                    {{ a.pesoKg }} kg · {{ a.alturaCm }} cm
+                    @if (a.imc !== null) { · IMC {{ a.imc }} }
+                  </p>
+                </div>
+                <div class="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[12px] text-tinta-3">
+                  @if (a.percentualGordura !== null) { <span>Gordura: {{ a.percentualGordura }}%</span> }
+                  @if (a.circunferenciaCintura !== null) { <span>Cintura: {{ a.circunferenciaCintura }} cm</span> }
+                  @if (a.circunferenciaQuadril !== null) { <span>Quadril: {{ a.circunferenciaQuadril }} cm</span> }
+                  @if (a.circunferenciaBraco !== null) { <span>Braço: {{ a.circunferenciaBraco }} cm</span> }
+                  @if (a.circunferenciaCoxa !== null) { <span>Coxa: {{ a.circunferenciaCoxa }} cm</span> }
+                  @if (a.circunferenciaPeito !== null) { <span>Peito: {{ a.circunferenciaPeito }} cm</span> }
+                </div>
+                @if (a.observacoes; as obs) {
+                  <p class="mt-1.5 text-[12.5px] leading-snug text-tinta-2">{{ obs }}</p>
+                }
               </div>
-              @if (a.observacoes; as obs) {
-                <p class="mt-1.5 text-[12.5px] leading-snug text-tinta-2">{{ obs }}</p>
-              }
             </div>
+
+            @if (a.fotoIds.length > 1) {
+              <div class="ml-[68px] flex flex-wrap gap-2">
+                @for (fotoId of a.fotoIds; track fotoId) {
+                  @if (fotoUrl(a.id, fotoId); as url) {
+                    <div class="h-12 w-12 overflow-hidden rounded-marca-sm bg-fundo-2">
+                      <img [src]="url" alt="" class="h-full w-full object-cover">
+                    </div>
+                  }
+                }
+              </div>
+            }
           </li>
         }
       </ul>

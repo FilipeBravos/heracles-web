@@ -73,6 +73,13 @@ export const routes: Routes = [
           import('./pages/minhas-aulas/minhas-aulas').then((m) => m.MinhasAulasComponent),
       },
       {
+        path: 'minha-evolucao-fisica',
+        canActivate: [perfilGuard],
+        loadComponent: () =>
+          import('./pages/minha-evolucao-fisica/minha-evolucao-fisica').then(
+            (m) => m.MinhaEvolucaoFisicaComponent),
+      },
+      {
         path: 'unidades',
         canActivate: [perfilGuard],
         loadComponent: () => import('./pages/unidades/unidades').then((m) => m.UnidadesComponent),
