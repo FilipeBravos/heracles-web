@@ -379,6 +379,47 @@
           </section>
         }
       </div>
+
+      <!-- ============ Ocupação: check-ins liberados por hora do dia, por unidade ============ -->
+      <h2 class="h-rotulo mt-8 mb-3">Ocupação por horário</h2>
+
+      @if (erroOcupacao(); as mensagem) {
+        <div role="alert"
+             class="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+          <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+            <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+          </span>
+          <button type="button" (click)="carregarOcupacao()"
+                  class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">
+            Tentar novamente
+          </button>
+        </div>
+      } @else if (carregandoOcupacao()) {
+        <div class="flex items-center gap-3 rounded-marca border border-linha bg-papel px-5 py-14 text-[13px] text-tinta-3">
+          <mat-spinner diameter="20"></mat-spinner><span>Carregando ocupação…</span>
+        </div>
+      } @else if (ocupacao(); as o) {
+        <p class="mb-4 text-[12.5px] text-tinta-3">
+          Check-ins liberados nos últimos {{ o.dias }} dias, somados por hora do dia —
+          pra dimensionar equipamento e horário de aula em grupo.
+        </p>
+
+        <div class="grid grid-cols-1 gap-4">
+          @for (unidade of o.unidades; track unidade.unidadeId) {
+            <section class="rounded-marca border border-linha bg-papel" [attr.aria-labelledby]="'titulo-ocupacao-' + unidade.unidadeId">
+              <header class="border-b border-linha px-5 py-4">
+                <h3 [id]="'titulo-ocupacao-' + unidade.unidadeId" class="h-rotulo">{{ unidade.unidadeNome }}</h3>
+              </header>
+              <app-grafico-ocupacao [unidade]="unidade" [dias]="o.dias"></app-grafico-ocupacao>
+            </section>
+          } @empty {
+            <div class="flex flex-col items-center gap-2 rounded-marca border border-linha bg-papel px-5 py-12 text-center">
+              <mat-icon class="!h-6 !w-6 !text-[24px] text-tinta-3" svgIcon="how_to_reg"></mat-icon>
+              <p class="text-[13.5px] font-semibold text-tinta">Nenhuma unidade cadastrada</p>
+            </div>
+          }
+        </div>
+      }
     }
   }
 </div>
