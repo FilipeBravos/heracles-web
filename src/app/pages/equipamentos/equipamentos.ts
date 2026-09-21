@@ -7,9 +7,10 @@ import { MatPaginatorIntl, MatPaginatorModule, PageEvent } from '@angular/materi
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
+import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { ChamadoManutencao, Equipamento } from '../../core/models';
+import { ChamadoManutencao, Equipamento, PainelManutencao } from '../../core/models';
 import { EquipamentoService } from '../../core/services/equipamento.service';
 import { podeExecutar } from '../../core/acesso';
 import { AuthService } from '../../core/services/auth.service';
@@ -27,6 +28,7 @@ import { ChamadoDialogComponent } from './chamado-dialog/chamado-dialog';
     MatIconModule,
     MatPaginatorModule,
     MatProgressSpinnerModule,
+    MatTabsModule,
     MatTooltipModule,
     CurrencyPipe,
     DatePipe,
@@ -69,8 +71,39 @@ export class EquipamentosComponent implements OnInit {
   readonly historico = signal<ChamadoManutencao[]>([]);
   readonly carregandoHistorico = signal(false);
 
+  readonly colunasMaisProblematicos = ['posicao', 'equipamento', 'unidade', 'chamados', 'custo'];
+  readonly colunasPorUnidade = ['unidade', 'chamados', 'custo'];
+  readonly relatorio = signal<PainelManutencao | null>(null);
+  readonly carregandoRelatorio = signal(false);
+  readonly erroRelatorio = signal<string | null>(null);
+  private relatorioCarregado = false;
+
   ngOnInit(): void {
     this.listar();
+  }
+
+  /** Só busca o relatório quando a aba é aberta pela primeira vez. */
+  aoTrocarAba(indice: number): void {
+    if (indice === 1 && !this.relatorioCarregado) {
+      this.carregarRelatorio();
+    }
+  }
+
+  carregarRelatorio(): void {
+    this.carregandoRelatorio.set(true);
+    this.erroRelatorio.set(null);
+
+    this.equipamentoService.relatorio(90).subscribe({
+      next: (relatorio) => {
+        this.relatorio.set(relatorio);
+        this.carregandoRelatorio.set(false);
+        this.relatorioCarregado = true;
+      },
+      error: (erro) => {
+        this.erroRelatorio.set(mensagemDeErro(erro, 'Não foi possível carregar o relatório de manutenção.'));
+        this.carregandoRelatorio.set(false);
+      },
+    });
   }
 
   listar(): void {
