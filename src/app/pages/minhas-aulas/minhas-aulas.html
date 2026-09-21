@@ -42,23 +42,24 @@
                 {{ a.vagasOcupadas }} / {{ a.capacidadeMaxima }} vagas ocupadas
               </p>
             </div>
-            <div class="shrink-0">
-              @if (a.inscrito) {
+            <div class="flex shrink-0 flex-col items-end gap-1.5">
+              @if (a.posicaoEspera !== null) {
+                <span class="h-etiqueta h-etiqueta--neutra">Posição {{ a.posicaoEspera }} na espera</span>
+              }
+              @if (a.inscrito || a.posicaoEspera !== null) {
                 <button mat-stroked-button class="!h-10"
                         [disabled]="processando() === a.id"
                         (click)="cancelarReserva(a)">
                   @if (processando() === a.id) { <mat-spinner diameter="18"></mat-spinner> }
-                  @else { Cancelar vaga }
+                  @else { {{ a.inscrito ? 'Cancelar vaga' : 'Sair da fila' }} }
                 </button>
-              } @else if (podeReservar(a)) {
+              } @else {
                 <button mat-flat-button color="primary" class="!h-10"
                         [disabled]="processando() === a.id"
                         (click)="reservar(a)">
                   @if (processando() === a.id) { <mat-spinner diameter="18"></mat-spinner> }
-                  @else { Reservar vaga }
+                  @else { {{ aulaLotada(a) ? 'Entrar na lista de espera' : 'Reservar vaga' }} }
                 </button>
-              } @else {
-                <span class="h-etiqueta h-etiqueta--neutra">Lotada</span>
               }
             </div>
           </li>

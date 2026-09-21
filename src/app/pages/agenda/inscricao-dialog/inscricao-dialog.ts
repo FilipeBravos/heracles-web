@@ -8,7 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 
-import { AulaGrupo, Usuario } from '../../../core/models';
+import { AulaGrupo, ResultadoInscricao, Usuario } from '../../../core/models';
 import { AgendaService } from '../../../core/services/agenda.service';
 import { UsuarioService } from '../../../core/services/usuario.service';
 import { mensagemDeErro } from '../../../core/services/erro-api';
@@ -79,18 +79,23 @@ export class InscricaoDialogComponent implements OnInit {
     this.erro.set(null);
     const alunoId = this.form.getRawValue().alunoId!;
 
-    const requisicao = this.data.modo === 'marcar'
-      ? this.agendaService.marcarVaga(this.data.aula.id, alunoId)
-      : this.agendaService.desmarcarVaga(this.data.aula.id, alunoId);
+    const aoFalhar = (erro: unknown) => {
+      this.enviando.set(false);
+      this.erro.set(mensagemDeErro(erro, this.data.modo === 'marcar'
+        ? 'Não foi possível marcar a vaga.'
+        : 'Não foi possível desmarcar a vaga.'));
+    };
 
-    requisicao.subscribe({
-      next: () => this.dialogRef.close(true),
-      error: (erro) => {
-        this.enviando.set(false);
-        this.erro.set(mensagemDeErro(erro, this.data.modo === 'marcar'
-          ? 'Não foi possível marcar a vaga.'
-          : 'Não foi possível desmarcar a vaga.'));
-      },
-    });
+    if (this.data.modo === 'marcar') {
+      this.agendaService.marcarVaga(this.data.aula.id, alunoId).subscribe({
+        next: (resultado) => this.dialogRef.close(resultado),
+        error: aoFalhar,
+      });
+    } else {
+      this.agendaService.desmarcarVaga(this.data.aula.id, alunoId).subscribe({
+        next: () => this.dialogRef.close(true),
+        error: aoFalhar,
+      });
+    }
   }
 }

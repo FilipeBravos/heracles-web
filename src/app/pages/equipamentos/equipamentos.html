@@ -12,19 +12,23 @@
     }
   </header>
 
-  @if (erro(); as mensagem) {
-    <div role="alert"
-         class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
-      <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
-        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
-      </span>
-      <button type="button" (click)="listar()"
-              class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
-    </div>
-  }
+  <mat-tab-group (selectedIndexChange)="aoTrocarAba($event)" animationDuration="0ms">
+    <!-- ============ Equipamentos ============ -->
+    <mat-tab label="Equipamentos">
+      <div class="pt-5">
+        @if (erro(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="listar()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        }
 
-  <div class="h-painel overflow-hidden">
-    <div class="overflow-x-auto">
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
       <table mat-table [dataSource]="equipamentos()" class="h-tabela">
         <ng-container matColumnDef="nome">
           <th mat-header-cell *matHeaderCellDef>Equipamento</th>
@@ -168,5 +172,140 @@
       <mat-paginator [length]="total()" [pageIndex]="pagina()" [pageSize]="tamanhoPagina()"
                      [pageSizeOptions]="[10, 20, 50]" (page)="mudarPagina($event)"></mat-paginator>
     }
-  </div>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- ============ Relatório ============ -->
+    <mat-tab label="Relatório">
+      <div class="pt-5">
+        @if (erroRelatorio(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="carregarRelatorio()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        } @else if (carregandoRelatorio()) {
+          <div class="flex items-center gap-3 rounded-marca border border-linha bg-papel px-5 py-14 text-[13px] text-tinta-3">
+            <mat-spinner diameter="20"></mat-spinner><span>Carregando relatório…</span>
+          </div>
+        } @else if (relatorio(); as r) {
+          <p class="mb-4 text-[12.5px] text-tinta-3">
+            Últimos {{ r.dias }} dias.
+          </p>
+
+          <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div class="h-painel px-5 py-4">
+              <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Custo de manutenção</p>
+              <p class="mt-1 text-[22px] font-bold tabular-nums text-tinta">{{ r.custoTotal | currency: 'BRL' }}</p>
+            </div>
+            <div class="h-painel px-5 py-4">
+              <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Chamados no período</p>
+              <p class="mt-1 text-[22px] font-bold tabular-nums text-tinta">{{ r.quantidadeChamados }}</p>
+              @if (r.quantidadeAbertos > 0) {
+                <p class="mt-0.5 text-[12px] text-alerta-700">{{ r.quantidadeAbertos }} ainda em aberto</p>
+              }
+            </div>
+            <div class="h-painel px-5 py-4">
+              <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Tempo médio de resolução</p>
+              <p class="mt-1 text-[22px] font-bold tabular-nums text-tinta">{{ r.tempoMedioResolucaoHoras }}h</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+            <section class="h-painel overflow-hidden" aria-labelledby="titulo-mais-problematicos">
+              <header class="border-b border-linha px-5 py-4">
+                <h2 id="titulo-mais-problematicos" class="h-rotulo">Equipamentos mais problemáticos</h2>
+              </header>
+
+              <div class="overflow-x-auto">
+                <table mat-table [dataSource]="r.maisProblematicos" class="h-tabela">
+                  <ng-container matColumnDef="posicao">
+                    <th mat-header-cell *matHeaderCellDef class="!w-12">#</th>
+                    <td mat-cell *matCellDef="let l; let i = index" class="tabular-nums text-tinta-3">{{ i + 1 }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="equipamento">
+                    <th mat-header-cell *matHeaderCellDef>Equipamento</th>
+                    <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.equipamentoNome }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="unidade">
+                    <th mat-header-cell *matHeaderCellDef>Unidade</th>
+                    <td mat-cell *matCellDef="let l" class="text-tinta-2">{{ l.unidadeNome }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="chamados">
+                    <th mat-header-cell *matHeaderCellDef class="!text-right">Chamados</th>
+                    <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                      {{ l.quantidadeChamados }}
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="custo">
+                    <th mat-header-cell *matHeaderCellDef class="!text-right">Custo</th>
+                    <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold text-tinta">
+                      {{ l.custoTotal | currency: 'BRL' }}
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="colunasMaisProblematicos"></tr>
+                  <tr mat-row *matRowDef="let row; columns: colunasMaisProblematicos"></tr>
+                </table>
+              </div>
+
+              @if (r.maisProblematicos.length === 0) {
+                <div class="flex flex-col items-center gap-2 px-5 py-10 text-center">
+                  <mat-icon class="!h-6 !w-6 !text-[24px] text-tinta-3" svgIcon="build"></mat-icon>
+                  <p class="text-[13px] text-tinta-3">Nenhum chamado no período.</p>
+                </div>
+              }
+            </section>
+
+            <section class="h-painel overflow-hidden" aria-labelledby="titulo-manutencao-por-unidade">
+              <header class="border-b border-linha px-5 py-4">
+                <h2 id="titulo-manutencao-por-unidade" class="h-rotulo">Por unidade</h2>
+              </header>
+
+              <div class="overflow-x-auto">
+                <table mat-table [dataSource]="r.porUnidade" class="h-tabela">
+                  <ng-container matColumnDef="unidade">
+                    <th mat-header-cell *matHeaderCellDef>Unidade</th>
+                    <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.unidadeNome }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="chamados">
+                    <th mat-header-cell *matHeaderCellDef class="!text-right">Chamados</th>
+                    <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                      {{ l.quantidadeChamados }}
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="custo">
+                    <th mat-header-cell *matHeaderCellDef class="!text-right">Custo</th>
+                    <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold text-tinta">
+                      {{ l.custoTotal | currency: 'BRL' }}
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="colunasPorUnidade"></tr>
+                  <tr mat-row *matRowDef="let row; columns: colunasPorUnidade"></tr>
+                </table>
+              </div>
+
+              @if (r.porUnidade.length === 0) {
+                <div class="flex flex-col items-center gap-2 px-5 py-10 text-center">
+                  <mat-icon class="!h-6 !w-6 !text-[24px] text-tinta-3" svgIcon="store"></mat-icon>
+                  <p class="text-[13px] text-tinta-3">Nenhum chamado no período.</p>
+                </div>
+              }
+            </section>
+          </div>
+        }
+      </div>
+    </mat-tab>
+  </mat-tab-group>
 </div>

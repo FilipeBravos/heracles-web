@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { ChamadoManutencao, Equipamento, EquipamentoForm, Pagina } from '../models';
+import { ChamadoManutencao, Equipamento, EquipamentoForm, Pagina, PainelManutencao } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class EquipamentoService {
@@ -34,5 +34,11 @@ export class EquipamentoService {
 
   resolverChamado(chamadoId: number, custoReparo: number | null): Observable<ChamadoManutencao> {
     return this.http.put<ChamadoManutencao>(`${this.url}/chamados/${chamadoId}/resolver`, { custoReparo });
+  }
+
+  /** Painel de manutenção: custo, tempo médio de resolução, equipamentos mais problemáticos e comparação por unidade. */
+  relatorio(dias = 90): Observable<PainelManutencao> {
+    const params = new HttpParams().set('dias', dias);
+    return this.http.get<PainelManutencao>(`${this.url}/relatorio`, { params });
   }
 }

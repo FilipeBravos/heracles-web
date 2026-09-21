@@ -79,8 +79,11 @@ export class MinhasAulasComponent implements OnInit {
   reservar(aula: AulaGrupoParaAluno): void {
     this.processando.set(aula.id);
     this.minhasAulasService.inscrever(aula.id).subscribe({
-      next: () => {
-        this.snackBar.open(`Vaga reservada em "${aula.nome}".`, 'Fechar', { duration: 4000 });
+      next: (resultado) => {
+        const mensagem = resultado.status === 'EM_ESPERA'
+          ? `Turma lotada. Você entrou na lista de espera de "${aula.nome}" (posição ${resultado.posicaoEspera}).`
+          : `Vaga reservada em "${aula.nome}".`;
+        this.snackBar.open(mensagem, 'Fechar', { duration: 5000 });
         this.processando.set(null);
         this.listarAulas();
       },
@@ -92,12 +95,15 @@ export class MinhasAulasComponent implements OnInit {
   }
 
   cancelarReserva(aula: AulaGrupoParaAluno): void {
-    if (!confirm(`Cancelar sua vaga em "${aula.nome}"?`)) return;
+    const pergunta = aula.inscrito
+      ? `Cancelar sua vaga em "${aula.nome}"?`
+      : `Sair da lista de espera de "${aula.nome}"?`;
+    if (!confirm(pergunta)) return;
 
     this.processando.set(aula.id);
     this.minhasAulasService.cancelarInscricao(aula.id).subscribe({
       next: () => {
-        this.snackBar.open('Vaga cancelada.', 'Fechar', { duration: 4000 });
+        this.snackBar.open(aula.inscrito ? 'Vaga cancelada.' : 'Você saiu da lista de espera.', 'Fechar', { duration: 4000 });
         this.processando.set(null);
         this.listarAulas();
       },
@@ -108,9 +114,9 @@ export class MinhasAulasComponent implements OnInit {
     });
   }
 
-  /** Sem vaga e sem estar inscrito, reservar não adianta nada. */
-  podeReservar(aula: AulaGrupoParaAluno): boolean {
-    return !aula.inscrito && aula.vagasOcupadas < aula.capacidadeMaxima;
+  /** A turma cheia não impede mais a tentativa: só muda se ela reserva ou entra na fila. */
+  aulaLotada(aula: AulaGrupoParaAluno): boolean {
+    return aula.vagasOcupadas >= aula.capacidadeMaxima;
   }
 
   /** Só depois que o professor confirmar que a sessão aconteceu, e uma vez só. */

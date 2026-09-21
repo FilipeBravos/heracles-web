@@ -86,6 +86,37 @@ export interface ChamadoManutencao {
   dataResolucao: string | null;
 }
 
+/** Uma linha do ranking de equipamentos mais problemáticos: mais chamados primeiro. */
+export interface LinhaEquipamentoProblematico {
+  equipamentoId: number;
+  equipamentoNome: string;
+  unidadeNome: string;
+  quantidadeChamados: number;
+  custoTotal: number;
+}
+
+/** Chamados e custo de manutenção de uma unidade no período. */
+export interface LinhaManutencaoPorUnidade {
+  unidadeId: number;
+  unidadeNome: string;
+  quantidadeChamados: number;
+  custoTotal: number;
+}
+
+/**
+ * O painel de manutenção: custo, tempo médio de resolução, os
+ * equipamentos mais problemáticos e a comparação entre unidades.
+ */
+export interface PainelManutencao {
+  dias: number;
+  quantidadeChamados: number;
+  quantidadeAbertos: number;
+  custoTotal: number;
+  tempoMedioResolucaoHoras: number;
+  maisProblematicos: LinhaEquipamentoProblematico[];
+  porUnidade: LinhaManutencaoPorUnidade[];
+}
+
 /** Uma linha do ranking de produtos mais vendidos: do mais vendido pro menos. */
 export interface LinhaProdutoMaisVendido {
   produtoId: number;

@@ -20,6 +20,7 @@ import {
   DIAS_SEMANA,
   HorarioProfessor,
   LinhaAvaliacaoProfessor,
+  ResultadoInscricao,
   ROTULO_DIA_SEMANA,
   Unidade,
   Usuario,
@@ -198,9 +199,12 @@ export class AgendaComponent implements OnInit {
     this.dialog
       .open(InscricaoDialogComponent, { width: '480px', maxWidth: '94vw', data: { aula, modo: 'marcar' } })
       .afterClosed()
-      .subscribe((confirmou) => {
-        if (confirmou) {
-          this.snackBar.open('Vaga marcada.', 'Fechar', { duration: 4000 });
+      .subscribe((resultado: ResultadoInscricao | undefined) => {
+        if (resultado) {
+          const mensagem = resultado.status === 'EM_ESPERA'
+            ? `Turma lotada — aluno entrou na lista de espera (posição ${resultado.posicaoEspera}).`
+            : 'Vaga marcada.';
+          this.snackBar.open(mensagem, 'Fechar', { duration: 5000 });
           this.listarAulas();
         }
       });

@@ -14,6 +14,7 @@ import {
   HorarioProfessorForm,
   LinhaAvaliacaoProfessor,
   Pagina,
+  ResultadoInscricao,
 } from '../models';
 
 /**
@@ -67,9 +68,13 @@ export class AgendaService {
     return this.http.put<AulaGrupo>(`${this.urlAulas}/${id}/cancelamento`, {});
   }
 
-  /** A secretaria marca a vaga em nome do aluno — quem liga ou passa no balcão sem usar o app. */
-  marcarVaga(aulaId: number, alunoId: number): Observable<void> {
-    return this.http.post<void>(`${this.urlAulas}/${aulaId}/inscricoes`, { alunoId });
+  /**
+   * A secretaria marca a vaga em nome do aluno — quem liga ou passa no
+   * balcão sem usar o app. A resposta diz se entrou direto ou foi para a
+   * fila de espera, já que a turma cheia não recusa mais.
+   */
+  marcarVaga(aulaId: number, alunoId: number): Observable<ResultadoInscricao> {
+    return this.http.post<ResultadoInscricao>(`${this.urlAulas}/${aulaId}/inscricoes`, { alunoId });
   }
 
   desmarcarVaga(aulaId: number, alunoId: number): Observable<void> {
@@ -118,8 +123,9 @@ export class MinhasAulasService {
     return this.http.get<Pagina<AulaGrupoParaAluno>>(`${this.url}/aulas`, { params });
   }
 
-  inscrever(aulaId: number): Observable<void> {
-    return this.http.post<void>(`${this.url}/aulas/${aulaId}/inscricoes`, {});
+  /** A resposta diz se entrou direto ou foi para a fila de espera, já que a turma cheia não recusa mais. */
+  inscrever(aulaId: number): Observable<ResultadoInscricao> {
+    return this.http.post<ResultadoInscricao>(`${this.url}/aulas/${aulaId}/inscricoes`, {});
   }
 
   cancelarInscricao(aulaId: number): Observable<void> {
