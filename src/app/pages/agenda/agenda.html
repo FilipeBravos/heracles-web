@@ -59,6 +59,9 @@
                 <th mat-header-cell *matHeaderCellDef>Vagas</th>
                 <td mat-cell *matCellDef="let a" class="tabular-nums text-tinta-2">
                   {{ a.vagasOcupadas }} / {{ a.capacidadeMaxima }}
+                  @if (a.vagasEspera > 0) {
+                    <span class="ml-1.5 h-etiqueta h-etiqueta--neutra">+{{ a.vagasEspera }} na espera</span>
+                  }
                 </td>
               </ng-container>
 

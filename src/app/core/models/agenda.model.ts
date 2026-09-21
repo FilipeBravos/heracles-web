@@ -39,7 +39,18 @@ export interface HorarioProfessorForm {
 
 export type StatusAula = 'ATIVA' | 'CANCELADA';
 
-/** Aula em grupo — visão operacional, com a ocupação da turma. */
+export type StatusInscricao = 'INSCRITA' | 'EM_ESPERA';
+
+/**
+ * O que aconteceu ao tentar marcar a vaga: entrou direto (INSCRITA) ou a
+ * turma estava cheia e foi para a fila (EM_ESPERA, com a posição).
+ */
+export interface ResultadoInscricao {
+  status: StatusInscricao;
+  posicaoEspera: number | null;
+}
+
+/** Aula em grupo — visão operacional, com a ocupação e a fila de espera da turma. */
 export interface AulaGrupo {
   id: number;
   nome: string;
@@ -51,10 +62,11 @@ export interface AulaGrupo {
   duracaoMinutos: number;
   capacidadeMaxima: number;
   vagasOcupadas: number;
+  vagasEspera: number;
   status: StatusAula;
 }
 
-/** A mesma aula, sob o olhar do aluno: se ele já está inscrito. */
+/** A mesma aula, sob o olhar do aluno: se ele já está inscrito, ou sua posição na fila de espera. */
 export interface AulaGrupoParaAluno {
   id: number;
   nome: string;
@@ -65,6 +77,8 @@ export interface AulaGrupoParaAluno {
   capacidadeMaxima: number;
   vagasOcupadas: number;
   inscrito: boolean;
+  /** Posição (1-based) na fila de espera, ou null se não está nela. */
+  posicaoEspera: number | null;
   status: StatusAula;
 }
 
