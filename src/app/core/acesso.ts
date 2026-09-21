@@ -114,6 +114,7 @@ export type Acao =
   | 'gerenciar-aula-grupo'
   | 'marcar-vaga-aula'
   | 'gerenciar-personal'
+  | 'ver-avaliacoes-personal'
   | 'gerenciar-horario-professor'
   | 'gerenciar-equipamento'
   | 'resolver-chamado'
@@ -150,6 +151,10 @@ const ACOES: Readonly<Record<Acao, readonly TipoPerfil[]>> = {
   // Personal nunca é self-service: quem agenda é sempre o balcão, a
   // pedido do aluno.
   'gerenciar-personal': BALCAO,
+  // A média de avaliação por professor é visibilidade de gestão sobre
+  // qualidade de atendimento — o professor vê a própria nota na agenda,
+  // mas o comparativo entre professores é do balcão.
+  'ver-avaliacoes-personal': BALCAO,
   // Horário de professor é estrutura de escala, como cadastro de
   // unidade — só a administração escreve.
   'gerenciar-horario-professor': ['ADMIN'],

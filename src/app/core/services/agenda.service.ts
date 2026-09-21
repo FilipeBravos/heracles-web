@@ -9,8 +9,10 @@ import {
   AulaGrupo,
   AulaGrupoForm,
   AulaGrupoParaAluno,
+  AvaliarSessaoPersonalForm,
   HorarioProfessor,
   HorarioProfessorForm,
+  LinhaAvaliacaoProfessor,
   Pagina,
 } from '../models';
 
@@ -18,6 +20,11 @@ import {
  * Agenda de aulas em grupo, personal e horário de professor — o lado
  * operacional (balcão/professor). O self-service do aluno vive em
  * MinhasAulasService, sob /eu, que a API já isola por token.
+ *
+ * Uma exceção: confirmar que a própria sessão de personal aconteceu
+ * também é sob /eu (só o professor que esteve lá pode atestar), mas o
+ * professor faz isso a partir desta tela operacional, não da área do
+ * aluno — daí o método morar aqui.
  */
 @Injectable({ providedIn: 'root' })
 export class AgendaService {
@@ -25,6 +32,7 @@ export class AgendaService {
   private readonly urlProfessores = `${environment.apiUrl}/professores`;
   private readonly urlAulas = `${environment.apiUrl}/aulas`;
   private readonly urlPersonal = `${environment.apiUrl}/sessoes-personal`;
+  private readonly urlEu = `${environment.apiUrl}/eu`;
 
   // ---------------------------------------------------------------
   // Horário do professor
@@ -84,6 +92,16 @@ export class AgendaService {
   cancelarSessaoPersonal(id: number): Observable<AgendamentoPersonal> {
     return this.http.put<AgendamentoPersonal>(`${this.urlPersonal}/${id}/cancelamento`, {});
   }
+
+  /** O professor confirma que a própria sessão aconteceu — só ele estava lá para atestar. */
+  marcarSessaoPersonalRealizada(id: number): Observable<AgendamentoPersonal> {
+    return this.http.put<AgendamentoPersonal>(`${this.urlEu}/sessoes-personal/${id}/realizacao`, {});
+  }
+
+  /** Nota média por professor, do melhor pro pior — visibilidade de qualidade de atendimento pra gestão. */
+  avaliacoesPorProfessor(): Observable<LinhaAvaliacaoProfessor[]> {
+    return this.http.get<LinhaAvaliacaoProfessor[]>(`${this.urlPersonal}/avaliacoes`);
+  }
 }
 
 /**
@@ -111,5 +129,10 @@ export class MinhasAulasService {
   sessoesPersonal(pagina = 0, tamanho = 20): Observable<Pagina<AgendamentoPersonal>> {
     const params = new HttpParams().set('page', pagina).set('size', tamanho);
     return this.http.get<Pagina<AgendamentoPersonal>>(`${this.url}/sessoes-personal`, { params });
+  }
+
+  /** Avalia a própria sessão já realizada — nota de 1 a 5, comentário opcional. Uma vez só. */
+  avaliarSessaoPersonal(id: number, avaliacao: AvaliarSessaoPersonalForm): Observable<AgendamentoPersonal> {
+    return this.http.put<AgendamentoPersonal>(`${this.url}/sessoes-personal/${id}/avaliacao`, avaliacao);
   }
 }

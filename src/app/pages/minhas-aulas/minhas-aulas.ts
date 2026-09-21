@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -9,11 +10,13 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { AgendamentoPersonal, AulaGrupoParaAluno } from '../../core/models';
 import { MinhasAulasService } from '../../core/services/agenda.service';
 import { mensagemDeErro } from '../../core/services/erro-api';
+import { AvaliarSessaoDialogComponent } from './avaliar-sessao-dialog/avaliar-sessao-dialog';
 
 /**
  * A agenda do aluno: aulas em grupo, que ele mesmo reserva ou cancela, e
  * sessões de personal, que ele só acompanha — quem agenda continua sendo
- * o balcão, a pedido dele.
+ * o balcão, a pedido dele. A única escrita dele aqui é avaliar uma sessão
+ * já realizada.
  */
 @Component({
   selector: 'app-minhas-aulas',
@@ -24,6 +27,7 @@ import { mensagemDeErro } from '../../core/services/erro-api';
 export class MinhasAulasComponent implements OnInit {
   private readonly minhasAulasService = inject(MinhasAulasService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
 
   readonly aulas = signal<AulaGrupoParaAluno[]>([]);
   readonly carregandoAulas = signal(true);
@@ -107,5 +111,22 @@ export class MinhasAulasComponent implements OnInit {
   /** Sem vaga e sem estar inscrito, reservar não adianta nada. */
   podeReservar(aula: AulaGrupoParaAluno): boolean {
     return !aula.inscrito && aula.vagasOcupadas < aula.capacidadeMaxima;
+  }
+
+  /** Só depois que o professor confirmar que a sessão aconteceu, e uma vez só. */
+  podeAvaliar(sessao: AgendamentoPersonal): boolean {
+    return sessao.status === 'REALIZADA' && sessao.notaAvaliacao === null;
+  }
+
+  avaliarSessao(sessao: AgendamentoPersonal): void {
+    this.dialog
+      .open(AvaliarSessaoDialogComponent, { width: '480px', maxWidth: '94vw', data: { sessao } })
+      .afterClosed()
+      .subscribe((avaliada: AgendamentoPersonal | undefined) => {
+        if (avaliada) {
+          this.snackBar.open('Avaliação enviada. Obrigado!', 'Fechar', { duration: 4000 });
+          this.listarSessoesPersonal();
+        }
+      });
   }
 }
