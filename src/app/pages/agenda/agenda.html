@@ -182,11 +182,27 @@
                 <td mat-cell *matCellDef="let s" class="text-tinta-2">{{ s.observacoes ?? '—' }}</td>
               </ng-container>
 
+              <ng-container matColumnDef="nota">
+                <th mat-header-cell *matHeaderCellDef>Avaliação</th>
+                <td mat-cell *matCellDef="let s">
+                  @if (s.notaAvaliacao) {
+                    <span class="font-semibold tabular-nums text-bronze-700"
+                          [matTooltip]="s.comentarioAvaliacao ?? ''" [matTooltipDisabled]="!s.comentarioAvaliacao">
+                      {{ s.notaAvaliacao }}/5
+                    </span>
+                  } @else {
+                    <span class="text-[12.5px] italic text-tinta-3">
+                      {{ s.status === 'REALIZADA' ? 'Ainda não avaliada' : '—' }}
+                    </span>
+                  }
+                </td>
+              </ng-container>
+
               <ng-container matColumnDef="status">
                 <th mat-header-cell *matHeaderCellDef>Situação</th>
                 <td mat-cell *matCellDef="let s">
-                  <span class="h-etiqueta" [class]="s.status === 'AGENDADO' ? 'h-etiqueta--ok' : 'h-etiqueta--neutra'">
-                    {{ s.status === 'AGENDADO' ? 'Agendada' : 'Cancelada' }}
+                  <span class="h-etiqueta" [class]="classeStatusPersonal(s.status)">
+                    {{ rotuloStatusPersonal(s.status) }}
                   </span>
                 </td>
               </ng-container>
@@ -194,6 +210,13 @@
               <ng-container matColumnDef="acoes">
                 <th mat-header-cell *matHeaderCellDef class="!text-right">Ações</th>
                 <td mat-cell *matCellDef="let s" class="!text-right whitespace-nowrap">
+                  @if (podeMarcarRealizada(s)) {
+                    <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-ok-700"
+                            (click)="marcarSessaoPersonalRealizada(s)"
+                            matTooltip="Confirmar que a sessão aconteceu" aria-label="Marcar como realizada">
+                      <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="check_circle"></mat-icon>
+                    </button>
+                  }
                   @if (s.status === 'AGENDADO' && podeGerenciarPersonal()) {
                     <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-perigo-700"
                             (click)="cancelarSessaoPersonal(s)"
@@ -358,5 +381,75 @@
         </div>
       </div>
     </mat-tab>
+
+    <!-- ============ Avaliações de personal ============ -->
+    @if (podeVerAvaliacoesPersonal()) {
+      <mat-tab label="Avaliações">
+        <div class="pt-5">
+          <p class="mb-4 text-[12.5px] text-tinta-3">
+            Nota média das sessões de personal já avaliadas pelo aluno, do melhor pro pior — o professor
+            também vê a própria nota na aba Personal, sessão a sessão.
+          </p>
+
+          @if (erroAvaliacoes(); as mensagem) {
+            <div role="alert"
+                 class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+              <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+              </span>
+              <button type="button" (click)="listarAvaliacoesPorProfessor()"
+                      class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+            </div>
+          }
+
+          <div class="h-painel overflow-hidden">
+            <div class="overflow-x-auto">
+              <table mat-table [dataSource]="avaliacoesPorProfessor()" class="h-tabela">
+                <ng-container matColumnDef="posicao">
+                  <th mat-header-cell *matHeaderCellDef class="!w-12">#</th>
+                  <td mat-cell *matCellDef="let l; let i = index" class="tabular-nums text-tinta-3">{{ i + 1 }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="professor">
+                  <th mat-header-cell *matHeaderCellDef>Professor</th>
+                  <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.professorNome }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="notaMedia">
+                  <th mat-header-cell *matHeaderCellDef class="!text-right">Nota média</th>
+                  <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold text-tinta">
+                    {{ l.notaMedia.toFixed(1).replace('.', ',') }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="quantidade">
+                  <th mat-header-cell *matHeaderCellDef class="!text-right">Avaliações</th>
+                  <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                    {{ l.quantidade }}
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="colunasAvaliacoes"></tr>
+                <tr mat-row *matRowDef="let row; columns: colunasAvaliacoes"></tr>
+              </table>
+            </div>
+
+            @if (carregandoAvaliacoes()) {
+              <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+                <mat-spinner diameter="20"></mat-spinner><span>Carregando avaliações…</span>
+              </div>
+            } @else if (avaliacoesPorProfessor().length === 0 && !erroAvaliacoes()) {
+              <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+                <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="fitness_center"></mat-icon>
+                <p class="text-[14px] font-semibold text-tinta">Nenhuma avaliação ainda</p>
+                <p class="max-w-sm text-[13px] text-tinta-3">
+                  Quando um aluno avaliar uma sessão de personal já realizada, ela aparece aqui.
+                </p>
+              </div>
+            }
+          </div>
+        </div>
+      </mat-tab>
+    }
   </mat-tab-group>
 </div>

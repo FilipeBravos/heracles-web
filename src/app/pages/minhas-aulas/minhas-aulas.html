@@ -101,10 +101,26 @@
               @if (s.observacoes) {
                 <p class="mt-1 text-[12px] text-tinta-3">{{ s.observacoes }}</p>
               }
+              @if (s.notaAvaliacao) {
+                <p class="mt-1 text-[12.5px] font-semibold text-bronze-700">
+                  Sua avaliação: {{ s.notaAvaliacao }}/5
+                  @if (s.comentarioAvaliacao) {
+                    <span class="font-normal text-tinta-3"> · "{{ s.comentarioAvaliacao }}"</span>
+                  }
+                </p>
+              }
             </div>
-            <span class="h-etiqueta shrink-0" [class]="s.status === 'AGENDADO' ? 'h-etiqueta--ok' : 'h-etiqueta--neutra'">
-              {{ s.status === 'AGENDADO' ? 'Agendada' : 'Cancelada' }}
-            </span>
+            <div class="flex shrink-0 items-center gap-2">
+              @if (podeAvaliar(s)) {
+                <button mat-stroked-button class="!h-10" (click)="avaliarSessao(s)">
+                  Avaliar sessão
+                </button>
+              }
+              <span class="h-etiqueta"
+                    [class]="s.status === 'CANCELADO' ? 'h-etiqueta--neutra' : 'h-etiqueta--ok'">
+                {{ s.status === 'AGENDADO' ? 'Agendada' : s.status === 'REALIZADA' ? 'Realizada' : 'Cancelada' }}
+              </span>
+            </div>
           </li>
         }
       </ul>

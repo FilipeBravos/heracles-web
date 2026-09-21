@@ -19,6 +19,7 @@ import {
   AulaGrupo,
   DIAS_SEMANA,
   HorarioProfessor,
+  LinhaAvaliacaoProfessor,
   ROTULO_DIA_SEMANA,
   Unidade,
   Usuario,
@@ -69,6 +70,8 @@ export class AgendaComponent implements OnInit {
     podeExecutar('marcar-vaga-aula', this.auth.usuario()?.tipoPerfil));
   readonly podeGerenciarPersonal = computed(() =>
     podeExecutar('gerenciar-personal', this.auth.usuario()?.tipoPerfil));
+  readonly podeVerAvaliacoesPersonal = computed(() =>
+    podeExecutar('ver-avaliacoes-personal', this.auth.usuario()?.tipoPerfil));
   readonly podeGerenciarHorario = computed(() =>
     podeExecutar('gerenciar-horario-professor', this.auth.usuario()?.tipoPerfil));
 
@@ -88,13 +91,20 @@ export class AgendaComponent implements OnInit {
   // ---------------------------------------------------------------
   // Personal
   // ---------------------------------------------------------------
-  readonly colunasPersonal = ['aluno', 'professor', 'unidade', 'dataHora', 'observacoes', 'status', 'acoes'];
+  readonly colunasPersonal =
+    ['aluno', 'professor', 'unidade', 'dataHora', 'observacoes', 'nota', 'status', 'acoes'];
   readonly sessoesPersonal = signal<AgendamentoPersonal[]>([]);
   readonly carregandoPersonal = signal(false);
   readonly erroPersonal = signal<string | null>(null);
   readonly totalPersonal = signal(0);
   readonly paginaPersonal = signal(0);
   private personalCarregado = false;
+
+  readonly colunasAvaliacoes = ['posicao', 'professor', 'notaMedia', 'quantidade'];
+  readonly avaliacoesPorProfessor = signal<LinhaAvaliacaoProfessor[]>([]);
+  readonly carregandoAvaliacoes = signal(false);
+  readonly erroAvaliacoes = signal<string | null>(null);
+  private avaliacoesCarregadas = false;
 
   // ---------------------------------------------------------------
   // Horários de professor
@@ -125,6 +135,9 @@ export class AgendaComponent implements OnInit {
     }
     if (indice === 2 && !this.horariosCarregados) {
       this.carregarSuporteDeHorarios();
+    }
+    if (indice === 3 && !this.avaliacoesCarregadas) {
+      this.listarAvaliacoesPorProfessor();
     }
   }
 
@@ -257,6 +270,58 @@ export class AgendaComponent implements OnInit {
         this.listarPersonal();
       },
       error: (erro) => this.snackBar.open(mensagemDeErro(erro), 'Fechar', { duration: 6000 }),
+    });
+  }
+
+  /**
+   * Só o próprio professor confirma que a sessão aconteceu — e só depois
+   * que o horário passou, senão a API recusa mesmo.
+   */
+  podeMarcarRealizada(sessao: AgendamentoPersonal): boolean {
+    if (sessao.status !== 'AGENDADO') return false;
+    if (this.auth.usuario()?.tipoPerfil !== 'PROFESSOR') return false;
+    if (sessao.professorId !== this.auth.usuario()?.id) return false;
+
+    const fim = new Date(sessao.dataHora).getTime() + sessao.duracaoMinutos * 60_000;
+    return fim <= Date.now();
+  }
+
+  marcarSessaoPersonalRealizada(sessao: AgendamentoPersonal): void {
+    this.agendaService.marcarSessaoPersonalRealizada(sessao.id).subscribe({
+      next: () => {
+        this.snackBar.open('Sessão confirmada como realizada.', 'Fechar', { duration: 4000 });
+        this.listarPersonal();
+      },
+      error: (erro) => this.snackBar.open(mensagemDeErro(erro), 'Fechar', { duration: 6000 }),
+    });
+  }
+
+  rotuloStatusPersonal(status: AgendamentoPersonal['status']): string {
+    return { AGENDADO: 'Agendada', REALIZADA: 'Realizada', CANCELADO: 'Cancelada' }[status];
+  }
+
+  classeStatusPersonal(status: AgendamentoPersonal['status']): string {
+    return status === 'CANCELADO' ? 'h-etiqueta--neutra' : 'h-etiqueta--ok';
+  }
+
+  // ---------------------------------------------------------------
+  // Avaliações de personal
+  // ---------------------------------------------------------------
+
+  listarAvaliacoesPorProfessor(): void {
+    this.carregandoAvaliacoes.set(true);
+    this.erroAvaliacoes.set(null);
+
+    this.agendaService.avaliacoesPorProfessor().subscribe({
+      next: (linhas) => {
+        this.avaliacoesPorProfessor.set(linhas);
+        this.carregandoAvaliacoes.set(false);
+        this.avaliacoesCarregadas = true;
+      },
+      error: (erro) => {
+        this.erroAvaliacoes.set(mensagemDeErro(erro, 'Não foi possível carregar as avaliações.'));
+        this.carregandoAvaliacoes.set(false);
+      },
     });
   }
 

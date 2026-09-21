@@ -77,7 +77,7 @@ export interface AulaGrupoForm {
   capacidadeMaxima: number;
 }
 
-export type StatusAgendamento = 'AGENDADO' | 'CANCELADO';
+export type StatusAgendamento = 'AGENDADO' | 'REALIZADA' | 'CANCELADO';
 
 export interface AgendamentoPersonal {
   id: number;
@@ -91,6 +91,9 @@ export interface AgendamentoPersonal {
   duracaoMinutos: number;
   observacoes: string | null;
   status: StatusAgendamento;
+  /** Nula até o aluno avaliar — só possível depois de REALIZADA. */
+  notaAvaliacao: number | null;
+  comentarioAvaliacao: string | null;
 }
 
 export interface AgendamentoPersonalForm {
@@ -100,4 +103,22 @@ export interface AgendamentoPersonalForm {
   dataHora: string;
   duracaoMinutos: number;
   observacoes: string | null;
+}
+
+/**
+ * A avaliação que o aluno envia depois da sessão realizada — a mesma
+ * pergunta que o motivo de cancelamento faz de outro jeito, mas aqui o
+ * aluno ainda está engajado.
+ */
+export interface AvaliarSessaoPersonalForm {
+  nota: number;
+  comentario: string | null;
+}
+
+/** Uma linha do ranking de avaliação por professor: do melhor pro pior. */
+export interface LinhaAvaliacaoProfessor {
+  professorId: number;
+  professorNome: string;
+  notaMedia: number;
+  quantidade: number;
 }
