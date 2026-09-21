@@ -86,6 +86,36 @@ export interface ChamadoManutencao {
   dataResolucao: string | null;
 }
 
+/** Uma linha do ranking de produtos mais vendidos: do mais vendido pro menos. */
+export interface LinhaProdutoMaisVendido {
+  produtoId: number;
+  produtoNome: string;
+  quantidadeVendida: number;
+  receitaTotal: number;
+}
+
+/** Faturamento, número de vendas e ticket médio de uma unidade no período. */
+export interface LinhaVendaPorUnidade {
+  unidadeId: number;
+  unidadeNome: string;
+  faturamentoTotal: number;
+  quantidadeVendas: number;
+  ticketMedio: number;
+}
+
+/**
+ * O relatório de vendas da loja: o resumo do período, os produtos mais
+ * vendidos e a comparação entre unidades.
+ */
+export interface PainelVendas {
+  dias: number;
+  faturamentoTotal: number;
+  quantidadeVendas: number;
+  ticketMedio: number;
+  maisVendidos: LinhaProdutoMaisVendido[];
+  porUnidade: LinhaVendaPorUnidade[];
+}
+
 export const METODOS_PAGAMENTO: { valor: MetodoPagamento; rotulo: string }[] = [
   { valor: 'PIX', rotulo: 'PIX' },
   { valor: 'DINHEIRO', rotulo: 'Dinheiro' },
