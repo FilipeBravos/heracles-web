@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { Pagina, Treino, TreinoForm } from '../models';
+import { LinhaAlunoSemFicha, Pagina, ResumoAlunosSemFicha, Treino, TreinoForm } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class TreinoService {
@@ -29,5 +29,16 @@ export class TreinoService {
 
   deletar(id: number): Observable<void> {
     return this.http.delete<void>(`${this.url}/${id}`);
+  }
+
+  /** Cabeçalho do alerta: quantos alunos com matrícula ativa nunca receberam ficha de treino. */
+  resumoAlunosSemFicha(): Observable<ResumoAlunosSemFicha> {
+    return this.http.get<ResumoAlunosSemFicha>(`${this.url}/alunos-sem-ficha/resumo`);
+  }
+
+  /** O alerta em si: alunos com matrícula ativa que nunca receberam uma ficha de treino. */
+  alunosSemFicha(pagina = 0, tamanho = 20): Observable<Pagina<LinhaAlunoSemFicha>> {
+    const params = new HttpParams().set('page', pagina).set('size', tamanho);
+    return this.http.get<Pagina<LinhaAlunoSemFicha>>(`${this.url}/alunos-sem-ficha`, { params });
   }
 }

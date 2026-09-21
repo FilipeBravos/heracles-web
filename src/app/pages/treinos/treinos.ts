@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,9 +7,10 @@ import { MatPaginatorIntl, MatPaginatorModule, PageEvent } from '@angular/materi
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
+import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { Treino } from '../../core/models';
+import { LinhaAlunoSemFicha, ResumoAlunosSemFicha, Treino } from '../../core/models';
 import { TreinoService } from '../../core/services/treino.service';
 import { mensagemDeErro } from '../../core/services/erro-api';
 import { PaginadorIntl } from '../../core/paginador-intl';
@@ -24,7 +26,9 @@ import { TreinoFormComponent } from './treino-form/treino-form';
     MatIconModule,
     MatPaginatorModule,
     MatProgressSpinnerModule,
+    MatTabsModule,
     MatTooltipModule,
+    DatePipe,
   ],
   templateUrl: './treinos.html',
   // Rótulos do paginador em português. Providos aqui, e não na raiz:
@@ -46,8 +50,24 @@ export class TreinosComponent implements OnInit {
   readonly pagina = signal(0);
   readonly tamanhoPagina = signal(20);
 
+  readonly colunasSemFicha = ['aluno', 'contato', 'dataCadastro'];
+  readonly resumoSemFicha = signal<ResumoAlunosSemFicha | null>(null);
+  readonly alunosSemFicha = signal<LinhaAlunoSemFicha[]>([]);
+  readonly carregandoSemFicha = signal(false);
+  readonly erroSemFicha = signal<string | null>(null);
+  readonly totalSemFicha = signal(0);
+  readonly paginaSemFicha = signal(0);
+  private semFichaCarregada = false;
+
   ngOnInit(): void {
     this.listar();
+  }
+
+  /** Só busca o alerta de alunos sem ficha quando a aba é aberta pela primeira vez. */
+  aoTrocarAba(indice: number): void {
+    if (indice === 1 && !this.semFichaCarregada) {
+      this.listarAlunosSemFicha();
+    }
   }
 
   listar(): void {
@@ -117,5 +137,46 @@ export class TreinosComponent implements OnInit {
       },
       error: (erro) => this.snackBar.open(mensagemDeErro(erro), 'Fechar', { duration: 6000 }),
     });
+  }
+
+  // ---------------------------------------------------------------
+  // Alerta de alunos sem ficha de treino
+  // ---------------------------------------------------------------
+
+  listarAlunosSemFicha(): void {
+    this.carregandoSemFicha.set(true);
+    this.erroSemFicha.set(null);
+
+    Promise.all([
+      new Promise<void>((ok, falha) => this.treinoService.resumoAlunosSemFicha().subscribe({
+        next: (resumo) => { this.resumoSemFicha.set(resumo); ok(); },
+        error: falha,
+      })),
+      new Promise<void>((ok, falha) => this.treinoService
+        .alunosSemFicha(this.paginaSemFicha(), 20)
+        .subscribe({
+          next: (pagina) => {
+            this.alunosSemFicha.set(pagina.content);
+            this.totalSemFicha.set(pagina.totalElements);
+            ok();
+          },
+          error: falha,
+        })),
+    ]).then(
+      () => {
+        this.carregandoSemFicha.set(false);
+        this.semFichaCarregada = true;
+      },
+      (erro) => {
+        this.erroSemFicha.set(
+          mensagemDeErro(erro, 'Não foi possível carregar o alerta de alunos sem ficha.'));
+        this.carregandoSemFicha.set(false);
+      }
+    );
+  }
+
+  mudarPaginaSemFicha(evento: PageEvent): void {
+    this.paginaSemFicha.set(evento.pageIndex);
+    this.listarAlunosSemFicha();
   }
 }

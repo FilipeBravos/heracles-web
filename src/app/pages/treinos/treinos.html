@@ -10,21 +10,25 @@
     </button>
   </header>
 
-  @if (erro(); as mensagem) {
-    <div role="alert"
-         class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
-      <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
-        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
-      </span>
-      <button type="button" (click)="listar()"
-              class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">
-        Tentar novamente
-      </button>
-    </div>
-  }
+  <mat-tab-group (selectedIndexChange)="aoTrocarAba($event)" animationDuration="0ms">
+    <!-- ============ Fichas ============ -->
+    <mat-tab label="Fichas">
+      <div class="pt-5">
+        @if (erro(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="listar()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">
+              Tentar novamente
+            </button>
+          </div>
+        }
 
-  <div class="h-painel overflow-hidden">
-    <div class="overflow-x-auto">
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
       <table mat-table [dataSource]="treinos()" class="h-tabela">
         <ng-container matColumnDef="nome">
           <th mat-header-cell *matHeaderCellDef>Ficha</th>
@@ -108,5 +112,86 @@
                      [pageSizeOptions]="[10, 20, 50]" (page)="mudarPagina($event)">
       </mat-paginator>
     }
-  </div>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- ============ Alerta de alunos sem ficha ============ -->
+    <mat-tab label="Alunos sem ficha">
+      <div class="pt-5">
+        <p class="mb-4 text-[12.5px] text-tinta-3">
+          Matrícula ativa, mas o aluno nunca recebeu uma ficha de treino — pagou e nunca foi "recebido" de
+          verdade pelo treino.
+        </p>
+
+        @if (erroSemFicha(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="listarAlunosSemFicha()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        }
+
+        @if (resumoSemFicha(); as resumo) {
+          <div class="mb-5 h-painel px-5 py-4 sm:max-w-xs">
+            <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Alunos sem ficha</p>
+            <p class="mt-1 text-[22px] font-bold tabular-nums text-alerta-700">{{ resumo.total }}</p>
+          </div>
+        }
+
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="alunosSemFicha()" class="h-tabela">
+              <ng-container matColumnDef="aluno">
+                <th mat-header-cell *matHeaderCellDef>Aluno</th>
+                <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.alunoNome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="contato">
+                <th mat-header-cell *matHeaderCellDef>Contato</th>
+                <td mat-cell *matCellDef="let l">
+                  <p class="text-tinta-2">{{ l.email }}</p>
+                  @if (l.telefone) {
+                    <p class="text-[12px] text-tinta-3">{{ l.telefone }}</p>
+                  }
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="dataCadastro">
+                <th mat-header-cell *matHeaderCellDef>Matriculado em</th>
+                <td mat-cell *matCellDef="let l" class="whitespace-nowrap tabular-nums text-tinta-2">
+                  {{ l.dataCadastro | date: 'dd/MM/yyyy' }}
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasSemFicha"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasSemFicha"></tr>
+            </table>
+          </div>
+
+          @if (carregandoSemFicha()) {
+            <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando alerta…</span>
+            </div>
+          } @else if (alunosSemFicha().length === 0 && !erroSemFicha()) {
+            <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <mat-icon class="!h-7 !w-7 !text-[28px] text-ok-700" svgIcon="check_circle"></mat-icon>
+              <p class="text-[14px] font-semibold text-tinta">Todo mundo tem ficha</p>
+              <p class="max-w-sm text-[13px] text-tinta-3">
+                Todo aluno com matrícula ativa já recebeu uma ficha de treino.
+              </p>
+            </div>
+          }
+
+          @if (totalSemFicha() > 0) {
+            <mat-paginator [length]="totalSemFicha()" [pageIndex]="paginaSemFicha()" [pageSize]="20"
+                           [hidePageSize]="true" (page)="mudarPaginaSemFicha($event)"></mat-paginator>
+          }
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
 </div>
