@@ -90,6 +90,13 @@
                         <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="person_off"></mat-icon>
                       </button>
                     }
+                    @if (podeConfirmarPresenca(a)) {
+                      <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
+                              (click)="abrirConfirmarPresenca(a)"
+                              matTooltip="Confirmar presenças" aria-label="Confirmar presenças">
+                        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="assignment_turned_in"></mat-icon>
+                      </button>
+                    }
                     @if (podeGerenciarAula()) {
                       <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-perigo-700"
                               (click)="cancelarAula(a)"
@@ -451,6 +458,93 @@
               </div>
             }
           </div>
+        </div>
+      </mat-tab>
+    }
+
+    <!-- ============ Presença em aula em grupo ============ -->
+    @if (podeVerRelatorioPresenca()) {
+      <mat-tab label="Presenças">
+        <div class="pt-5">
+          @if (erroRelatorioPresenca(); as mensagem) {
+            <div role="alert"
+                 class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+              <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+              </span>
+              <button type="button" (click)="carregarRelatorioPresenca()"
+                      class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+            </div>
+          } @else if (carregandoRelatorioPresenca()) {
+            <div class="flex items-center gap-3 rounded-marca border border-linha bg-papel px-5 py-14 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando relatório…</span>
+            </div>
+          } @else if (relatorioPresenca(); as r) {
+            <p class="mb-4 text-[12.5px] text-tinta-3">
+              Últimos {{ r.dias }} dias — presenças confirmadas pelo professor depois de cada aula.
+            </p>
+
+            <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div class="h-painel px-5 py-4">
+                <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Taxa de comparecimento</p>
+                <p class="mt-1 text-[22px] font-bold tabular-nums text-tinta">
+                  {{ r.taxaComparecimento.toFixed(1).replace('.', ',') }}%
+                </p>
+              </div>
+              <div class="h-painel px-5 py-4">
+                <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Presenças confirmadas</p>
+                <p class="mt-1 text-[22px] font-bold tabular-nums text-tinta">{{ r.totalConfirmadas }}</p>
+              </div>
+              <div class="h-painel px-5 py-4">
+                <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Faltas</p>
+                <p class="mt-1 text-[22px] font-bold tabular-nums text-tinta">{{ r.totalFaltas }}</p>
+              </div>
+            </div>
+
+            <section class="h-painel overflow-hidden" aria-labelledby="titulo-mais-faltosos">
+              <header class="border-b border-linha px-5 py-4">
+                <h2 id="titulo-mais-faltosos" class="h-rotulo">Quem mais falta</h2>
+              </header>
+
+              <div class="overflow-x-auto">
+                <table mat-table [dataSource]="r.maisFaltosos" class="h-tabela">
+                  <ng-container matColumnDef="posicao">
+                    <th mat-header-cell *matHeaderCellDef class="!w-12">#</th>
+                    <td mat-cell *matCellDef="let l; let i = index" class="tabular-nums text-tinta-3">{{ i + 1 }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="aluno">
+                    <th mat-header-cell *matHeaderCellDef>Aluno</th>
+                    <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.alunoNome }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="faltas">
+                    <th mat-header-cell *matHeaderCellDef class="!text-right">Faltas</th>
+                    <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold text-perigo-700">
+                      {{ l.faltas }}
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="presencas">
+                    <th mat-header-cell *matHeaderCellDef class="!text-right">Presenças</th>
+                    <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                      {{ l.presencas }}
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="colunasFaltosos"></tr>
+                  <tr mat-row *matRowDef="let row; columns: colunasFaltosos"></tr>
+                </table>
+              </div>
+
+              @if (r.maisFaltosos.length === 0) {
+                <div class="flex flex-col items-center gap-2 px-5 py-10 text-center">
+                  <mat-icon class="!h-6 !w-6 !text-[24px] text-tinta-3" svgIcon="assignment_turned_in"></mat-icon>
+                  <p class="text-[13px] text-tinta-3">Nenhuma falta no período.</p>
+                </div>
+              }
+            </section>
+          }
         </div>
       </mat-tab>
     }

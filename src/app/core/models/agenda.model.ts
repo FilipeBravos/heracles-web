@@ -136,3 +136,28 @@ export interface LinhaAvaliacaoProfessor {
   notaMedia: number;
   quantidade: number;
 }
+
+/** Uma vaga marcada no roster da aula — o que o professor confere pra confirmar presença. */
+export interface LinhaPresenca {
+  alunoId: number;
+  alunoNome: string;
+  /** Nulo até o professor confirmar; true = compareceu, false = faltou. */
+  presente: boolean | null;
+}
+
+/** Uma linha do ranking de faltas por aluno: de quem mais falta pra quem menos falta. */
+export interface LinhaFaltaAluno {
+  alunoId: number;
+  alunoNome: string;
+  faltas: number;
+  presencas: number;
+}
+
+/** O relatório de faltas: taxa de comparecimento geral e o ranking de quem mais falta. */
+export interface PainelPresenca {
+  dias: number;
+  totalConfirmadas: number;
+  totalFaltas: number;
+  taxaComparecimento: number;
+  maisFaltosos: LinhaFaltaAluno[];
+}

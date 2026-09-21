@@ -20,6 +20,7 @@ import {
   DIAS_SEMANA,
   HorarioProfessor,
   LinhaAvaliacaoProfessor,
+  PainelPresenca,
   ResultadoInscricao,
   ROTULO_DIA_SEMANA,
   Unidade,
@@ -35,6 +36,7 @@ import { PaginadorIntl } from '../../core/paginador-intl';
 import { AulaFormComponent } from './aula-form/aula-form';
 import { PersonalFormComponent } from './personal-form/personal-form';
 import { InscricaoDialogComponent } from './inscricao-dialog/inscricao-dialog';
+import { PresencaDialogComponent } from './presenca-dialog/presenca-dialog';
 
 @Component({
   selector: 'app-agenda',
@@ -73,6 +75,8 @@ export class AgendaComponent implements OnInit {
     podeExecutar('gerenciar-personal', this.auth.usuario()?.tipoPerfil));
   readonly podeVerAvaliacoesPersonal = computed(() =>
     podeExecutar('ver-avaliacoes-personal', this.auth.usuario()?.tipoPerfil));
+  readonly podeVerRelatorioPresenca = computed(() =>
+    podeExecutar('ver-relatorio-presenca', this.auth.usuario()?.tipoPerfil));
   readonly podeGerenciarHorario = computed(() =>
     podeExecutar('gerenciar-horario-professor', this.auth.usuario()?.tipoPerfil));
 
@@ -107,6 +111,12 @@ export class AgendaComponent implements OnInit {
   readonly erroAvaliacoes = signal<string | null>(null);
   private avaliacoesCarregadas = false;
 
+  readonly colunasFaltosos = ['posicao', 'aluno', 'faltas', 'presencas'];
+  readonly relatorioPresenca = signal<PainelPresenca | null>(null);
+  readonly carregandoRelatorioPresenca = signal(false);
+  readonly erroRelatorioPresenca = signal<string | null>(null);
+  private relatorioPresencaCarregado = false;
+
   // ---------------------------------------------------------------
   // Horários de professor
   // ---------------------------------------------------------------
@@ -139,6 +149,9 @@ export class AgendaComponent implements OnInit {
     }
     if (indice === 3 && !this.avaliacoesCarregadas) {
       this.listarAvaliacoesPorProfessor();
+    }
+    if (indice === 4 && !this.relatorioPresencaCarregado) {
+      this.carregarRelatorioPresenca();
     }
   }
 
@@ -220,6 +233,24 @@ export class AgendaComponent implements OnInit {
           this.listarAulas();
         }
       });
+  }
+
+  /**
+   * Só o próprio professor confirma quem compareceu — e só depois que a
+   * aula aconteceu, mesma regra de podeMarcarRealizada pro personal.
+   */
+  podeConfirmarPresenca(aula: AulaGrupo): boolean {
+    if (aula.status !== 'ATIVA') return false;
+    if (this.auth.usuario()?.tipoPerfil !== 'PROFESSOR') return false;
+    if (aula.professorId !== this.auth.usuario()?.id) return false;
+
+    const fim = new Date(aula.dataHora).getTime() + aula.duracaoMinutos * 60_000;
+    return fim <= Date.now();
+  }
+
+  /** A presença não muda a ocupação da turma, então fechar o diálogo não precisa recarregar a agenda. */
+  abrirConfirmarPresenca(aula: AulaGrupo): void {
+    this.dialog.open(PresencaDialogComponent, { width: '520px', maxWidth: '94vw', data: { aula } });
   }
 
   // ---------------------------------------------------------------
@@ -325,6 +356,27 @@ export class AgendaComponent implements OnInit {
       error: (erro) => {
         this.erroAvaliacoes.set(mensagemDeErro(erro, 'Não foi possível carregar as avaliações.'));
         this.carregandoAvaliacoes.set(false);
+      },
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // Relatório de presença
+  // ---------------------------------------------------------------
+
+  carregarRelatorioPresenca(): void {
+    this.carregandoRelatorioPresenca.set(true);
+    this.erroRelatorioPresenca.set(null);
+
+    this.agendaService.relatorioPresenca(90).subscribe({
+      next: (relatorio) => {
+        this.relatorioPresenca.set(relatorio);
+        this.carregandoRelatorioPresenca.set(false);
+        this.relatorioPresencaCarregado = true;
+      },
+      error: (erro) => {
+        this.erroRelatorioPresenca.set(mensagemDeErro(erro, 'Não foi possível carregar o relatório de presença.'));
+        this.carregandoRelatorioPresenca.set(false);
       },
     });
   }

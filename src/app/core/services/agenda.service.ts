@@ -13,7 +13,9 @@ import {
   HorarioProfessor,
   HorarioProfessorForm,
   LinhaAvaliacaoProfessor,
+  LinhaPresenca,
   Pagina,
+  PainelPresenca,
   ResultadoInscricao,
 } from '../models';
 
@@ -79,6 +81,26 @@ export class AgendaService {
 
   desmarcarVaga(aulaId: number, alunoId: number): Observable<void> {
     return this.http.delete<void>(`${this.urlAulas}/${aulaId}/inscricoes/${alunoId}`);
+  }
+
+  /**
+   * O roster da aula para o professor confirmar presença — mesma exceção
+   * de marcarSessaoPersonalRealizada: é sob /eu (só o professor que deu a
+   * aula enxerga), mas ele confirma a partir desta tela operacional.
+   */
+  inscricoesDaAula(aulaId: number): Observable<LinhaPresenca[]> {
+    return this.http.get<LinhaPresenca[]>(`${this.urlEu}/aulas/${aulaId}/inscricoes`);
+  }
+
+  /** Confirma presença ou falta de um aluno — uma vez só, depois que a aula aconteceu. */
+  confirmarPresenca(aulaId: number, alunoId: number, presente: boolean): Observable<void> {
+    return this.http.put<void>(`${this.urlEu}/aulas/${aulaId}/inscricoes/${alunoId}/presenca`, { presente });
+  }
+
+  /** Taxa de comparecimento geral e o ranking de quem mais falta em aula em grupo. */
+  relatorioPresenca(dias = 90): Observable<PainelPresenca> {
+    const params = new HttpParams().set('dias', dias);
+    return this.http.get<PainelPresenca>(`${this.urlAulas}/relatorio`, { params });
   }
 
   // ---------------------------------------------------------------
