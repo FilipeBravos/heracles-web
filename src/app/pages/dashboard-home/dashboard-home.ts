@@ -1,5 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -43,6 +43,7 @@ interface CartaoEstatistica {
     MatIconModule,
     MatProgressSpinnerModule,
     DatePipe,
+    CurrencyPipe,
     RouterLink,
     GraficoMatriculasComponent,
     GraficoChurnComponent,

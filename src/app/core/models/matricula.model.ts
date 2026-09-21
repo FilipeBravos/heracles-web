@@ -564,6 +564,23 @@ export interface Retencao {
 }
 
 /**
+ * Uma linha do detalhamento financeiro por unidade, no mês corrente.
+ *
+ * Mesmo espalhamento de LinhaChurn.porUnidade: uma assinatura de plano de
+ * rede conta o MRR (e a inadimplência de suas cobranças) inteiro em cada
+ * unidade que o plano cobre, então a soma das linhas pode superar os
+ * totais do painel.
+ */
+export interface LinhaFinanceiro {
+  unidadeId: number;
+  unidadeNome: string;
+  mrr: number;
+  assinaturasAtivas: number;
+  ticketMedio: number;
+  inadimplenciaEmReais: number;
+}
+
+/**
  * O painel financeiro: o dinheiro, onde o painel de retenção mede alunos.
  *
  * `mrr` conta só quem está ATIVA — é a receita recorrente saudável; o que
@@ -571,7 +588,9 @@ export interface Retencao {
  * perguntas não se misturarem num número só. `projecaoDoMes` é a soma das
  * cobranças (pagas e pendentes) com vencimento dentro do mês corrente —
  * uma previsão de caixa a partir de cobranças reais, não uma extrapolação
- * do MRR.
+ * do MRR. `porUnidade` segue o mesmo critério do detalhamento de retenção:
+ * só aparece quem tem assinatura ativa agora, sem preencher com zero quem
+ * não tem nenhuma.
  */
 export interface PainelFinanceiro {
   /** `yyyy-MM` do mês corrente — mesmo formato de PontoMensal.mes. */
@@ -581,6 +600,7 @@ export interface PainelFinanceiro {
   ticketMedio: number;
   inadimplenciaEmReais: number;
   projecaoDoMes: number;
+  porUnidade: LinhaFinanceiro[];
 }
 
 /** Um ponto do gráfico de ocupação: quantos check-ins liberados nesta hora do dia. */
