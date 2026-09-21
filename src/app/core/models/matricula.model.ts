@@ -345,6 +345,38 @@ export function descreverPrazo(diasParaVencer: number): string {
 }
 
 /**
+ * Uma linha do alerta de inatividade: matrícula ativa, mas o aluno
+ * parou de aparecer.
+ *
+ * `ultimoCheckin`/`diasSemCheckin` saem nulos quando o aluno nunca fez
+ * um check-in liberado — "nunca apareceu" é mais grave que qualquer
+ * número de dias, e não é o mesmo que "zero dias".
+ */
+export interface LinhaAlunoInativo {
+  assinaturaId: number;
+  alunoId: number;
+  alunoNome: string;
+  planoNome: string;
+  dataVencimento: string;
+  ultimoCheckin: string | null;
+  diasSemCheckin: number | null;
+}
+
+/** Cabeçalho do alerta de inatividade: quantos estão parados, e quantos desses nunca apareceram. */
+export interface ResumoAlunosInativos {
+  total: number;
+  nuncaFizeramCheckin: number;
+}
+
+/** Como a inatividade de uma linha se lê — "nunca" é sua própria categoria, não um número. */
+export function descreverInatividade(diasSemCheckin: number | null): string {
+  if (diasSemCheckin === null) return 'nunca fez check-in';
+  if (diasSemCheckin === 0) return 'check-in hoje';
+  if (diasSemCheckin === 1) return 'há 1 dia';
+  return `há ${diasSemCheckin} dias`;
+}
+
+/**
  * Urgência da linha: o que já venceu grita, o que vence esta semana
  * chama, o resto é contexto.
  */

@@ -13,6 +13,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   Assinatura,
   CLASSE_SITUACAO,
+  LinhaAlunoInativo,
   LinhaInadimplencia,
   LinhaIndicacao,
   LinhaMotivoCancelamento,
@@ -20,7 +21,9 @@ import {
   ROTULO_FORMA_PAGAMENTO,
   ROTULO_MOTIVO_CANCELAMENTO,
   ROTULO_SITUACAO,
+  ResumoAlunosInativos,
   ResumoInadimplencia,
+  descreverInatividade,
   descreverPrazo,
   situacaoDaLinhaInadimplencia,
   situacaoDaMatricula,
@@ -112,6 +115,15 @@ export class MatriculasComponent implements OnInit {
   readonly erroMotivosCancelamento = signal<string | null>(null);
   private motivosCancelamentoCarregados = false;
 
+  readonly colunasInatividade = ['aluno', 'plano', 'vencimento', 'ultimoCheckin'];
+  readonly resumoInatividade = signal<ResumoAlunosInativos | null>(null);
+  readonly alunosInativos = signal<LinhaAlunoInativo[]>([]);
+  readonly carregandoInatividade = signal(false);
+  readonly erroInatividade = signal<string | null>(null);
+  readonly totalInatividade = signal(0);
+  readonly paginaInatividade = signal(0);
+  private inatividadeCarregada = false;
+
   ngOnInit(): void {
     this.listarAssinaturas();
   }
@@ -165,6 +177,9 @@ export class MatriculasComponent implements OnInit {
     if (indice === 4 && !this.motivosCancelamentoCarregados) {
       this.listarMotivosCancelamento();
     }
+    if (indice === 5 && !this.inatividadeCarregada) {
+      this.listarAlunosInativos();
+    }
   }
 
   mudarPaginaAssinaturas(evento: PageEvent): void {
@@ -180,6 +195,11 @@ export class MatriculasComponent implements OnInit {
   mudarPaginaInadimplencia(evento: PageEvent): void {
     this.paginaInadimplencia.set(evento.pageIndex);
     this.listarInadimplencia();
+  }
+
+  mudarPaginaInatividade(evento: PageEvent): void {
+    this.paginaInatividade.set(evento.pageIndex);
+    this.listarAlunosInativos();
   }
 
   // ---------------------------------------------------------------
@@ -324,6 +344,46 @@ export class MatriculasComponent implements OnInit {
   /** "WhatsApp" ou "E-mail" — o rótulo que a tela mostra, não o valor cru do enum. */
   rotuloCanalLembrete(linha: LinhaInadimplencia): string {
     return linha.ultimoLembreteCanal === 'WHATSAPP' ? 'WhatsApp' : 'E-mail';
+  }
+
+  // ---------------------------------------------------------------
+  // Alerta de inatividade
+  // ---------------------------------------------------------------
+
+  listarAlunosInativos(): void {
+    this.carregandoInatividade.set(true);
+    this.erroInatividade.set(null);
+
+    Promise.all([
+      new Promise<void>((ok, falha) => this.assinaturaService.resumoAlunosInativos().subscribe({
+        next: (resumo) => { this.resumoInatividade.set(resumo); ok(); },
+        error: falha,
+      })),
+      new Promise<void>((ok, falha) => this.assinaturaService
+        .alunosInativos(this.paginaInatividade(), 20)
+        .subscribe({
+          next: (pagina) => {
+            this.alunosInativos.set(pagina.content);
+            this.totalInatividade.set(pagina.totalElements);
+            ok();
+          },
+          error: falha,
+        })),
+    ]).then(
+      () => {
+        this.carregandoInatividade.set(false);
+        this.inatividadeCarregada = true;
+      },
+      (erro) => {
+        this.erroInatividade.set(
+          mensagemDeErro(erro, 'Não foi possível carregar o alerta de inatividade.'));
+        this.carregandoInatividade.set(false);
+      }
+    );
+  }
+
+  descreverInatividadeDaLinha(linha: LinhaAlunoInativo): string {
+    return descreverInatividade(linha.diasSemCheckin);
   }
 
   // ---------------------------------------------------------------
