@@ -10,7 +10,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { Produto, Venda } from '../../core/models';
+import { PainelVendas, Produto, Venda } from '../../core/models';
 import { ProdutoService } from '../../core/services/produto.service';
 import { VendaService } from '../../core/services/venda.service';
 import { podeExecutar } from '../../core/acesso';
@@ -76,6 +76,13 @@ export class LojaComponent implements OnInit {
   readonly paginaVendas = signal(0);
   private vendasCarregadas = false;
 
+  readonly colunasMaisVendidos = ['posicao', 'produto', 'quantidade', 'receita'];
+  readonly colunasPorUnidade = ['unidade', 'faturamento', 'vendas', 'ticketMedio'];
+  readonly relatorio = signal<PainelVendas | null>(null);
+  readonly carregandoRelatorio = signal(false);
+  readonly erroRelatorio = signal<string | null>(null);
+  private relatorioCarregado = false;
+
   ngOnInit(): void {
     this.listarProdutos();
   }
@@ -115,10 +122,13 @@ export class LojaComponent implements OnInit {
     });
   }
 
-  /** Só busca o histórico quando a aba é aberta pela primeira vez. */
+  /** Só busca o histórico/relatório quando a aba é aberta pela primeira vez. */
   aoTrocarAba(indice: number): void {
     if (indice === 1 && !this.vendasCarregadas) {
       this.listarVendas();
+    }
+    if (indice === 2 && !this.relatorioCarregado) {
+      this.carregarRelatorio();
     }
   }
 
@@ -212,5 +222,26 @@ export class LojaComponent implements OnInit {
 
   rotuloPagamento(venda: Venda): string {
     return { PIX: 'PIX', DINHEIRO: 'Dinheiro', DEBITO: 'Débito', CREDITO: 'Crédito' }[venda.metodoPagamento];
+  }
+
+  // ---------------------------------------------------------------
+  // Relatório de vendas
+  // ---------------------------------------------------------------
+
+  carregarRelatorio(): void {
+    this.carregandoRelatorio.set(true);
+    this.erroRelatorio.set(null);
+
+    this.vendaService.relatorio(30).subscribe({
+      next: (relatorio) => {
+        this.relatorio.set(relatorio);
+        this.carregandoRelatorio.set(false);
+        this.relatorioCarregado = true;
+      },
+      error: (erro) => {
+        this.erroRelatorio.set(mensagemDeErro(erro, 'Não foi possível carregar o relatório de vendas.'));
+        this.carregandoRelatorio.set(false);
+      },
+    });
   }
 }
