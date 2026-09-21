@@ -1,0 +1,60 @@
+<div>
+  <div class="border-b border-linha px-6 py-5">
+    <h2 mat-dialog-title class="!m-0 !p-0 font-display !text-[22px] !font-bold !leading-tight text-tinta">
+      Confirmar presença
+    </h2>
+    <p class="mt-1 text-[12.5px] text-tinta-3">
+      {{ aula.nome }} — {{ aula.dataHora | date: 'dd/MM/yyyy HH:mm' }}
+    </p>
+  </div>
+
+  <mat-dialog-content class="!px-6 !pt-5 !pb-2">
+    @if (erro(); as mensagem) {
+      <div role="alert"
+           class="mb-4 flex items-start gap-2.5 rounded-marca border border-perigo-200 bg-perigo-50 px-4 py-3">
+        <mat-icon class="!mt-px !h-[18px] !w-[18px] !text-[18px] text-perigo-700" svgIcon="error"></mat-icon>
+        <span class="text-[12.5px] leading-snug text-perigo-700">{{ mensagem }}</span>
+      </div>
+    }
+
+    @if (carregando()) {
+      <div class="flex items-center gap-3 py-4 text-[13px] text-tinta-3">
+        <mat-spinner diameter="20"></mat-spinner><span>Carregando alunos…</span>
+      </div>
+    } @else if (roster().length === 0) {
+      <p class="py-4 text-[13px] text-tinta-3">Nenhuma vaga marcada nesta aula.</p>
+    } @else {
+      <ul class="m-0 mb-2 list-none space-y-2 p-0">
+        @for (aluno of roster(); track aluno.alunoId) {
+          <li class="flex flex-wrap items-center justify-between gap-3 rounded-marca border border-linha px-4 py-3">
+            <span class="font-medium text-tinta">{{ aluno.alunoNome }}</span>
+
+            @if (aluno.presente === true) {
+              <span class="h-etiqueta h-etiqueta--ok">Compareceu</span>
+            } @else if (aluno.presente === false) {
+              <span class="h-etiqueta h-etiqueta--perigo">Faltou</span>
+            } @else {
+              <div class="flex shrink-0 gap-2">
+                <button mat-stroked-button type="button" class="!h-9"
+                        [disabled]="confirmando() === aluno.alunoId"
+                        (click)="confirmar(aluno, false)">
+                  Faltou
+                </button>
+                <button mat-flat-button color="primary" type="button" class="!h-9"
+                        [disabled]="confirmando() === aluno.alunoId"
+                        (click)="confirmar(aluno, true)">
+                  @if (confirmando() === aluno.alunoId) { <mat-spinner diameter="18"></mat-spinner> }
+                  @else { Compareceu }
+                </button>
+              </div>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="!gap-2 border-t border-linha !px-6 !py-4">
+    <button mat-flat-button color="primary" type="button" class="!px-5" [mat-dialog-close]="true">Fechar</button>
+  </mat-dialog-actions>
+</div>
