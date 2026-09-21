@@ -64,6 +64,23 @@ export function descreverPrescricao(exercicio: Pick<Exercicio, 'series' | 'repet
 }
 
 /**
+ * Um aluno com matrícula ativa que nunca recebeu uma ficha de treino —
+ * pagou, mas nunca foi "recebido" de verdade pelo treino.
+ */
+export interface LinhaAlunoSemFicha {
+  alunoId: number;
+  alunoNome: string;
+  email: string;
+  telefone: string | null;
+  dataCadastro: string;
+}
+
+/** Cabeçalho do alerta: quantos alunos com matrícula ativa nunca receberam ficha de treino. */
+export interface ResumoAlunosSemFicha {
+  total: number;
+}
+
+/**
  * Uma ficha que o aluno já treinou e não treina mais.
  *
  * Nome, foco e nível vêm do registro histórico, não da ficha viva: ela
