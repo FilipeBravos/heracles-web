@@ -12,6 +12,7 @@ import {
   FilaDeVencimentos,
   HistoricoMensal,
   Lembrete,
+  LinhaAlunoInativo,
   LinhaInadimplencia,
   LinhaIndicacao,
   LinhaMotivoCancelamento,
@@ -20,6 +21,7 @@ import {
   PainelFinanceiro,
   PainelOcupacao,
   Retencao,
+  ResumoAlunosInativos,
   ResumoInadimplencia,
 } from '../models';
 
@@ -122,6 +124,21 @@ export class AssinaturaService {
       .set('size', tamanho)
       .set('diasParaVencer', diasParaVencer);
     return this.http.get<Pagina<LinhaInadimplencia>>(`${this.url}/inadimplencia`, { params });
+  }
+
+  /** Cabeçalho do alerta de inatividade: quantos alunos com matrícula ativa pararam de aparecer. */
+  resumoAlunosInativos(diasSemCheckin = 14): Observable<ResumoAlunosInativos> {
+    const params = new HttpParams().set('diasSemCheckin', diasSemCheckin);
+    return this.http.get<ResumoAlunosInativos>(`${this.url}/inatividade/resumo`, { params });
+  }
+
+  /** O alerta de inatividade: matrícula ativa, mas o aluno parou de fazer check-in. */
+  alunosInativos(pagina = 0, tamanho = 20, diasSemCheckin = 14): Observable<Pagina<LinhaAlunoInativo>> {
+    const params = new HttpParams()
+      .set('page', pagina)
+      .set('size', tamanho)
+      .set('diasSemCheckin', diasSemCheckin);
+    return this.http.get<Pagina<LinhaAlunoInativo>>(`${this.url}/inatividade`, { params });
   }
 
   /**

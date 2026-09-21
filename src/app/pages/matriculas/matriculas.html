@@ -514,5 +514,96 @@
         </div>
       </div>
     </mat-tab>
+
+    <!-- ============ Alerta de inatividade ============ -->
+    <mat-tab label="Inatividade">
+      <div class="pt-5">
+        <p class="mb-4 text-[12.5px] text-tinta-3">
+          Matrícula ativa, mas o aluno parou de fazer check-in — diferente da inadimplência, aqui o problema
+          não é o pagamento, é a frequência. Dá pra agir antes do cancelamento, não só medir depois.
+        </p>
+
+        @if (erroInatividade(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="listarAlunosInativos()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        }
+
+        @if (resumoInatividade(); as resumo) {
+          <div class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div class="h-painel px-5 py-4">
+              <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Alunos parados</p>
+              <p class="mt-1 text-[22px] font-bold tabular-nums text-alerta-700">{{ resumo.total }}</p>
+            </div>
+            <div class="h-painel px-5 py-4">
+              <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Nunca fizeram check-in</p>
+              <p class="mt-1 text-[22px] font-bold tabular-nums text-perigo-700">{{ resumo.nuncaFizeramCheckin }}</p>
+            </div>
+          </div>
+        }
+
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="alunosInativos()" class="h-tabela">
+              <ng-container matColumnDef="aluno">
+                <th mat-header-cell *matHeaderCellDef>Aluno</th>
+                <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.alunoNome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="plano">
+                <th mat-header-cell *matHeaderCellDef>Plano</th>
+                <td mat-cell *matCellDef="let l" class="text-tinta-2">{{ l.planoNome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="vencimento">
+                <th mat-header-cell *matHeaderCellDef>Vencimento</th>
+                <td mat-cell *matCellDef="let l" class="whitespace-nowrap tabular-nums text-tinta-2">
+                  {{ l.dataVencimento | date: 'dd/MM/yyyy' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="ultimoCheckin">
+                <th mat-header-cell *matHeaderCellDef>Último check-in</th>
+                <td mat-cell *matCellDef="let l">
+                  @if (l.ultimoCheckin) {
+                    <p class="tabular-nums text-tinta-2">{{ l.ultimoCheckin | date: 'dd/MM/yyyy' }}</p>
+                    <p class="text-[12px] text-perigo-700">{{ descreverInatividadeDaLinha(l) }}</p>
+                  } @else {
+                    <span class="h-etiqueta h-etiqueta--perigo">{{ descreverInatividadeDaLinha(l) }}</span>
+                  }
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasInatividade"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasInatividade"></tr>
+            </table>
+          </div>
+
+          @if (carregandoInatividade()) {
+            <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando alerta de inatividade…</span>
+            </div>
+          } @else if (alunosInativos().length === 0 && !erroInatividade()) {
+            <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <mat-icon class="!h-7 !w-7 !text-[28px] text-ok-700" svgIcon="check_circle"></mat-icon>
+              <p class="text-[14px] font-semibold text-tinta">Ninguém parado</p>
+              <p class="max-w-sm text-[13px] text-tinta-3">
+                Todo aluno com matrícula ativa fez check-in recentemente.
+              </p>
+            </div>
+          }
+
+          @if (totalInatividade() > 0) {
+            <mat-paginator [length]="totalInatividade()" [pageIndex]="paginaInatividade()" [pageSize]="20"
+                           [hidePageSize]="true" (page)="mudarPaginaInatividade($event)"></mat-paginator>
+          }
+        </div>
+      </div>
+    </mat-tab>
   </mat-tab-group>
 </div>
