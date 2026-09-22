@@ -126,8 +126,10 @@ export class AgendaService {
   }
 
   /** Nota média por professor, do melhor pro pior — visibilidade de qualidade de atendimento pra gestão. */
-  avaliacoesPorProfessor(): Observable<LinhaAvaliacaoProfessor[]> {
-    return this.http.get<LinhaAvaliacaoProfessor[]>(`${this.urlPersonal}/avaliacoes`);
+  /** `quantidadeMinima` deixa de fora quem ainda nao tem amostra suficiente pra sustentar a media. */
+  avaliacoesPorProfessor(quantidadeMinima = 3): Observable<LinhaAvaliacaoProfessor[]> {
+    const params = new HttpParams().set('quantidadeMinima', quantidadeMinima);
+    return this.http.get<LinhaAvaliacaoProfessor[]>(`${this.urlPersonal}/avaliacoes`, { params });
   }
 }
 

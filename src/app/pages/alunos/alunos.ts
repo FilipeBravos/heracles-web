@@ -6,9 +6,11 @@ import { MatPaginatorIntl, MatPaginatorModule, PageEvent } from '@angular/materi
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
+import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { DatePipe } from '@angular/common';
 
-import { Usuario } from '../../core/models';
+import { LinhaReavaliacaoVencida, ResumoReavaliacaoVencida, Usuario } from '../../core/models';
 import { UsuarioService } from '../../core/services/usuario.service';
 import { podeExecutar } from '../../core/acesso';
 import { AuthService } from '../../core/services/auth.service';
@@ -30,7 +32,9 @@ import { ContratoDialogComponent } from './contrato-dialog/contrato-dialog';
     MatIconModule,
     MatPaginatorModule,
     MatProgressSpinnerModule,
+    MatTabsModule,
     MatTooltipModule,
+    DatePipe,
   ],
   templateUrl: './alunos.html',
   // Rótulos do paginador em português. Providos aqui, e não na raiz:
@@ -76,8 +80,24 @@ export class AlunosComponent implements OnInit, OnDestroy {
   /** Object URLs das fotos da página atual, por id de aluno. */
   readonly fotoPorAluno = signal<Record<number, string>>({});
 
+  readonly colunasReavaliacaoVencida = ['aluno', 'contato', 'ultimaAvaliacao'];
+  readonly resumoReavaliacaoVencida = signal<ResumoReavaliacaoVencida | null>(null);
+  readonly reavaliacaoVencida = signal<LinhaReavaliacaoVencida[]>([]);
+  readonly carregandoReavaliacaoVencida = signal(false);
+  readonly erroReavaliacaoVencida = signal<string | null>(null);
+  readonly totalReavaliacaoVencida = signal(0);
+  readonly paginaReavaliacaoVencida = signal(0);
+  private reavaliacaoVencidaCarregada = false;
+
   ngOnInit(): void {
     this.listar();
+  }
+
+  /** Só busca o alerta de reavaliação vencida quando a aba é aberta pela primeira vez. */
+  aoTrocarAba(indice: number): void {
+    if (indice === 1 && !this.reavaliacaoVencidaCarregada) {
+      this.listarReavaliacaoVencida();
+    }
   }
 
   ngOnDestroy(): void {
@@ -230,5 +250,46 @@ export class AlunosComponent implements OnInit, OnDestroy {
     const digitos = aluno.cpf?.replace(/\D/g, '') ?? '';
     if (digitos.length !== 11) return aluno.cpf ?? '';
     return `${digitos.slice(0, 3)}.${digitos.slice(3, 6)}.${digitos.slice(6, 9)}-${digitos.slice(9)}`;
+  }
+
+  // ---------------------------------------------------------------
+  // Alerta de reavaliação física vencida
+  // ---------------------------------------------------------------
+
+  listarReavaliacaoVencida(): void {
+    this.carregandoReavaliacaoVencida.set(true);
+    this.erroReavaliacaoVencida.set(null);
+
+    Promise.all([
+      new Promise<void>((ok, falha) => this.usuarioService.resumoReavaliacaoVencida().subscribe({
+        next: (resumo) => { this.resumoReavaliacaoVencida.set(resumo); ok(); },
+        error: falha,
+      })),
+      new Promise<void>((ok, falha) => this.usuarioService
+        .reavaliacaoVencida(this.paginaReavaliacaoVencida(), 20)
+        .subscribe({
+          next: (pagina) => {
+            this.reavaliacaoVencida.set(pagina.content);
+            this.totalReavaliacaoVencida.set(pagina.totalElements);
+            ok();
+          },
+          error: falha,
+        })),
+    ]).then(
+      () => {
+        this.carregandoReavaliacaoVencida.set(false);
+        this.reavaliacaoVencidaCarregada = true;
+      },
+      (erro) => {
+        this.erroReavaliacaoVencida.set(
+          mensagemDeErro(erro, 'Não foi possível carregar o alerta de reavaliação vencida.'));
+        this.carregandoReavaliacaoVencida.set(false);
+      }
+    );
+  }
+
+  mudarPaginaReavaliacaoVencida(evento: PageEvent): void {
+    this.paginaReavaliacaoVencida.set(evento.pageIndex);
+    this.listarReavaliacaoVencida();
   }
 }

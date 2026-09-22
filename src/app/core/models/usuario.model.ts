@@ -103,3 +103,22 @@ export interface AnamneseForm {
   contatoEmergenciaNome: string;
   contatoEmergenciaTelefone: string;
 }
+
+/**
+ * Uma linha do alerta de reavaliação vencida: matrícula ativa, mas a
+ * última avaliação física passou da janela — ou nunca aconteceu.
+ * `diasSemAvaliacao` nulo significa "nunca fez uma", não zero dias.
+ */
+export interface LinhaReavaliacaoVencida {
+  alunoId: number;
+  alunoNome: string;
+  email: string;
+  telefone: string | null;
+  ultimaAvaliacao: string | null;
+  diasSemAvaliacao: number | null;
+}
+
+/** Cabeçalho do alerta: quantos alunos com matrícula ativa estão com a reavaliação física vencida. */
+export interface ResumoReavaliacaoVencida {
+  total: number;
+}
