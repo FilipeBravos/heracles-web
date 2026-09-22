@@ -14,6 +14,7 @@ import {
   Lembrete,
   LinhaAlunoInativo,
   LinhaComissaoIndicacao,
+  LinhaExecucaoRenovacaoAutomatica,
   LinhaInadimplencia,
   LinhaIndicacao,
   LinhaMotivoCancelamento,
@@ -122,6 +123,12 @@ export class AssinaturaService {
   /** Aprova a comissão: aplica o desconto na cobrança pendente da matrícula vigente do indicador. */
   aplicarComissaoIndicacao(id: number): Observable<LinhaComissaoIndicacao> {
     return this.http.put<LinhaComissaoIndicacao>(`${this.url}/comissoes-indicacao/${id}/aplicar`, {});
+  }
+
+  /** O log do job diário de renovação automática no cartão: quando rodou, e quantas assinaturas renovou. */
+  historicoRenovacaoAutomatica(pagina = 0, tamanho = 20): Observable<Pagina<LinhaExecucaoRenovacaoAutomatica>> {
+    const params = new HttpParams().set('page', pagina).set('size', tamanho);
+    return this.http.get<Pagina<LinhaExecucaoRenovacaoAutomatica>>(`${this.url}/renovacoes-automaticas`, { params });
   }
 
   /** Quantos cancelamentos por motivo, do mais comum para o menos comum. */

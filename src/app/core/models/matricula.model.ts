@@ -136,6 +136,13 @@ export interface LinhaMotivoCancelamento {
   quantidade: number;
 }
 
+/** Uma execução do job diário de renovação automática no cartão: quando rodou, quantas assinaturas renovou. */
+export interface LinhaExecucaoRenovacaoAutomatica {
+  id: number;
+  dataExecucao: string;
+  quantidadeRenovada: number;
+}
+
 /** Veredito da catraca, com o motivo — cada um leva a um encaminhamento. */
 export interface Acesso {
   liberado: boolean;
