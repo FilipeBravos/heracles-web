@@ -12,6 +12,10 @@
     }
   </header>
 
+  <mat-tab-group (selectedIndexChange)="aoTrocarAba($event)" animationDuration="0ms">
+    <!-- ============ Alunos ============ -->
+    <mat-tab label="Alunos">
+      <div class="pt-5">
   @if (erro(); as mensagem) {
     <div role="alert"
          class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
@@ -169,4 +173,88 @@
       </mat-paginator>
     }
   </div>
+      </div>
+    </mat-tab>
+
+    <!-- ============ Alerta de reavaliação física vencida ============ -->
+    <mat-tab label="Reavaliação vencida">
+      <div class="pt-5">
+        <p class="mb-4 text-[12.5px] text-tinta-3">
+          Matrícula ativa, mas a última avaliação física passou de 90 dias — ou nunca aconteceu.
+        </p>
+
+        @if (erroReavaliacaoVencida(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="listarReavaliacaoVencida()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        }
+
+        @if (resumoReavaliacaoVencida(); as resumo) {
+          <div class="mb-5 h-painel px-5 py-4 sm:max-w-xs">
+            <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Reavaliação vencida</p>
+            <p class="mt-1 text-[22px] font-bold tabular-nums text-alerta-700">{{ resumo.total }}</p>
+          </div>
+        }
+
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="reavaliacaoVencida()" class="h-tabela">
+              <ng-container matColumnDef="aluno">
+                <th mat-header-cell *matHeaderCellDef>Aluno</th>
+                <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.alunoNome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="contato">
+                <th mat-header-cell *matHeaderCellDef>Contato</th>
+                <td mat-cell *matCellDef="let l">
+                  <p class="text-tinta-2">{{ l.email }}</p>
+                  @if (l.telefone) {
+                    <p class="text-[12px] text-tinta-3">{{ l.telefone }}</p>
+                  }
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="ultimaAvaliacao">
+                <th mat-header-cell *matHeaderCellDef>Última avaliação</th>
+                <td mat-cell *matCellDef="let l" class="whitespace-nowrap tabular-nums text-tinta-2">
+                  @if (l.ultimaAvaliacao) {
+                    {{ l.ultimaAvaliacao | date: 'dd/MM/yyyy' }}
+                  } @else {
+                    <span class="italic text-tinta-3">Nunca avaliado</span>
+                  }
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasReavaliacaoVencida"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasReavaliacaoVencida"></tr>
+            </table>
+          </div>
+
+          @if (carregandoReavaliacaoVencida()) {
+            <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando alerta…</span>
+            </div>
+          } @else if (reavaliacaoVencida().length === 0 && !erroReavaliacaoVencida()) {
+            <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <mat-icon class="!h-7 !w-7 !text-[28px] text-ok-700" svgIcon="check_circle"></mat-icon>
+              <p class="text-[14px] font-semibold text-tinta">Ninguém com reavaliação vencida</p>
+              <p class="max-w-sm text-[13px] text-tinta-3">
+                Todo aluno com matrícula ativa fez uma avaliação física nos últimos 90 dias.
+              </p>
+            </div>
+          }
+
+          @if (totalReavaliacaoVencida() > 0) {
+            <mat-paginator [length]="totalReavaliacaoVencida()" [pageIndex]="paginaReavaliacaoVencida()" [pageSize]="20"
+                           [hidePageSize]="true" (page)="mudarPaginaReavaliacaoVencida($event)"></mat-paginator>
+          }
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
 </div>

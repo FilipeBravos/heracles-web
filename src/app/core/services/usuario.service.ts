@@ -11,8 +11,10 @@ import {
   ComparativoFisico,
   Contrato,
   EdicaoUsuario,
+  LinhaReavaliacaoVencida,
   NovoUsuario,
   Pagina,
+  ResumoReavaliacaoVencida,
   Usuario,
 } from '../models';
 
@@ -88,5 +90,18 @@ export class UsuarioService {
   /** O contrato assinado no cadastro — só leitura, não há edição. */
   buscarContrato(id: number): Observable<Contrato> {
     return this.http.get<Contrato>(`${this.url}/${id}/contrato`);
+  }
+
+  /** Cabeçalho do alerta: quantos alunos com matrícula ativa estão com a reavaliação física vencida. */
+  resumoReavaliacaoVencida(diasSemReavaliacao = 90): Observable<ResumoReavaliacaoVencida> {
+    const params = new HttpParams().set('diasSemReavaliacao', diasSemReavaliacao);
+    return this.http.get<ResumoReavaliacaoVencida>(`${this.url}/reavaliacao-vencida/resumo`, { params });
+  }
+
+  /** O alerta em si: matrícula ativa, mas a última avaliação física passou da janela (ou nunca aconteceu). */
+  reavaliacaoVencida(pagina = 0, tamanho = 20, diasSemReavaliacao = 90): Observable<Pagina<LinhaReavaliacaoVencida>> {
+    const params = new HttpParams()
+      .set('page', pagina).set('size', tamanho).set('diasSemReavaliacao', diasSemReavaliacao);
+    return this.http.get<Pagina<LinhaReavaliacaoVencida>>(`${this.url}/reavaliacao-vencida`, { params });
   }
 }
