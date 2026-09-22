@@ -7,6 +7,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 
 import {
+  Aniversariante,
   FilaDeVencimentos,
   HistoricoMensal,
   PainelFinanceiro,
@@ -24,6 +25,7 @@ import { GraficoOcupacaoComponent } from './grafico-ocupacao/grafico-ocupacao';
 import { AssinaturaService } from '../../core/services/assinatura.service';
 import { AuthService } from '../../core/services/auth.service';
 import { DashboardService } from '../../core/services/dashboard.service';
+import { UsuarioService } from '../../core/services/usuario.service';
 import { mensagemDeErro } from '../../core/services/erro-api';
 
 interface CartaoEstatistica {
@@ -54,6 +56,7 @@ interface CartaoEstatistica {
 export class DashboardHomeComponent implements OnInit {
   private readonly dashboardService = inject(DashboardService);
   private readonly assinaturaService = inject(AssinaturaService);
+  private readonly usuarioService = inject(UsuarioService);
   private readonly auth = inject(AuthService);
 
   /** Janela do painel de vencimentos. */
@@ -92,6 +95,11 @@ export class DashboardHomeComponent implements OnInit {
   readonly ocupacao = signal<PainelOcupacao | null>(null);
   readonly carregandoOcupacao = signal(true);
   readonly erroOcupacao = signal<string | null>(null);
+
+  /** Visível pra todo perfil — vem de /api/usuarios, sem o dado financeiro que restringe a faixa de matrículas. */
+  readonly aniversariantes = signal<Aniversariante[]>([]);
+  readonly carregandoAniversariantes = signal(true);
+  readonly erroAniversariantes = signal<string | null>(null);
 
   /**
    * A carteira de matrículas é da recepção e da administração: o professor
@@ -247,6 +255,7 @@ export class DashboardHomeComponent implements OnInit {
 
   ngOnInit(): void {
     this.carregar();
+    this.carregarAniversariantes();
 
     if (this.podeVerMatriculas()) {
       this.carregarHistorico();
@@ -341,6 +350,30 @@ export class DashboardHomeComponent implements OnInit {
         this.carregandoOcupacao.set(false);
       },
     });
+  }
+
+  carregarAniversariantes(): void {
+    this.carregandoAniversariantes.set(true);
+    this.erroAniversariantes.set(null);
+
+    this.usuarioService.aniversariantes().subscribe({
+      next: (linhas) => {
+        this.aniversariantes.set(linhas);
+        this.carregandoAniversariantes.set(false);
+      },
+      error: (erro) => {
+        this.erroAniversariantes.set(mensagemDeErro(erro, 'Não foi possível carregar os aniversariantes.'));
+        this.carregandoAniversariantes.set(false);
+      },
+    });
+  }
+
+  /** Iniciais do aniversariante para o avatar da linha. */
+  iniciaisAniversariante(aniversariante: Aniversariante): string {
+    const partes = aniversariante.alunoNome.trim().split(/\s+/);
+    const primeira = partes[0]?.[0] ?? '';
+    const ultima = partes.length > 1 ? partes[partes.length - 1][0] : '';
+    return (primeira + ultima).toUpperCase();
   }
 
   /** Iniciais do aluno para o avatar da linha. */

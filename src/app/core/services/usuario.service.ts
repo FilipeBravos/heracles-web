@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 import {
   Anamnese,
   AnamneseForm,
+  Aniversariante,
   AvaliacaoFisica,
   AvaliacaoFisicaForm,
   ComparativoFisico,
@@ -90,6 +91,11 @@ export class UsuarioService {
   /** O contrato assinado no cadastro — só leitura, não há edição. */
   buscarContrato(id: number): Observable<Contrato> {
     return this.http.get<Contrato>(`${this.url}/${id}/contrato`);
+  }
+
+  /** Aniversariantes do mês corrente, do dia mais próximo pro mais distante. */
+  aniversariantes(): Observable<Aniversariante[]> {
+    return this.http.get<Aniversariante[]>(`${this.url}/aniversariantes`);
   }
 
   /** Cabeçalho do alerta: quantos alunos com matrícula ativa estão com a reavaliação física vencida. */

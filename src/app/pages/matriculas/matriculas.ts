@@ -15,6 +15,7 @@ import {
   CLASSE_SITUACAO,
   LinhaAlunoInativo,
   LinhaComissaoIndicacao,
+  LinhaExecucaoRenovacaoAutomatica,
   LinhaInadimplencia,
   LinhaIndicacao,
   LinhaMotivoCancelamento,
@@ -132,6 +133,14 @@ export class MatriculasComponent implements OnInit {
   readonly paginaInatividade = signal(0);
   private inatividadeCarregada = false;
 
+  readonly colunasRenovacaoAutomatica = ['dataExecucao', 'quantidadeRenovada'];
+  readonly renovacaoAutomatica = signal<LinhaExecucaoRenovacaoAutomatica[]>([]);
+  readonly carregandoRenovacaoAutomatica = signal(false);
+  readonly erroRenovacaoAutomatica = signal<string | null>(null);
+  readonly totalRenovacaoAutomatica = signal(0);
+  readonly paginaRenovacaoAutomatica = signal(0);
+  private renovacaoAutomaticaCarregada = false;
+
   ngOnInit(): void {
     this.listarAssinaturas();
   }
@@ -188,6 +197,9 @@ export class MatriculasComponent implements OnInit {
     }
     if (indice === 5 && !this.inatividadeCarregada) {
       this.listarAlunosInativos();
+    }
+    if (indice === 6 && !this.renovacaoAutomaticaCarregada) {
+      this.listarRenovacaoAutomatica();
     }
   }
 
@@ -393,6 +405,34 @@ export class MatriculasComponent implements OnInit {
 
   descreverInatividadeDaLinha(linha: LinhaAlunoInativo): string {
     return descreverInatividade(linha.diasSemCheckin);
+  }
+
+  // ---------------------------------------------------------------
+  // Log de renovação automática
+  // ---------------------------------------------------------------
+
+  listarRenovacaoAutomatica(): void {
+    this.carregandoRenovacaoAutomatica.set(true);
+    this.erroRenovacaoAutomatica.set(null);
+
+    this.assinaturaService.historicoRenovacaoAutomatica(this.paginaRenovacaoAutomatica(), 20).subscribe({
+      next: (pagina) => {
+        this.renovacaoAutomatica.set(pagina.content);
+        this.totalRenovacaoAutomatica.set(pagina.totalElements);
+        this.carregandoRenovacaoAutomatica.set(false);
+        this.renovacaoAutomaticaCarregada = true;
+      },
+      error: (erro) => {
+        this.erroRenovacaoAutomatica.set(
+          mensagemDeErro(erro, 'Não foi possível carregar o log de renovação automática.'));
+        this.carregandoRenovacaoAutomatica.set(false);
+      },
+    });
+  }
+
+  mudarPaginaRenovacaoAutomatica(evento: PageEvent): void {
+    this.paginaRenovacaoAutomatica.set(evento.pageIndex);
+    this.listarRenovacaoAutomatica();
   }
 
   // ---------------------------------------------------------------
