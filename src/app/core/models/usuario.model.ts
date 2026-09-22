@@ -122,3 +122,12 @@ export interface LinhaReavaliacaoVencida {
 export interface ResumoReavaliacaoVencida {
   total: number;
 }
+
+/** Uma linha do painel de aniversariantes do mês. */
+export interface Aniversariante {
+  alunoId: number;
+  alunoNome: string;
+  dataNascimento: string;
+  telefone: string | null;
+  email: string;
+}

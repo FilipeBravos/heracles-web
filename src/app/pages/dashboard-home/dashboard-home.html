@@ -472,5 +472,56 @@
         </div>
       }
     }
+
+    <!-- ============ Aniversariantes do mês ============ -->
+    <section class="mt-6 rounded-marca border border-linha bg-papel" aria-labelledby="titulo-aniversariantes">
+      <header class="border-b border-linha px-5 py-4">
+        <h2 id="titulo-aniversariantes" class="h-rotulo">Aniversariantes do mês</h2>
+        <p class="mt-1 text-[12px] text-tinta-3">Do dia mais próximo pro mais distante — pra planejar com antecedência.</p>
+      </header>
+
+      @if (carregandoAniversariantes()) {
+        <div class="flex items-center gap-3 px-5 py-8 text-[13px] text-tinta-3">
+          <mat-spinner diameter="20"></mat-spinner><span>Carregando aniversariantes…</span>
+        </div>
+      } @else if (erroAniversariantes(); as mensagem) {
+        <div role="alert" class="flex flex-wrap items-center justify-between gap-3 px-5 py-6">
+          <span class="flex items-center gap-2.5 text-[13px] text-perigo-700">
+            <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="error"></mat-icon>{{ mensagem }}
+          </span>
+          <button type="button" (click)="carregarAniversariantes()"
+                  class="text-[12.5px] font-semibold text-perigo-700 underline underline-offset-2">
+            Tentar novamente
+          </button>
+        </div>
+      } @else if (aniversariantes().length > 0) {
+        <ul class="m-0 list-none divide-y divide-linha p-0">
+          @for (a of aniversariantes(); track a.alunoId) {
+            <li class="flex items-center gap-3 px-5 py-3">
+              <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-marca
+                           bg-fundo-2 text-[11px] font-bold tracking-wide text-tinta-2">
+                {{ iniciaisAniversariante(a) }}
+              </span>
+
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-[13.5px] font-semibold text-tinta">{{ a.alunoNome }}</p>
+                @if (a.telefone) {
+                  <p class="truncate text-[12px] text-tinta-3">{{ a.telefone }}</p>
+                }
+              </div>
+
+              <p class="shrink-0 text-[12.5px] font-semibold tabular-nums text-tinta-2">
+                {{ a.dataNascimento | date: 'dd/MM' }}
+              </p>
+            </li>
+          }
+        </ul>
+      } @else {
+        <div class="flex flex-col items-center gap-2 px-5 py-12 text-center">
+          <mat-icon class="!h-6 !w-6 !text-[24px] text-tinta-3" svgIcon="group_add"></mat-icon>
+          <p class="text-[13.5px] font-semibold text-tinta">Ninguém faz aniversário este mês</p>
+        </div>
+      }
+    </section>
   }
 </div>
