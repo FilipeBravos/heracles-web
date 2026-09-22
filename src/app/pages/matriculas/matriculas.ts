@@ -14,6 +14,7 @@ import {
   Assinatura,
   CLASSE_SITUACAO,
   LinhaAlunoInativo,
+  LinhaComissaoIndicacao,
   LinhaInadimplencia,
   LinhaIndicacao,
   LinhaMotivoCancelamento,
@@ -22,6 +23,7 @@ import {
   ROTULO_MOTIVO_CANCELAMENTO,
   ROTULO_SITUACAO,
   ResumoAlunosInativos,
+  ResumoComissoesIndicacao,
   ResumoInadimplencia,
   descreverInatividade,
   descreverPrazo,
@@ -109,6 +111,12 @@ export class MatriculasComponent implements OnInit {
   readonly erroIndicacoes = signal<string | null>(null);
   private indicacoesCarregadas = false;
 
+  readonly colunasComissoes = ['indicador', 'indicado', 'valor', 'dataCriacao', 'acoes'];
+  readonly resumoComissoes = signal<ResumoComissoesIndicacao | null>(null);
+  readonly comissoesIndicacao = signal<LinhaComissaoIndicacao[]>([]);
+  readonly carregandoComissoes = signal(false);
+  readonly erroComissoes = signal<string | null>(null);
+
   readonly colunasMotivosCancelamento = ['posicao', 'motivo', 'quantidade'];
   readonly motivosCancelamento = signal<LinhaMotivoCancelamento[]>([]);
   readonly carregandoMotivosCancelamento = signal(false);
@@ -173,6 +181,7 @@ export class MatriculasComponent implements OnInit {
     }
     if (indice === 3 && !this.indicacoesCarregadas) {
       this.listarIndicacoes();
+      this.listarComissoesIndicacao();
     }
     if (indice === 4 && !this.motivosCancelamentoCarregados) {
       this.listarMotivosCancelamento();
@@ -404,6 +413,43 @@ export class MatriculasComponent implements OnInit {
         this.erroIndicacoes.set(mensagemDeErro(erro, 'Não foi possível carregar o ranking de indicações.'));
         this.carregandoIndicacoes.set(false);
       },
+    });
+  }
+
+  listarComissoesIndicacao(): void {
+    this.carregandoComissoes.set(true);
+    this.erroComissoes.set(null);
+
+    Promise.all([
+      new Promise<void>((ok, falha) => this.assinaturaService.resumoComissoesIndicacao().subscribe({
+        next: (resumo) => { this.resumoComissoes.set(resumo); ok(); },
+        error: falha,
+      })),
+      new Promise<void>((ok, falha) => this.assinaturaService.comissoesIndicacaoPendentes(0, 20).subscribe({
+        next: (pagina) => { this.comissoesIndicacao.set(pagina.content); ok(); },
+        error: falha,
+      })),
+    ]).then(
+      () => this.carregandoComissoes.set(false),
+      (erro) => {
+        this.erroComissoes.set(mensagemDeErro(erro, 'Não foi possível carregar as comissões de indicação.'));
+        this.carregandoComissoes.set(false);
+      }
+    );
+  }
+
+  aplicarComissao(comissao: LinhaComissaoIndicacao): void {
+    if (!confirm(`Aplicar o desconto de ${comissao.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} ` +
+                 `na próxima cobrança de ${comissao.indicadorNome}?`)) {
+      return;
+    }
+
+    this.assinaturaService.aplicarComissaoIndicacao(comissao.id).subscribe({
+      next: () => {
+        this.snackBar.open('Desconto aplicado na cobrança do indicador.', 'Fechar', { duration: 5000 });
+        this.listarComissoesIndicacao();
+      },
+      error: (erro) => this.snackBar.open(mensagemDeErro(erro), 'Fechar', { duration: 6000 }),
     });
   }
 
