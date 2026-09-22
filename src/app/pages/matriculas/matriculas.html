@@ -449,6 +449,88 @@
             </div>
           }
         </div>
+
+        <!-- ============ Comissões de indicação pendentes ============ -->
+        <h3 class="h-rotulo mt-8 mb-3">Comissões pendentes</h3>
+        <p class="mb-4 text-[12.5px] text-tinta-3">
+          Nasce quando o indicado paga a primeira cobrança. A secretaria aprova aqui, e o desconto vai pra próxima
+          cobrança pendente do indicador — sem matrícula vigente ou sem cobrança pendente nela, continua pendente.
+        </p>
+
+        @if (erroComissoes(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="listarComissoesIndicacao()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        }
+
+        @if (resumoComissoes(); as resumo) {
+          <div class="mb-5 h-painel px-5 py-4 sm:max-w-xs">
+            <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Aguardando aprovação</p>
+            <p class="mt-1 text-[22px] font-bold tabular-nums text-alerta-700">{{ resumo.pendentes }}</p>
+          </div>
+        }
+
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="comissoesIndicacao()" class="h-tabela">
+              <ng-container matColumnDef="indicador">
+                <th mat-header-cell *matHeaderCellDef>Indicador</th>
+                <td mat-cell *matCellDef="let c" class="font-semibold text-tinta">{{ c.indicadorNome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="indicado">
+                <th mat-header-cell *matHeaderCellDef>Indicado</th>
+                <td mat-cell *matCellDef="let c" class="text-tinta-2">{{ c.indicadoNome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="valor">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Valor</th>
+                <td mat-cell *matCellDef="let c" class="!text-right tabular-nums font-semibold text-tinta">
+                  {{ c.valor | currency: 'BRL' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="dataCriacao">
+                <th mat-header-cell *matHeaderCellDef>Desde</th>
+                <td mat-cell *matCellDef="let c" class="whitespace-nowrap tabular-nums text-tinta-2">
+                  {{ c.dataCriacao | date: 'dd/MM/yyyy' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="acoes">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Ações</th>
+                <td mat-cell *matCellDef="let c" class="!text-right whitespace-nowrap">
+                  <button mat-flat-button color="primary" class="!h-8 !px-3 !text-[12.5px]"
+                          (click)="aplicarComissao(c)">
+                    Aplicar
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasComissoes"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasComissoes"></tr>
+            </table>
+          </div>
+
+          @if (carregandoComissoes()) {
+            <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando comissões…</span>
+            </div>
+          } @else if (comissoesIndicacao().length === 0 && !erroComissoes()) {
+            <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <mat-icon class="!h-7 !w-7 !text-[28px] text-ok-700" svgIcon="check_circle"></mat-icon>
+              <p class="text-[14px] font-semibold text-tinta">Nenhuma comissão pendente</p>
+              <p class="max-w-sm text-[13px] text-tinta-3">
+                Toda indicação já paga teve seu desconto aprovado.
+              </p>
+            </div>
+          }
+        </div>
       </div>
     </mat-tab>
 

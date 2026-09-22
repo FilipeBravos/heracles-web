@@ -13,6 +13,7 @@ import {
   HistoricoMensal,
   Lembrete,
   LinhaAlunoInativo,
+  LinhaComissaoIndicacao,
   LinhaInadimplencia,
   LinhaIndicacao,
   LinhaMotivoCancelamento,
@@ -22,6 +23,7 @@ import {
   PainelOcupacao,
   Retencao,
   ResumoAlunosInativos,
+  ResumoComissoesIndicacao,
   ResumoInadimplencia,
 } from '../models';
 
@@ -104,6 +106,22 @@ export class AssinaturaService {
   /** Ranking do programa de indicação: quantas matrículas cada aluno trouxe. */
   indicacoes(): Observable<LinhaIndicacao[]> {
     return this.http.get<LinhaIndicacao[]>(`${this.url}/indicacoes`);
+  }
+
+  /** Cabeçalho do alerta: quantas comissões de indicação esperam aprovação. */
+  resumoComissoesIndicacao(): Observable<ResumoComissoesIndicacao> {
+    return this.http.get<ResumoComissoesIndicacao>(`${this.url}/comissoes-indicacao/resumo`);
+  }
+
+  /** A fila de comissões de indicação pendentes de aprovação. */
+  comissoesIndicacaoPendentes(pagina = 0, tamanho = 20): Observable<Pagina<LinhaComissaoIndicacao>> {
+    const params = new HttpParams().set('page', pagina).set('size', tamanho);
+    return this.http.get<Pagina<LinhaComissaoIndicacao>>(`${this.url}/comissoes-indicacao`, { params });
+  }
+
+  /** Aprova a comissão: aplica o desconto na cobrança pendente da matrícula vigente do indicador. */
+  aplicarComissaoIndicacao(id: number): Observable<LinhaComissaoIndicacao> {
+    return this.http.put<LinhaComissaoIndicacao>(`${this.url}/comissoes-indicacao/${id}/aplicar`, {});
   }
 
   /** Quantos cancelamentos por motivo, do mais comum para o menos comum. */

@@ -368,6 +368,29 @@ export interface ResumoAlunosInativos {
   nuncaFizeramCheckin: number;
 }
 
+export type StatusComissao = 'PENDENTE' | 'APLICADA';
+
+/**
+ * Uma comissão de indicação: o desconto que o indicador vai receber,
+ * liberado quando o indicado paga a primeira cobrança.
+ */
+export interface LinhaComissaoIndicacao {
+  id: number;
+  indicadorId: number;
+  indicadorNome: string;
+  indicadoId: number;
+  indicadoNome: string;
+  valor: number;
+  status: StatusComissao;
+  dataCriacao: string;
+  dataResolucao: string | null;
+}
+
+/** Cabeçalho do alerta: quantas comissões de indicação esperam aprovação da secretaria. */
+export interface ResumoComissoesIndicacao {
+  pendentes: number;
+}
+
 /** Como a inatividade de uma linha se lê — "nunca" é sua própria categoria, não um número. */
 export function descreverInatividade(diasSemCheckin: number | null): string {
   if (diasSemCheckin === null) return 'nunca fez check-in';
