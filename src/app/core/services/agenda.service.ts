@@ -17,6 +17,7 @@ import {
   LinhaNoShowPorHorario,
   LinhaOcupacaoPersonal,
   LinhaPresenca,
+  LinhaSessoesPorProfessor,
   Pagina,
   PainelPresenca,
   ResultadoInscricao,
@@ -151,6 +152,12 @@ export class AgendaService {
   ocupacaoPorProfessor(dias = 90): Observable<LinhaOcupacaoPersonal[]> {
     const params = new HttpParams().set('dias', dias);
     return this.http.get<LinhaOcupacaoPersonal[]>(`${this.urlPersonal}/ocupacao`, { params });
+  }
+
+  /** Ranking de sessões de personal realizadas por professor, do mais cheio pro menos cheio. */
+  sessoesRealizadasPorProfessor(dias = 90): Observable<LinhaSessoesPorProfessor[]> {
+    const params = new HttpParams().set('dias', dias);
+    return this.http.get<LinhaSessoesPorProfessor[]>(`${this.urlPersonal}/sessoes-realizadas`, { params });
   }
 }
 

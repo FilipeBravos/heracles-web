@@ -166,6 +166,13 @@ export interface LinhaOcupacaoPersonal {
   taxaOcupacao: number;
 }
 
+/** O ranking de sessões de personal realizadas por professor, do mais cheio pro menos cheio. */
+export interface LinhaSessoesPorProfessor {
+  professorId: number;
+  professorNome: string;
+  quantidadeSessoes: number;
+}
+
 /** Uma vaga marcada no roster da aula — o que o professor confere pra confirmar presença. */
 export interface LinhaPresenca {
   alunoId: number;
