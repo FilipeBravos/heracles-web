@@ -15,6 +15,7 @@ import {
   LinhaAvaliacaoProfessor,
   LinhaCancelamentoProfessor,
   LinhaNoShowPorHorario,
+  LinhaOcupacaoPersonal,
   LinhaPresenca,
   Pagina,
   PainelPresenca,
@@ -144,6 +145,12 @@ export class AgendaService {
   cancelamentosPorProfessor(dias = 90, quantidadeMinima = 4): Observable<LinhaCancelamentoProfessor[]> {
     const params = new HttpParams().set('dias', dias).set('quantidadeMinima', quantidadeMinima);
     return this.http.get<LinhaCancelamentoProfessor[]>(`${this.urlPersonal}/cancelamentos`, { params });
+  }
+
+  /** Taxa de ocupação da agenda de personal por professor, do menos ocupado pro mais ocupado. */
+  ocupacaoPorProfessor(dias = 90): Observable<LinhaOcupacaoPersonal[]> {
+    const params = new HttpParams().set('dias', dias);
+    return this.http.get<LinhaOcupacaoPersonal[]>(`${this.urlPersonal}/ocupacao`, { params });
   }
 }
 

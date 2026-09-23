@@ -152,6 +152,20 @@ export interface LinhaCancelamentoProfessor {
   taxaCancelamento: number;
 }
 
+/**
+ * A taxa de ocupação da agenda de um professor, do menos ocupado pro mais
+ * ocupado: horas disponíveis (a partir do horário configurado, escaladas
+ * pro período) contra horas efetivamente ocupadas por sessões realizadas.
+ * Só entra professor com horário cadastrado.
+ */
+export interface LinhaOcupacaoPersonal {
+  professorId: number;
+  professorNome: string;
+  horasDisponiveis: number;
+  horasOcupadas: number;
+  taxaOcupacao: number;
+}
+
 /** Uma vaga marcada no roster da aula — o que o professor confere pra confirmar presença. */
 export interface LinhaPresenca {
   alunoId: number;

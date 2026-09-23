@@ -22,6 +22,7 @@ import {
   LinhaAvaliacaoProfessor,
   LinhaCancelamentoProfessor,
   LinhaNoShowPorHorario,
+  LinhaOcupacaoPersonal,
   PainelPresenca,
   ResultadoInscricao,
   ROTULO_DIA_SEMANA,
@@ -119,6 +120,12 @@ export class AgendaComponent implements OnInit {
   readonly erroCancelamentos = signal<string | null>(null);
   private cancelamentosCarregados = false;
 
+  readonly colunasOcupacao = ['posicao', 'professor', 'disponiveis', 'ocupadas', 'taxa'];
+  readonly ocupacaoPorProfessor = signal<LinhaOcupacaoPersonal[]>([]);
+  readonly carregandoOcupacao = signal(false);
+  readonly erroOcupacao = signal<string | null>(null);
+  private ocupacaoCarregada = false;
+
   readonly colunasFaltosos = ['posicao', 'aluno', 'faltas', 'presencas'];
   readonly relatorioPresenca = signal<PainelPresenca | null>(null);
   readonly carregandoRelatorioPresenca = signal(false);
@@ -166,6 +173,9 @@ export class AgendaComponent implements OnInit {
     }
     if (indice === 3 && !this.cancelamentosCarregados) {
       this.listarCancelamentosPorProfessor();
+    }
+    if (indice === 3 && !this.ocupacaoCarregada) {
+      this.listarOcupacaoPorProfessor();
     }
     if (indice === 4 && !this.relatorioPresencaCarregado) {
       this.carregarRelatorioPresenca();
@@ -393,6 +403,23 @@ export class AgendaComponent implements OnInit {
       error: (erro) => {
         this.erroCancelamentos.set(mensagemDeErro(erro, 'Não foi possível carregar os cancelamentos.'));
         this.carregandoCancelamentos.set(false);
+      },
+    });
+  }
+
+  listarOcupacaoPorProfessor(): void {
+    this.carregandoOcupacao.set(true);
+    this.erroOcupacao.set(null);
+
+    this.agendaService.ocupacaoPorProfessor().subscribe({
+      next: (linhas) => {
+        this.ocupacaoPorProfessor.set(linhas);
+        this.carregandoOcupacao.set(false);
+        this.ocupacaoCarregada = true;
+      },
+      error: (erro) => {
+        this.erroOcupacao.set(mensagemDeErro(erro, 'Não foi possível carregar a ocupação da agenda.'));
+        this.carregandoOcupacao.set(false);
       },
     });
   }
