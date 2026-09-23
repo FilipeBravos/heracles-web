@@ -13,6 +13,7 @@ import {
   HistoricoMensal,
   Lembrete,
   LinhaAlunoInativo,
+  LinhaAtrasoPagamento,
   LinhaComissaoIndicacao,
   LinhaExecucaoRenovacaoAutomatica,
   LinhaInadimplencia,
@@ -184,5 +185,11 @@ export class AssinaturaService {
   ocupacao(dias = 30): Observable<PainelOcupacao> {
     const params = new HttpParams().set('dias', dias);
     return this.http.get<PainelOcupacao>(`${this.url}/ocupacao`, { params });
+  }
+
+  /** Atraso médio de pagamento por forma de pagamento, entre cobranças pagas no período. */
+  atrasoPagamento(dias = 90): Observable<LinhaAtrasoPagamento[]> {
+    const params = new HttpParams().set('dias', dias);
+    return this.http.get<LinhaAtrasoPagamento[]>(`${this.url}/atraso-pagamento`, { params });
   }
 }

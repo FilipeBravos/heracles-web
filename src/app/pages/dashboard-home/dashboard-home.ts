@@ -10,11 +10,13 @@ import {
   Aniversariante,
   FilaDeVencimentos,
   HistoricoMensal,
+  LinhaAtrasoPagamento,
   LinhaTaxaLeituraNotificacao,
   PainelFinanceiro,
   PainelOcupacao,
   Retencao,
   ResumoDashboard,
+  ROTULO_FORMA_PAGAMENTO,
   ROTULO_MOTIVO_ACESSO,
   ROTULO_TIPO_NOTIFICACAO,
   Vencimento,
@@ -96,6 +98,14 @@ export class DashboardHomeComponent implements OnInit {
   readonly financeiro = signal<PainelFinanceiro | null>(null);
   readonly carregandoFinanceiro = signal(true);
   readonly erroFinanceiro = signal<string | null>(null);
+
+  /** Janela do relatório de atraso médio de pagamento. */
+  private readonly DIAS_ATRASO_PAGAMENTO = 90;
+
+  readonly atrasoPagamento = signal<LinhaAtrasoPagamento[]>([]);
+  readonly carregandoAtrasoPagamento = signal(true);
+  readonly erroAtrasoPagamento = signal<string | null>(null);
+  readonly rotuloFormaPagamento = ROTULO_FORMA_PAGAMENTO;
 
   readonly ocupacao = signal<PainelOcupacao | null>(null);
   readonly carregandoOcupacao = signal(true);
@@ -276,6 +286,7 @@ export class DashboardHomeComponent implements OnInit {
       this.carregarFila();
       this.carregarRetencao();
       this.carregarFinanceiro();
+      this.carregarAtrasoPagamento();
       this.carregarOcupacao();
       this.carregarTaxaLeituraNotificacao();
     } else {
@@ -283,6 +294,7 @@ export class DashboardHomeComponent implements OnInit {
       this.carregandoFila.set(false);
       this.carregandoRetencao.set(false);
       this.carregandoFinanceiro.set(false);
+      this.carregandoAtrasoPagamento.set(false);
       this.carregandoOcupacao.set(false);
       this.carregandoTaxaLeitura.set(false);
     }
@@ -348,6 +360,22 @@ export class DashboardHomeComponent implements OnInit {
       error: (erro) => {
         this.erroFinanceiro.set(mensagemDeErro(erro, 'Não foi possível carregar o financeiro.'));
         this.carregandoFinanceiro.set(false);
+      },
+    });
+  }
+
+  carregarAtrasoPagamento(): void {
+    this.carregandoAtrasoPagamento.set(true);
+    this.erroAtrasoPagamento.set(null);
+
+    this.assinaturaService.atrasoPagamento(this.DIAS_ATRASO_PAGAMENTO).subscribe({
+      next: (linhas) => {
+        this.atrasoPagamento.set(linhas);
+        this.carregandoAtrasoPagamento.set(false);
+      },
+      error: (erro) => {
+        this.erroAtrasoPagamento.set(mensagemDeErro(erro, 'Não foi possível carregar o atraso de pagamento.'));
+        this.carregandoAtrasoPagamento.set(false);
       },
     });
   }
