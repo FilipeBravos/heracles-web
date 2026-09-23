@@ -633,6 +633,20 @@ export interface PainelFinanceiro {
   porUnidade: LinhaFinanceiro[];
 }
 
+/**
+ * Atraso médio de pagamento de uma forma de pagamento, entre cobranças
+ * pagas no período, do pior pro melhor.
+ *
+ * Quem paga antes ou no dia do vencimento entra com atraso zero — nunca
+ * negativo, adiantar o pagamento não "compensa" um atraso de outra
+ * cobrança na média.
+ */
+export interface LinhaAtrasoPagamento {
+  formaPagamento: FormaPagamento;
+  quantidade: number;
+  atrasoMedioDias: number;
+}
+
 /** Um ponto do gráfico de ocupação: quantos check-ins liberados nesta hora do dia. */
 export interface PontoOcupacao {
   hora: number;

@@ -332,6 +332,62 @@
         }
       }
 
+      <!-- ============ Atraso médio de pagamento, por forma de pagamento ============ -->
+      @if (erroAtrasoPagamento(); as mensagem) {
+        <div role="alert"
+             class="mb-4 mt-4 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+          <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+            <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+          </span>
+          <button type="button" (click)="carregarAtrasoPagamento()"
+                  class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">
+            Tentar novamente
+          </button>
+        </div>
+      } @else if (carregandoAtrasoPagamento()) {
+        <div class="mt-4 flex items-center gap-3 rounded-marca border border-linha bg-papel px-5 py-10 text-[13px] text-tinta-3">
+          <mat-spinner diameter="20"></mat-spinner><span>Carregando atraso de pagamento…</span>
+        </div>
+      } @else {
+        <section class="mt-4 rounded-marca border border-linha bg-papel" aria-labelledby="titulo-atraso-pagamento">
+          <header class="border-b border-linha px-5 py-4">
+            <h2 id="titulo-atraso-pagamento" class="h-rotulo">Atraso médio de pagamento</h2>
+            <p class="mt-1 text-[12px] text-tinta-3">
+              Últimos 90 dias, por forma de pagamento — quem paga antes ou no vencimento entra com atraso zero.
+            </p>
+          </header>
+
+          @if (atrasoPagamento().length) {
+            <div class="overflow-x-auto">
+              <table class="w-full text-[12.5px]">
+                <thead>
+                  <tr class="border-b border-linha">
+                    <th scope="col" class="px-5 py-2 text-left font-semibold text-tinta-3">Forma de pagamento</th>
+                    <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Cobranças pagas</th>
+                    <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Atraso médio</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (linha of atrasoPagamento(); track linha.formaPagamento) {
+                    <tr class="border-b border-linha last:border-0">
+                      <td class="px-5 py-2 text-tinta">{{ rotuloFormaPagamento[linha.formaPagamento] }}</td>
+                      <td class="px-5 py-2 text-right tabular-nums text-tinta-2">{{ linha.quantidade }}</td>
+                      <td class="px-5 py-2 text-right tabular-nums font-semibold"
+                          [class.text-perigo-700]="linha.atrasoMedioDias > 0"
+                          [class.text-tinta]="linha.atrasoMedioDias === 0">
+                        {{ linha.atrasoMedioDias.toFixed(1).replace('.', ',') }} dia(s)
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="px-5 py-10 text-center text-[12.5px] text-tinta-3">Nenhuma cobrança paga no período.</p>
+          }
+        </section>
+      }
+
       <!-- ============ Retenção: churn por mês, por plano e por unidade ============ -->
       <h2 class="h-rotulo mt-8 mb-3">Retenção</h2>
       <div class="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">

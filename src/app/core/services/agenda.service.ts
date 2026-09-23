@@ -17,6 +17,7 @@ import {
   LinhaNoShowPorHorario,
   LinhaOcupacaoPersonal,
   LinhaPresenca,
+  LinhaPresencaPorProfessor,
   LinhaSessoesPorProfessor,
   Pagina,
   PainelPresenca,
@@ -111,6 +112,12 @@ export class AgendaService {
   relatorioNoShowPorHorario(dias = 90, quantidadeMinima = 4): Observable<LinhaNoShowPorHorario[]> {
     const params = new HttpParams().set('dias', dias).set('quantidadeMinima', quantidadeMinima);
     return this.http.get<LinhaNoShowPorHorario[]>(`${this.urlAulas}/relatorio/no-show`, { params });
+  }
+
+  /** Taxa de presença em aula em grupo por professor, do pior pro melhor. */
+  relatorioPresencaPorProfessor(dias = 90, quantidadeMinima = 8): Observable<LinhaPresencaPorProfessor[]> {
+    const params = new HttpParams().set('dias', dias).set('quantidadeMinima', quantidadeMinima);
+    return this.http.get<LinhaPresencaPorProfessor[]>(`${this.urlAulas}/relatorio/presenca-por-professor`, { params });
   }
 
   // ---------------------------------------------------------------
