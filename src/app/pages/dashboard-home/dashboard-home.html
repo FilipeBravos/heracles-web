@@ -470,6 +470,46 @@
             </div>
           }
         </div>
+
+        <!-- ============ Motivos de acesso negado: o oposto da ocupação ============ -->
+        <h3 class="h-rotulo mt-6 mb-2">Motivos de acesso negado</h3>
+        <p class="mb-4 text-[12.5px] text-tinta-3">
+          Tentativas de acesso barradas na catraca no mesmo período, por unidade e motivo — o atrito que
+          a ocupação não mostra, porque quem foi barrado não chegou a ocupar espaço nenhum.
+        </p>
+
+        <section class="rounded-marca border border-linha bg-papel" aria-labelledby="titulo-acesso-negado">
+          <header class="border-b border-linha px-5 py-4">
+            <h3 id="titulo-acesso-negado" class="h-rotulo">Por unidade e motivo</h3>
+          </header>
+
+          @if (o.motivosNegados.length) {
+            <div class="overflow-x-auto">
+              <table class="w-full text-[12.5px]">
+                <thead>
+                  <tr class="border-b border-linha">
+                    <th scope="col" class="px-5 py-2 text-left font-semibold text-tinta-3">Unidade</th>
+                    <th scope="col" class="px-5 py-2 text-left font-semibold text-tinta-3">Motivo</th>
+                    <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Tentativas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (linha of o.motivosNegados; track linha.unidadeId + linha.motivo) {
+                    <tr class="border-b border-linha last:border-0">
+                      <td class="px-5 py-2 text-tinta">{{ linha.unidadeNome }}</td>
+                      <td class="px-5 py-2 text-tinta-2">{{ rotuloMotivoAcesso[linha.motivo] }}</td>
+                      <td class="px-5 py-2 text-right tabular-nums font-semibold text-tinta">
+                        {{ linha.quantidade }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="px-5 py-10 text-center text-[12.5px] text-tinta-3">Nenhum acesso barrado no período.</p>
+          }
+        </section>
       }
 
       <!-- ============ Leitura de notificações: por tipo, do pior pro melhor ============ -->

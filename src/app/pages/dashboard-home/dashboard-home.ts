@@ -15,6 +15,7 @@ import {
   PainelOcupacao,
   Retencao,
   ResumoDashboard,
+  ROTULO_MOTIVO_ACESSO,
   ROTULO_TIPO_NOTIFICACAO,
   Vencimento,
   descreverMes,
@@ -107,6 +108,7 @@ export class DashboardHomeComponent implements OnInit {
   readonly carregandoTaxaLeitura = signal(true);
   readonly erroTaxaLeitura = signal<string | null>(null);
   readonly rotuloTipoNotificacao = ROTULO_TIPO_NOTIFICACAO;
+  readonly rotuloMotivoAcesso = ROTULO_MOTIVO_ACESSO;
 
   /** Visível pra todo perfil — vem de /api/usuarios, sem o dado financeiro que restringe a faixa de matrículas. */
   readonly aniversariantes = signal<Aniversariante[]>([]);
