@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { Notificacao, Pagina, ResumoNotificacoes } from '../models';
+import { LinhaTaxaLeituraNotificacao, Notificacao, Pagina, ResumoNotificacoes } from '../models';
 
 /**
  * A central de notificações de quem está autenticado.
@@ -16,6 +16,8 @@ import { Notificacao, Pagina, ResumoNotificacoes } from '../models';
 export class NotificacaoService {
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/eu/notificacoes`;
+  /** Visão de gestão, distinta de /eu — administração e secretaria só. */
+  private readonly urlRelatorios = `${environment.apiUrl}/notificacoes`;
 
   listar(pagina = 0, tamanho = 20): Observable<Pagina<Notificacao>> {
     const params = new HttpParams().set('page', pagina).set('size', tamanho);
@@ -33,5 +35,11 @@ export class NotificacaoService {
 
   marcarTodasComoLidas(): Observable<void> {
     return this.http.put<void>(`${this.url}/lidas`, {});
+  }
+
+  /** Taxa de leitura por tipo de notificação, do pior pro melhor, com o tempo médio até a leitura. */
+  taxaLeituraPorTipo(dias = 90): Observable<LinhaTaxaLeituraNotificacao[]> {
+    const params = new HttpParams().set('dias', dias);
+    return this.http.get<LinhaTaxaLeituraNotificacao[]>(`${this.urlRelatorios}/relatorio/taxa-leitura`, { params });
   }
 }
