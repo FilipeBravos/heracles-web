@@ -3,7 +3,14 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { ChamadoManutencao, Equipamento, EquipamentoForm, Pagina, PainelManutencao } from '../models';
+import {
+  ChamadoManutencao,
+  Equipamento,
+  EquipamentoForm,
+  LinhaManutencaoPreventiva,
+  Pagina,
+  PainelManutencao,
+} from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class EquipamentoService {
@@ -40,5 +47,10 @@ export class EquipamentoService {
   relatorio(dias = 90): Observable<PainelManutencao> {
     const params = new HttpParams().set('dias', dias);
     return this.http.get<PainelManutencao>(`${this.url}/relatorio`, { params });
+  }
+
+  /** Equipamentos com manutenção preventiva vencida ou vencendo, do mais atrasado pro mais recente. */
+  relatorioManutencaoPreventiva(): Observable<LinhaManutencaoPreventiva[]> {
+    return this.http.get<LinhaManutencaoPreventiva[]>(`${this.url}/relatorio/manutencao-preventiva`);
   }
 }
