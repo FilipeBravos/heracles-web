@@ -13,6 +13,7 @@ import {
   HorarioProfessor,
   HorarioProfessorForm,
   LinhaAvaliacaoProfessor,
+  LinhaNoShowPorHorario,
   LinhaPresenca,
   Pagina,
   PainelPresenca,
@@ -101,6 +102,12 @@ export class AgendaService {
   relatorioPresenca(dias = 90): Observable<PainelPresenca> {
     const params = new HttpParams().set('dias', dias);
     return this.http.get<PainelPresenca>(`${this.urlAulas}/relatorio`, { params });
+  }
+
+  /** Taxa de no-show por horário recorrente, do pior pro melhor — pra decisão de agenda. */
+  relatorioNoShowPorHorario(dias = 90, quantidadeMinima = 4): Observable<LinhaNoShowPorHorario[]> {
+    const params = new HttpParams().set('dias', dias).set('quantidadeMinima', quantidadeMinima);
+    return this.http.get<LinhaNoShowPorHorario[]>(`${this.urlAulas}/relatorio/no-show`, { params });
   }
 
   // ---------------------------------------------------------------

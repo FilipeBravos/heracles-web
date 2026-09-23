@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { Pagina, Produto, ProdutoForm } from '../models';
+import { LinhaReposicaoEstoque, Pagina, Produto, ProdutoForm } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class ProdutoService {
@@ -33,5 +33,10 @@ export class ProdutoService {
 
   alternarAtivo(id: number): Observable<Produto> {
     return this.http.put<Produto>(`${this.url}/${id}/ativo`, {});
+  }
+
+  /** Produtos ativos abaixo do próprio estoque mínimo, do maior déficit pro menor. */
+  reposicaoEstoque(): Observable<LinhaReposicaoEstoque[]> {
+    return this.http.get<LinhaReposicaoEstoque[]>(`${this.url}/reposicao-estoque`);
   }
 }
