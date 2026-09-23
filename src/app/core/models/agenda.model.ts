@@ -215,3 +215,16 @@ export interface LinhaNoShowPorHorario {
   presencas: number;
   taxaNoShow: number;
 }
+
+/**
+ * A taxa de presença em aula em grupo de um professor no período, do pior
+ * pro melhor — mistura todas as aulas que ele dá, diferente da taxa de
+ * no-show por horário, que separa por dia/hora.
+ */
+export interface LinhaPresencaPorProfessor {
+  professorNome: string;
+  totalConfirmadas: number;
+  faltas: number;
+  presencas: number;
+  taxaPresenca: number;
+}

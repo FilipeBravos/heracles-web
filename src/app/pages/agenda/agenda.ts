@@ -23,6 +23,7 @@ import {
   LinhaCancelamentoProfessor,
   LinhaNoShowPorHorario,
   LinhaOcupacaoPersonal,
+  LinhaPresencaPorProfessor,
   LinhaSessoesPorProfessor,
   PainelPresenca,
   ResultadoInscricao,
@@ -145,6 +146,12 @@ export class AgendaComponent implements OnInit {
   readonly erroNoShow = signal<string | null>(null);
   private noShowCarregado = false;
 
+  readonly colunasPresencaProfessor = ['posicao', 'professor', 'confirmadas', 'faltas', 'taxa'];
+  readonly presencaPorProfessor = signal<LinhaPresencaPorProfessor[]>([]);
+  readonly carregandoPresencaProfessor = signal(false);
+  readonly erroPresencaProfessor = signal<string | null>(null);
+  private presencaProfessorCarregada = false;
+
   // ---------------------------------------------------------------
   // Horários de professor
   // ---------------------------------------------------------------
@@ -192,6 +199,9 @@ export class AgendaComponent implements OnInit {
     }
     if (indice === 4 && !this.noShowCarregado) {
       this.carregarNoShowPorHorario();
+    }
+    if (indice === 4 && !this.presencaProfessorCarregada) {
+      this.carregarPresencaPorProfessor();
     }
   }
 
@@ -492,6 +502,23 @@ export class AgendaComponent implements OnInit {
   /** "Terça 18:00" — dia da semana traduzido, junto do horário. */
   diaEHorario(linha: LinhaNoShowPorHorario): string {
     return `${ROTULO_DIA_SEMANA[linha.diaSemana]} ${linha.horario}`;
+  }
+
+  carregarPresencaPorProfessor(): void {
+    this.carregandoPresencaProfessor.set(true);
+    this.erroPresencaProfessor.set(null);
+
+    this.agendaService.relatorioPresencaPorProfessor(90).subscribe({
+      next: (linhas) => {
+        this.presencaPorProfessor.set(linhas);
+        this.carregandoPresencaProfessor.set(false);
+        this.presencaProfessorCarregada = true;
+      },
+      error: (erro) => {
+        this.erroPresencaProfessor.set(mensagemDeErro(erro, 'Não foi possível carregar a presença por professor.'));
+        this.carregandoPresencaProfessor.set(false);
+      },
+    });
   }
 
   // ---------------------------------------------------------------
