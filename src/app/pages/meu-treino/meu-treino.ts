@@ -1,12 +1,15 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { Exercicio, HistoricoTreino, Treino, descreverPeriodo, descreverPrescricao } from '../../core/models';
 import { AuthService } from '../../core/services/auth.service';
 import { MinhaAreaService } from '../../core/services/minha-area.service';
 import { mensagemDeErro } from '../../core/services/erro-api';
+import { RegistroExecucaoDialogComponent } from './registro-execucao-dialog/registro-execucao-dialog';
 
 /**
  * A área do aluno.
@@ -24,6 +27,8 @@ import { mensagemDeErro } from '../../core/services/erro-api';
 export class MeuTreinoComponent implements OnInit {
   private readonly minhaArea = inject(MinhaAreaService);
   private readonly auth = inject(AuthService);
+  private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
 
   readonly carregando = signal(true);
   readonly erro = signal<string | null>(null);
@@ -98,6 +103,23 @@ export class MeuTreinoComponent implements OnInit {
     return [exercicio.carga, exercicio.observacoes].filter(
       (texto): texto is string => !!texto && texto.trim().length > 0
     );
+  }
+
+  /** Abre o registro de execução — carga e repetições que o aluno de fato fez, não a prescrição. */
+  registrarExecucao(exercicio: Exercicio): void {
+    if (exercicio.id === null) return;
+
+    this.dialog
+      .open(RegistroExecucaoDialogComponent, {
+        width: '480px',
+        data: { exercicioId: exercicio.id, exercicioNome: exercicio.nome },
+      })
+      .afterClosed()
+      .subscribe((registrou) => {
+        if (registrou) {
+          this.snackBar.open('Execução registrada.', 'Fechar', { duration: 4000 });
+        }
+      });
   }
 
   /**

@@ -91,9 +91,16 @@
 
                 <!-- A prescrição é o que se lê entre uma série e outra:
                      fica grande e à direita, onde o polegar não cobre. -->
-                <span class="h-etiqueta h-etiqueta--prescricao shrink-0 !text-[13px]">
-                  {{ prescricao(exercicio) }}
-                </span>
+                <div class="flex shrink-0 flex-col items-end gap-1.5">
+                  <span class="h-etiqueta h-etiqueta--prescricao !text-[13px]">
+                    {{ prescricao(exercicio) }}
+                  </span>
+                  <button mat-button type="button" class="!h-7 !min-w-0 !px-2 !text-[12px] !text-tinta-3"
+                          (click)="registrarExecucao(exercicio)" aria-label="Registrar execução">
+                    <mat-icon class="!h-4 !w-4 !text-[16px]" svgIcon="trending_up"></mat-icon>
+                    Registrar
+                  </button>
+                </div>
               </li>
             }
           </ol>

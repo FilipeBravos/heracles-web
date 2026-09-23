@@ -63,6 +63,30 @@ export function descreverPrescricao(exercicio: Pick<Exercicio, 'series' | 'repet
   return `${exercicio.series}x${repeticoes}`;
 }
 
+/** O que o aluno registra ter executado de um exercício, numa data. */
+export interface ExecucaoExercicioForm {
+  exercicioId: number;
+  /** yyyy-MM-dd */
+  dataExecucao: string;
+  seriesRealizadas: number;
+  repeticoesRealizadas: number;
+  cargaRealizada: number | null;
+  observacao: string | null;
+}
+
+/** Uma execução já registrada — a evolução de um exercício é a lista destas, da mais recente pra mais antiga. */
+export interface ExecucaoExercicio {
+  id: number;
+  exercicioId: number | null;
+  exercicioNome: string;
+  /** yyyy-MM-dd */
+  dataExecucao: string;
+  seriesRealizadas: number;
+  repeticoesRealizadas: number;
+  cargaRealizada: number | null;
+  observacao: string | null;
+}
+
 /**
  * Um aluno com matrícula ativa que nunca recebeu uma ficha de treino —
  * pagou, mas nunca foi "recebido" de verdade pelo treino.
