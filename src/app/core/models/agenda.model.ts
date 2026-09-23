@@ -161,3 +161,21 @@ export interface PainelPresenca {
   taxaComparecimento: number;
   maisFaltosos: LinhaFaltaAluno[];
 }
+
+/**
+ * Taxa de no-show de um horário recorrente (mesma aula, unidade, dia da
+ * semana e hora), do pior pro melhor — pra decisão de agenda.
+ * `ocorrencias` conta datas distintas, não confirmações de presença.
+ */
+export interface LinhaNoShowPorHorario {
+  nomeAula: string;
+  unidadeId: number;
+  unidadeNome: string;
+  professorNome: string;
+  diaSemana: DiaSemana;
+  horario: string;
+  ocorrencias: number;
+  faltas: number;
+  presencas: number;
+  taxaNoShow: number;
+}

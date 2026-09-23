@@ -20,6 +20,7 @@ import {
   DIAS_SEMANA,
   HorarioProfessor,
   LinhaAvaliacaoProfessor,
+  LinhaNoShowPorHorario,
   PainelPresenca,
   ResultadoInscricao,
   ROTULO_DIA_SEMANA,
@@ -117,6 +118,12 @@ export class AgendaComponent implements OnInit {
   readonly erroRelatorioPresenca = signal<string | null>(null);
   private relatorioPresencaCarregado = false;
 
+  readonly colunasNoShow = ['aula', 'diaHorario', 'ocorrencias', 'taxaNoShow'];
+  readonly noShowPorHorario = signal<LinhaNoShowPorHorario[]>([]);
+  readonly carregandoNoShow = signal(false);
+  readonly erroNoShow = signal<string | null>(null);
+  private noShowCarregado = false;
+
   // ---------------------------------------------------------------
   // Horários de professor
   // ---------------------------------------------------------------
@@ -152,6 +159,9 @@ export class AgendaComponent implements OnInit {
     }
     if (indice === 4 && !this.relatorioPresencaCarregado) {
       this.carregarRelatorioPresenca();
+    }
+    if (indice === 4 && !this.noShowCarregado) {
+      this.carregarNoShowPorHorario();
     }
   }
 
@@ -379,6 +389,28 @@ export class AgendaComponent implements OnInit {
         this.carregandoRelatorioPresenca.set(false);
       },
     });
+  }
+
+  carregarNoShowPorHorario(): void {
+    this.carregandoNoShow.set(true);
+    this.erroNoShow.set(null);
+
+    this.agendaService.relatorioNoShowPorHorario(90).subscribe({
+      next: (linhas) => {
+        this.noShowPorHorario.set(linhas);
+        this.carregandoNoShow.set(false);
+        this.noShowCarregado = true;
+      },
+      error: (erro) => {
+        this.erroNoShow.set(mensagemDeErro(erro, 'Não foi possível carregar a taxa de no-show por horário.'));
+        this.carregandoNoShow.set(false);
+      },
+    });
+  }
+
+  /** "Terça 18:00" — dia da semana traduzido, junto do horário. */
+  diaEHorario(linha: LinhaNoShowPorHorario): string {
+    return `${ROTULO_DIA_SEMANA[linha.diaSemana]} ${linha.horario}`;
   }
 
   // ---------------------------------------------------------------
