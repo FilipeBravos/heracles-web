@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { LinhaReposicaoEstoque, Pagina, Produto, ProdutoForm } from '../models';
+import { LinhaProdutoParado, LinhaReposicaoEstoque, Pagina, Produto, ProdutoForm } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class ProdutoService {
@@ -38,5 +38,11 @@ export class ProdutoService {
   /** Produtos ativos abaixo do próprio estoque mínimo, do maior déficit pro menor. */
   reposicaoEstoque(): Observable<LinhaReposicaoEstoque[]> {
     return this.http.get<LinhaReposicaoEstoque[]>(`${this.url}/reposicao-estoque`);
+  }
+
+  /** O oposto da reposição: produtos ativos sem venda há pelo menos `dias`, do mais parado pro menos. */
+  produtosParados(dias = 90): Observable<LinhaProdutoParado[]> {
+    const params = new HttpParams().set('dias', dias);
+    return this.http.get<LinhaProdutoParado[]>(`${this.url}/parados`, { params });
   }
 }
