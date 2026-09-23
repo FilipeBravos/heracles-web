@@ -10,7 +10,14 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { LinhaProdutoParado, LinhaReposicaoEstoque, PainelVendas, Produto, Venda } from '../../core/models';
+import {
+  LinhaProdutoParado,
+  LinhaReposicaoEstoque,
+  MetodoPagamento,
+  PainelVendas,
+  Produto,
+  Venda,
+} from '../../core/models';
 import { ProdutoService } from '../../core/services/produto.service';
 import { VendaService } from '../../core/services/venda.service';
 import { podeExecutar } from '../../core/acesso';
@@ -75,6 +82,7 @@ export class LojaComponent implements OnInit {
 
   readonly colunasMaisVendidos = ['posicao', 'produto', 'quantidade', 'receita'];
   readonly colunasPorUnidade = ['unidade', 'faturamento', 'vendas', 'ticketMedio'];
+  readonly colunasPorMetodoPagamento = ['unidade', 'pagamento', 'faturamento', 'vendas', 'ticketMedio'];
   readonly relatorio = signal<PainelVendas | null>(null);
   readonly carregandoRelatorio = signal(false);
   readonly erroRelatorio = signal<string | null>(null);
@@ -236,7 +244,11 @@ export class LojaComponent implements OnInit {
   }
 
   rotuloPagamento(venda: Venda): string {
-    return { PIX: 'PIX', DINHEIRO: 'Dinheiro', DEBITO: 'Débito', CREDITO: 'Crédito' }[venda.metodoPagamento];
+    return this.rotuloMetodoPagamento(venda.metodoPagamento);
+  }
+
+  rotuloMetodoPagamento(metodo: MetodoPagamento): string {
+    return { PIX: 'PIX', DINHEIRO: 'Dinheiro', DEBITO: 'Débito', CREDITO: 'Crédito' }[metodo];
   }
 
   // ---------------------------------------------------------------

@@ -10,10 +10,12 @@ import {
   Aniversariante,
   FilaDeVencimentos,
   HistoricoMensal,
+  LinhaTaxaLeituraNotificacao,
   PainelFinanceiro,
   PainelOcupacao,
   Retencao,
   ResumoDashboard,
+  ROTULO_TIPO_NOTIFICACAO,
   Vencimento,
   descreverMes,
   descreverPrazo,
@@ -25,6 +27,7 @@ import { GraficoOcupacaoComponent } from './grafico-ocupacao/grafico-ocupacao';
 import { AssinaturaService } from '../../core/services/assinatura.service';
 import { AuthService } from '../../core/services/auth.service';
 import { DashboardService } from '../../core/services/dashboard.service';
+import { NotificacaoService } from '../../core/services/notificacao.service';
 import { UsuarioService } from '../../core/services/usuario.service';
 import { mensagemDeErro } from '../../core/services/erro-api';
 
@@ -57,6 +60,7 @@ export class DashboardHomeComponent implements OnInit {
   private readonly dashboardService = inject(DashboardService);
   private readonly assinaturaService = inject(AssinaturaService);
   private readonly usuarioService = inject(UsuarioService);
+  private readonly notificacaoService = inject(NotificacaoService);
   private readonly auth = inject(AuthService);
 
   /** Janela do painel de vencimentos. */
@@ -95,6 +99,14 @@ export class DashboardHomeComponent implements OnInit {
   readonly ocupacao = signal<PainelOcupacao | null>(null);
   readonly carregandoOcupacao = signal(true);
   readonly erroOcupacao = signal<string | null>(null);
+
+  /** Janela do painel de leitura de notificações. */
+  private readonly DIAS_LEITURA_NOTIFICACAO = 90;
+
+  readonly taxaLeituraNotificacao = signal<LinhaTaxaLeituraNotificacao[]>([]);
+  readonly carregandoTaxaLeitura = signal(true);
+  readonly erroTaxaLeitura = signal<string | null>(null);
+  readonly rotuloTipoNotificacao = ROTULO_TIPO_NOTIFICACAO;
 
   /** Visível pra todo perfil — vem de /api/usuarios, sem o dado financeiro que restringe a faixa de matrículas. */
   readonly aniversariantes = signal<Aniversariante[]>([]);
@@ -263,12 +275,14 @@ export class DashboardHomeComponent implements OnInit {
       this.carregarRetencao();
       this.carregarFinanceiro();
       this.carregarOcupacao();
+      this.carregarTaxaLeituraNotificacao();
     } else {
       this.carregandoHistorico.set(false);
       this.carregandoFila.set(false);
       this.carregandoRetencao.set(false);
       this.carregandoFinanceiro.set(false);
       this.carregandoOcupacao.set(false);
+      this.carregandoTaxaLeitura.set(false);
     }
   }
 
@@ -348,6 +362,22 @@ export class DashboardHomeComponent implements OnInit {
       error: (erro) => {
         this.erroOcupacao.set(mensagemDeErro(erro, 'Não foi possível carregar a ocupação.'));
         this.carregandoOcupacao.set(false);
+      },
+    });
+  }
+
+  carregarTaxaLeituraNotificacao(): void {
+    this.carregandoTaxaLeitura.set(true);
+    this.erroTaxaLeitura.set(null);
+
+    this.notificacaoService.taxaLeituraPorTipo(this.DIAS_LEITURA_NOTIFICACAO).subscribe({
+      next: (linhas) => {
+        this.taxaLeituraNotificacao.set(linhas);
+        this.carregandoTaxaLeitura.set(false);
+      },
+      error: (erro) => {
+        this.erroTaxaLeitura.set(mensagemDeErro(erro, 'Não foi possível carregar a taxa de leitura.'));
+        this.carregandoTaxaLeitura.set(false);
       },
     });
   }

@@ -471,6 +471,74 @@
           }
         </div>
       }
+
+      <!-- ============ Leitura de notificações: por tipo, do pior pro melhor ============ -->
+      <h2 class="h-rotulo mt-8 mb-3">Leitura de notificações</h2>
+
+      @if (erroTaxaLeitura(); as mensagem) {
+        <div role="alert"
+             class="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+          <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+            <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+          </span>
+          <button type="button" (click)="carregarTaxaLeituraNotificacao()"
+                  class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">
+            Tentar novamente
+          </button>
+        </div>
+      } @else if (carregandoTaxaLeitura()) {
+        <div class="flex items-center gap-3 rounded-marca border border-linha bg-papel px-5 py-14 text-[13px] text-tinta-3">
+          <mat-spinner diameter="20"></mat-spinner><span>Carregando taxa de leitura…</span>
+        </div>
+      } @else {
+        <p class="mb-4 text-[12.5px] text-tinta-3">
+          Últimos 90 dias, por tipo de aviso, do pior pro melhor. O tempo médio até a leitura só
+          considera avisos com o momento de leitura registrado.
+        </p>
+
+        <section class="rounded-marca border border-linha bg-papel" aria-labelledby="titulo-taxa-leitura">
+          <header class="border-b border-linha px-5 py-4">
+            <h2 id="titulo-taxa-leitura" class="h-rotulo">Por tipo de notificação</h2>
+          </header>
+
+          @if (taxaLeituraNotificacao().length) {
+            <div class="overflow-x-auto">
+              <table class="w-full text-[12.5px]">
+                <thead>
+                  <tr class="border-b border-linha">
+                    <th scope="col" class="px-5 py-2 text-left font-semibold text-tinta-3">Tipo</th>
+                    <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Enviadas</th>
+                    <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Lidas</th>
+                    <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Taxa de leitura</th>
+                    <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Tempo médio até ler</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (linha of taxaLeituraNotificacao(); track linha.tipo) {
+                    <tr class="border-b border-linha last:border-0">
+                      <td class="px-5 py-2 text-tinta">{{ rotuloTipoNotificacao[linha.tipo] }}</td>
+                      <td class="px-5 py-2 text-right tabular-nums text-tinta-2">{{ linha.total }}</td>
+                      <td class="px-5 py-2 text-right tabular-nums text-tinta-2">{{ linha.lidas }}</td>
+                      <td class="px-5 py-2 text-right tabular-nums font-semibold"
+                          [class.text-perigo-700]="linha.taxaLeitura < 50"
+                          [class.text-tinta]="linha.taxaLeitura >= 50">
+                        {{ linha.taxaLeitura.toFixed(1).replace('.', ',') }}%
+                      </td>
+                      <td class="px-5 py-2 text-right tabular-nums text-tinta-2">
+                        {{ linha.tempoMedioLeituraHoras !== null
+                          ? linha.tempoMedioLeituraHoras.toFixed(1).replace('.', ',') + 'h'
+                          : '—' }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="px-5 py-10 text-center text-[12.5px] text-tinta-3">Nenhuma notificação enviada no período.</p>
+          }
+        </section>
+      }
     }
 
     <!-- ============ Aniversariantes do mês ============ -->
