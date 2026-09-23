@@ -20,6 +20,7 @@ import {
   DIAS_SEMANA,
   HorarioProfessor,
   LinhaAvaliacaoProfessor,
+  LinhaCancelamentoProfessor,
   LinhaNoShowPorHorario,
   PainelPresenca,
   ResultadoInscricao,
@@ -112,6 +113,12 @@ export class AgendaComponent implements OnInit {
   readonly erroAvaliacoes = signal<string | null>(null);
   private avaliacoesCarregadas = false;
 
+  readonly colunasCancelamentos = ['posicao', 'professor', 'total', 'emCimaDaHora', 'taxa'];
+  readonly cancelamentosPorProfessor = signal<LinhaCancelamentoProfessor[]>([]);
+  readonly carregandoCancelamentos = signal(false);
+  readonly erroCancelamentos = signal<string | null>(null);
+  private cancelamentosCarregados = false;
+
   readonly colunasFaltosos = ['posicao', 'aluno', 'faltas', 'presencas'];
   readonly relatorioPresenca = signal<PainelPresenca | null>(null);
   readonly carregandoRelatorioPresenca = signal(false);
@@ -156,6 +163,9 @@ export class AgendaComponent implements OnInit {
     }
     if (indice === 3 && !this.avaliacoesCarregadas) {
       this.listarAvaliacoesPorProfessor();
+    }
+    if (indice === 3 && !this.cancelamentosCarregados) {
+      this.listarCancelamentosPorProfessor();
     }
     if (indice === 4 && !this.relatorioPresencaCarregado) {
       this.carregarRelatorioPresenca();
@@ -366,6 +376,23 @@ export class AgendaComponent implements OnInit {
       error: (erro) => {
         this.erroAvaliacoes.set(mensagemDeErro(erro, 'Não foi possível carregar as avaliações.'));
         this.carregandoAvaliacoes.set(false);
+      },
+    });
+  }
+
+  listarCancelamentosPorProfessor(): void {
+    this.carregandoCancelamentos.set(true);
+    this.erroCancelamentos.set(null);
+
+    this.agendaService.cancelamentosPorProfessor().subscribe({
+      next: (linhas) => {
+        this.cancelamentosPorProfessor.set(linhas);
+        this.carregandoCancelamentos.set(false);
+        this.cancelamentosCarregados = true;
+      },
+      error: (erro) => {
+        this.erroCancelamentos.set(mensagemDeErro(erro, 'Não foi possível carregar os cancelamentos.'));
+        this.carregandoCancelamentos.set(false);
       },
     });
   }

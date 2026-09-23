@@ -13,6 +13,7 @@ import {
   HorarioProfessor,
   HorarioProfessorForm,
   LinhaAvaliacaoProfessor,
+  LinhaCancelamentoProfessor,
   LinhaNoShowPorHorario,
   LinhaPresenca,
   Pagina,
@@ -137,6 +138,12 @@ export class AgendaService {
   avaliacoesPorProfessor(quantidadeMinima = 3): Observable<LinhaAvaliacaoProfessor[]> {
     const params = new HttpParams().set('quantidadeMinima', quantidadeMinima);
     return this.http.get<LinhaAvaliacaoProfessor[]>(`${this.urlPersonal}/avaliacoes`, { params });
+  }
+
+  /** Taxa de cancelamento em cima da hora por professor, do pior pro melhor. */
+  cancelamentosPorProfessor(dias = 90, quantidadeMinima = 4): Observable<LinhaCancelamentoProfessor[]> {
+    const params = new HttpParams().set('dias', dias).set('quantidadeMinima', quantidadeMinima);
+    return this.http.get<LinhaCancelamentoProfessor[]>(`${this.urlPersonal}/cancelamentos`, { params });
   }
 }
 
