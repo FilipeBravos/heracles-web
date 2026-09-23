@@ -646,14 +646,26 @@ export interface OcupacaoPorUnidade {
   pontos: PontoOcupacao[];
 }
 
+/** Quantas tentativas de acesso foram barradas numa unidade, por motivo, no período. */
+export interface LinhaMotivoAcessoNegado {
+  unidadeId: number;
+  unidadeNome: string;
+  motivo: MotivoAcesso;
+  quantidade: number;
+}
+
 /**
  * O painel de ocupação inteiro: uma série por hora do dia, por unidade,
  * nos últimos `dias` dias — em que horário a casa costuma lotar, pra
  * dimensionar equipamento e horário de aula em grupo.
+ *
+ * `motivosNegados` é o oposto: por unidade, só entram os motivos que de
+ * fato ocorreram no período — sem zero-fill.
  */
 export interface PainelOcupacao {
   dias: number;
   unidades: OcupacaoPorUnidade[];
+  motivosNegados: LinhaMotivoAcessoNegado[];
 }
 
 /** "8h", "19h" — o rótulo do eixo de horas. */

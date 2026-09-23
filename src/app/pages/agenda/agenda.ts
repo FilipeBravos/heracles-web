@@ -23,6 +23,7 @@ import {
   LinhaCancelamentoProfessor,
   LinhaNoShowPorHorario,
   LinhaOcupacaoPersonal,
+  LinhaSessoesPorProfessor,
   PainelPresenca,
   ResultadoInscricao,
   ROTULO_DIA_SEMANA,
@@ -126,6 +127,12 @@ export class AgendaComponent implements OnInit {
   readonly erroOcupacao = signal<string | null>(null);
   private ocupacaoCarregada = false;
 
+  readonly colunasSessoesRealizadas = ['posicao', 'professor', 'quantidade'];
+  readonly sessoesRealizadasPorProfessor = signal<LinhaSessoesPorProfessor[]>([]);
+  readonly carregandoSessoesRealizadas = signal(false);
+  readonly erroSessoesRealizadas = signal<string | null>(null);
+  private sessoesRealizadasCarregadas = false;
+
   readonly colunasFaltosos = ['posicao', 'aluno', 'faltas', 'presencas'];
   readonly relatorioPresenca = signal<PainelPresenca | null>(null);
   readonly carregandoRelatorioPresenca = signal(false);
@@ -176,6 +183,9 @@ export class AgendaComponent implements OnInit {
     }
     if (indice === 3 && !this.ocupacaoCarregada) {
       this.listarOcupacaoPorProfessor();
+    }
+    if (indice === 3 && !this.sessoesRealizadasCarregadas) {
+      this.listarSessoesRealizadasPorProfessor();
     }
     if (indice === 4 && !this.relatorioPresencaCarregado) {
       this.carregarRelatorioPresenca();
@@ -420,6 +430,23 @@ export class AgendaComponent implements OnInit {
       error: (erro) => {
         this.erroOcupacao.set(mensagemDeErro(erro, 'Não foi possível carregar a ocupação da agenda.'));
         this.carregandoOcupacao.set(false);
+      },
+    });
+  }
+
+  listarSessoesRealizadasPorProfessor(): void {
+    this.carregandoSessoesRealizadas.set(true);
+    this.erroSessoesRealizadas.set(null);
+
+    this.agendaService.sessoesRealizadasPorProfessor().subscribe({
+      next: (linhas) => {
+        this.sessoesRealizadasPorProfessor.set(linhas);
+        this.carregandoSessoesRealizadas.set(false);
+        this.sessoesRealizadasCarregadas = true;
+      },
+      error: (erro) => {
+        this.erroSessoesRealizadas.set(mensagemDeErro(erro, 'Não foi possível carregar as sessões realizadas.'));
+        this.carregandoSessoesRealizadas.set(false);
       },
     });
   }

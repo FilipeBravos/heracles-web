@@ -596,6 +596,60 @@
               </div>
             }
           </div>
+
+          <h2 class="h-rotulo mb-2 mt-6">Sessões realizadas</h2>
+          <p class="mb-4 text-[12.5px] text-tinta-3">
+            Últimos 90 dias — contagem direta de sessões de personal realizadas por professor, do mais
+            cheio pro menos cheio.
+          </p>
+
+          @if (erroSessoesRealizadas(); as mensagem) {
+            <div role="alert"
+                 class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+              <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+              </span>
+              <button type="button" (click)="listarSessoesRealizadasPorProfessor()"
+                      class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+            </div>
+          }
+
+          <div class="h-painel overflow-hidden">
+            <div class="overflow-x-auto">
+              <table mat-table [dataSource]="sessoesRealizadasPorProfessor()" class="h-tabela">
+                <ng-container matColumnDef="posicao">
+                  <th mat-header-cell *matHeaderCellDef class="!w-12">#</th>
+                  <td mat-cell *matCellDef="let l; let i = index" class="tabular-nums text-tinta-3">{{ i + 1 }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="professor">
+                  <th mat-header-cell *matHeaderCellDef>Professor</th>
+                  <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.professorNome }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="quantidade">
+                  <th mat-header-cell *matHeaderCellDef class="!text-right">Sessões realizadas</th>
+                  <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold text-tinta">
+                    {{ l.quantidadeSessoes }}
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="colunasSessoesRealizadas"></tr>
+                <tr mat-row *matRowDef="let row; columns: colunasSessoesRealizadas"></tr>
+              </table>
+            </div>
+
+            @if (carregandoSessoesRealizadas()) {
+              <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+                <mat-spinner diameter="20"></mat-spinner><span>Carregando sessões realizadas…</span>
+              </div>
+            } @else if (sessoesRealizadasPorProfessor().length === 0 && !erroSessoesRealizadas()) {
+              <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+                <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="fitness_center"></mat-icon>
+                <p class="text-[14px] font-semibold text-tinta">Nenhuma sessão realizada no período</p>
+              </div>
+            }
+          </div>
         </div>
       </mat-tab>
     }
