@@ -137,6 +137,21 @@ export interface LinhaAvaliacaoProfessor {
   quantidade: number;
 }
 
+/**
+ * A taxa de cancelamento em cima da hora de um professor, do pior pro
+ * melhor. Só entram sessões finalizadas (realizadas ou canceladas); e só
+ * cancelamentos com menos de 24h de antecedência contam como "em cima da
+ * hora" — cancelar com folga não atrapalha a agenda do jeito que cancelar
+ * de última hora atrapalha.
+ */
+export interface LinhaCancelamentoProfessor {
+  professorId: number;
+  professorNome: string;
+  totalSessoes: number;
+  cancelamentosEmCimaDaHora: number;
+  taxaCancelamento: number;
+}
+
 /** Uma vaga marcada no roster da aula — o que o professor confere pra confirmar presença. */
 export interface LinhaPresenca {
   alunoId: number;
