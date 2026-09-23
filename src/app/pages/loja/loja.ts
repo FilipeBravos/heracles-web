@@ -10,7 +10,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { LinhaReposicaoEstoque, PainelVendas, Produto, Venda } from '../../core/models';
+import { LinhaProdutoParado, LinhaReposicaoEstoque, PainelVendas, Produto, Venda } from '../../core/models';
 import { ProdutoService } from '../../core/services/produto.service';
 import { VendaService } from '../../core/services/venda.service';
 import { podeExecutar } from '../../core/acesso';
@@ -86,6 +86,12 @@ export class LojaComponent implements OnInit {
   readonly erroReposicao = signal<string | null>(null);
   private reposicaoCarregada = false;
 
+  readonly colunasParados = ['produto', 'unidade', 'ultimaVenda', 'diasParado'];
+  readonly produtosParados = signal<LinhaProdutoParado[]>([]);
+  readonly carregandoParados = signal(false);
+  readonly erroParados = signal<string | null>(null);
+  private paradosCarregados = false;
+
   ngOnInit(): void {
     this.listarProdutos();
   }
@@ -135,6 +141,9 @@ export class LojaComponent implements OnInit {
     }
     if (indice === 3 && !this.reposicaoCarregada) {
       this.carregarReposicaoEstoque();
+    }
+    if (indice === 4 && !this.paradosCarregados) {
+      this.carregarProdutosParados();
     }
   }
 
@@ -264,6 +273,23 @@ export class LojaComponent implements OnInit {
       error: (erro) => {
         this.erroReposicao.set(mensagemDeErro(erro, 'Não foi possível carregar a sugestão de reposição.'));
         this.carregandoReposicao.set(false);
+      },
+    });
+  }
+
+  carregarProdutosParados(): void {
+    this.carregandoParados.set(true);
+    this.erroParados.set(null);
+
+    this.produtoService.produtosParados().subscribe({
+      next: (linhas) => {
+        this.produtosParados.set(linhas);
+        this.carregandoParados.set(false);
+        this.paradosCarregados = true;
+      },
+      error: (erro) => {
+        this.erroParados.set(mensagemDeErro(erro, 'Não foi possível carregar os produtos parados.'));
+        this.carregandoParados.set(false);
       },
     });
   }

@@ -424,5 +424,77 @@
         }
       </div>
     </mat-tab>
+
+    <mat-tab label="Produtos parados">
+      <div class="pt-5">
+        @if (erroParados(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="carregarProdutosParados()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        } @else if (carregandoParados()) {
+          <div class="flex items-center gap-3 rounded-marca border border-linha bg-papel px-5 py-14 text-[13px] text-tinta-3">
+            <mat-spinner diameter="20"></mat-spinner><span>Carregando produtos parados…</span>
+          </div>
+        } @else {
+          <p class="mb-4 text-[12.5px] text-tinta-3">
+            O oposto da reposição: produtos ativos sem venda há pelo menos 90 dias, do mais parado pro menos.
+          </p>
+
+          <section class="h-painel overflow-hidden" aria-labelledby="titulo-parados">
+            <header class="border-b border-linha px-5 py-4">
+              <h2 id="titulo-parados" class="h-rotulo">Sem venda recente</h2>
+            </header>
+
+            <div class="overflow-x-auto">
+              <table mat-table [dataSource]="produtosParados()" class="h-tabela">
+                <ng-container matColumnDef="produto">
+                  <th mat-header-cell *matHeaderCellDef>Produto</th>
+                  <td mat-cell *matCellDef="let l">
+                    <p class="font-semibold text-tinta">{{ l.produtoNome }}</p>
+                    @if (l.marca) {
+                      <p class="text-[12px] text-tinta-3">{{ l.marca }}</p>
+                    }
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="unidade">
+                  <th mat-header-cell *matHeaderCellDef>Unidade</th>
+                  <td mat-cell *matCellDef="let l" class="text-tinta-2">{{ l.unidadeNome }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="ultimaVenda">
+                  <th mat-header-cell *matHeaderCellDef>Última venda</th>
+                  <td mat-cell *matCellDef="let l" class="text-tinta-2">
+                    {{ l.ultimaVenda ? (l.ultimaVenda | date: 'dd/MM/yyyy') : 'Nunca vendeu' }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="diasParado">
+                  <th mat-header-cell *matHeaderCellDef class="!text-right">Dias parado</th>
+                  <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold text-perigo-700">
+                    {{ l.diasParado }}
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="colunasParados"></tr>
+                <tr mat-row *matRowDef="let row; columns: colunasParados"></tr>
+              </table>
+            </div>
+
+            @if (produtosParados().length === 0) {
+              <div class="flex flex-col items-center gap-2 px-5 py-10 text-center">
+                <mat-icon class="!h-6 !w-6 !text-[24px] text-tinta-3" svgIcon="check_circle"></mat-icon>
+                <p class="text-[13px] text-tinta-3">Nenhum produto parado no momento.</p>
+              </div>
+            }
+          </section>
+        }
+      </div>
+    </mat-tab>
   </mat-tab-group>
 </div>

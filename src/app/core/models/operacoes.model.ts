@@ -38,6 +38,23 @@ export interface LinhaReposicaoEstoque {
   quantidadeSugerida: number;
 }
 
+/**
+ * O oposto da reposição de estoque: um produto ativo sem venda há pelo
+ * menos o limiar configurado, do mais parado pro menos. `ultimaVenda` é
+ * nula quando o produto nunca vendeu — nesse caso os dias contam a partir
+ * do cadastro, não de uma venda que nunca aconteceu.
+ */
+export interface LinhaProdutoParado {
+  produtoId: number;
+  produtoNome: string;
+  marca: string | null;
+  unidadeId: number;
+  unidadeNome: string;
+  /** yyyy-MM-dd, ou nula se o produto nunca vendeu. */
+  ultimaVenda: string | null;
+  diasParado: number;
+}
+
 export interface ItemVenda {
   produtoId: number;
   produtoNome: string;
