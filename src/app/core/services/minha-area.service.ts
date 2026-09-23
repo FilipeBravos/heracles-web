@@ -7,6 +7,8 @@ import {
   AtualizarMeusDadosForm,
   AvaliacaoFisica,
   ComparativoFisico,
+  ExecucaoExercicio,
+  ExecucaoExercicioForm,
   HistoricoTreino,
   MeusDados,
   MinhaMatricula,
@@ -82,5 +84,16 @@ export class MinhaAreaService {
   minhaFotoAvaliacaoFisica(avaliacaoId: number, fotoId: number): Observable<Blob> {
     return this.http.get(
       `${this.url}/avaliacoes-fisicas/${avaliacaoId}/fotos/${fotoId}`, { responseType: 'blob' });
+  }
+
+  /** Registra o que executou de fato num exercício da própria ficha atual. */
+  registrarExecucao(form: ExecucaoExercicioForm): Observable<ExecucaoExercicio> {
+    return this.http.post<ExecucaoExercicio>(`${this.url}/execucoes`, form);
+  }
+
+  /** A evolução de um exercício específico, da mais recente pra mais antiga. */
+  execucoesDoExercicio(exercicioId: number): Observable<ExecucaoExercicio[]> {
+    const params = new HttpParams().set('exercicioId', exercicioId);
+    return this.http.get<ExecucaoExercicio[]>(`${this.url}/execucoes`, { params });
   }
 }

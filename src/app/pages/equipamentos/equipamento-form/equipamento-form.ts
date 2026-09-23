@@ -50,6 +50,8 @@ export class EquipamentoFormComponent implements OnInit {
   readonly form = this.fb.nonNullable.group({
     unidadeId: [this.equipamento?.unidadeId ?? null as number | null, Validators.required],
     nome: [this.equipamento?.nome ?? '', [Validators.required, Validators.maxLength(100)]],
+    intervaloDiasManutencao: [this.equipamento?.intervaloDiasManutencao ?? null as number | null,
+      [Validators.min(1), Validators.max(3650)]],
   });
 
   ngOnInit(): void {
@@ -80,7 +82,11 @@ export class EquipamentoFormComponent implements OnInit {
     this.erro.set(null);
 
     const valores = this.form.getRawValue();
-    const payload = { unidadeId: valores.unidadeId!, nome: valores.nome.trim() };
+    const payload = {
+      unidadeId: valores.unidadeId!,
+      nome: valores.nome.trim(),
+      intervaloDiasManutencao: valores.intervaloDiasManutencao != null ? Number(valores.intervaloDiasManutencao) : null,
+    };
 
     const requisicao = this.equipamento
       ? this.equipamentoService.atualizar(this.equipamento.id, payload)

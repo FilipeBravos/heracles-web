@@ -47,6 +47,16 @@
             <mat-error>Informe o nome do equipamento.</mat-error>
           }
         </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Intervalo de manutenção preventiva (dias)</mat-label>
+          <input matInput id="intervaloDiasManutencao" type="number" inputmode="numeric" min="1" step="1"
+                 formControlName="intervaloDiasManutencao" placeholder="Ex: 90">
+          <mat-hint>Em branco, o equipamento não entra na manutenção preventiva.</mat-hint>
+          @if (form.controls.intervaloDiasManutencao.touched && form.controls.intervaloDiasManutencao.invalid) {
+            <mat-error>Informe um intervalo entre 1 e 3650 dias.</mat-error>
+          }
+        </mat-form-field>
       </form>
     }
   </mat-dialog-content>

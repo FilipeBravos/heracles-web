@@ -10,7 +10,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { ChamadoManutencao, Equipamento, PainelManutencao } from '../../core/models';
+import { ChamadoManutencao, Equipamento, LinhaManutencaoPreventiva, PainelManutencao } from '../../core/models';
 import { EquipamentoService } from '../../core/services/equipamento.service';
 import { podeExecutar } from '../../core/acesso';
 import { AuthService } from '../../core/services/auth.service';
@@ -78,14 +78,23 @@ export class EquipamentosComponent implements OnInit {
   readonly erroRelatorio = signal<string | null>(null);
   private relatorioCarregado = false;
 
+  readonly colunasManutencaoPreventiva = ['equipamento', 'unidade', 'ultimaManutencao', 'proximaManutencao', 'atraso'];
+  readonly manutencaoPreventiva = signal<LinhaManutencaoPreventiva[]>([]);
+  readonly carregandoManutencaoPreventiva = signal(false);
+  readonly erroManutencaoPreventiva = signal<string | null>(null);
+  private manutencaoPreventivaCarregada = false;
+
   ngOnInit(): void {
     this.listar();
   }
 
-  /** Só busca o relatório quando a aba é aberta pela primeira vez. */
+  /** Só busca cada aba quando ela é aberta pela primeira vez. */
   aoTrocarAba(indice: number): void {
     if (indice === 1 && !this.relatorioCarregado) {
       this.carregarRelatorio();
+    }
+    if (indice === 2 && !this.manutencaoPreventivaCarregada) {
+      this.carregarManutencaoPreventiva();
     }
   }
 
@@ -102,6 +111,24 @@ export class EquipamentosComponent implements OnInit {
       error: (erro) => {
         this.erroRelatorio.set(mensagemDeErro(erro, 'Não foi possível carregar o relatório de manutenção.'));
         this.carregandoRelatorio.set(false);
+      },
+    });
+  }
+
+  carregarManutencaoPreventiva(): void {
+    this.carregandoManutencaoPreventiva.set(true);
+    this.erroManutencaoPreventiva.set(null);
+
+    this.equipamentoService.relatorioManutencaoPreventiva().subscribe({
+      next: (linhas) => {
+        this.manutencaoPreventiva.set(linhas);
+        this.carregandoManutencaoPreventiva.set(false);
+        this.manutencaoPreventivaCarregada = true;
+      },
+      error: (erro) => {
+        this.erroManutencaoPreventiva.set(
+          mensagemDeErro(erro, 'Não foi possível carregar a manutenção preventiva.'));
+        this.carregandoManutencaoPreventiva.set(false);
       },
     });
   }

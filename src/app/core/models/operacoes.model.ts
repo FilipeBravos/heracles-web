@@ -85,11 +85,26 @@ export interface Equipamento {
   unidadeNome: string;
   nome: string;
   statusAtual: StatusEquipamento;
+  /** Nulo: sem acompanhamento preventivo configurado. */
+  intervaloDiasManutencao: number | null;
 }
 
 export interface EquipamentoForm {
   unidadeId: number;
   nome: string;
+  intervaloDiasManutencao: number | null;
+}
+
+/** Um equipamento com manutenção preventiva vencida ou vencendo. */
+export interface LinhaManutencaoPreventiva {
+  equipamentoId: number;
+  equipamentoNome: string;
+  unidadeId: number;
+  unidadeNome: string;
+  intervaloDiasManutencao: number;
+  ultimaManutencao: string;
+  proximaManutencaoDevida: string;
+  diasAtraso: number;
 }
 
 export interface ChamadoManutencao {
