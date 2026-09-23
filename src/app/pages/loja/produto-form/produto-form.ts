@@ -56,6 +56,8 @@ export class ProdutoFormComponent implements OnInit {
     // Só no cadastro: depois o saldo se move por entrada e por venda.
     quantidadeEstoque: [this.produto?.quantidadeEstoque ?? 0,
       [Validators.required, Validators.min(0)]],
+    estoqueMinimo: [this.produto?.estoqueMinimo ?? 5,
+      [Validators.required, Validators.min(0)]],
   });
 
   ngOnInit(): void {
@@ -96,6 +98,7 @@ export class ProdutoFormComponent implements OnInit {
       marca: valores.marca.trim() || null,
       precoVenda: Number(valores.precoVenda),
       quantidadeEstoque: Number(valores.quantidadeEstoque),
+      estoqueMinimo: Number(valores.estoqueMinimo),
     };
 
     const requisicao = this.produto

@@ -11,6 +11,8 @@ export interface Produto {
   marca: string | null;
   precoVenda: number;
   quantidadeEstoque: number;
+  /** Abaixo disso, o produto entra na sugestão de reposição. */
+  estoqueMinimo: number;
   /** Produto fora de linha continua no histórico de vendas, mas não vende. */
   ativo: boolean;
 }
@@ -21,6 +23,19 @@ export interface ProdutoForm {
   marca: string | null;
   precoVenda: number;
   quantidadeEstoque: number;
+  estoqueMinimo: number;
+}
+
+/** Uma linha da sugestão de reposição: produto abaixo do próprio estoque mínimo, e quanto falta pra completar. */
+export interface LinhaReposicaoEstoque {
+  produtoId: number;
+  produtoNome: string;
+  marca: string | null;
+  unidadeId: number;
+  unidadeNome: string;
+  quantidadeEstoque: number;
+  estoqueMinimo: number;
+  quantidadeSugerida: number;
 }
 
 export interface ItemVenda {

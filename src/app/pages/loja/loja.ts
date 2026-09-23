@@ -10,7 +10,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { PainelVendas, Produto, Venda } from '../../core/models';
+import { LinhaReposicaoEstoque, PainelVendas, Produto, Venda } from '../../core/models';
 import { ProdutoService } from '../../core/services/produto.service';
 import { VendaService } from '../../core/services/venda.service';
 import { podeExecutar } from '../../core/acesso';
@@ -19,9 +19,6 @@ import { mensagemDeErro } from '../../core/services/erro-api';
 import { PaginadorIntl } from '../../core/paginador-intl';
 import { ProdutoFormComponent } from './produto-form/produto-form';
 import { PdvDialogComponent } from './pdv-dialog/pdv-dialog';
-
-/** Estoque igual ou abaixo disso aparece destacado na lista. */
-const LIMITE_ESTOQUE_BAIXO = 5;
 
 @Component({
   selector: 'app-loja',
@@ -83,6 +80,12 @@ export class LojaComponent implements OnInit {
   readonly erroRelatorio = signal<string | null>(null);
   private relatorioCarregado = false;
 
+  readonly colunasReposicao = ['produto', 'unidade', 'estoqueAtual', 'estoqueMinimo', 'quantidadeSugerida'];
+  readonly reposicaoEstoque = signal<LinhaReposicaoEstoque[]>([]);
+  readonly carregandoReposicao = signal(false);
+  readonly erroReposicao = signal<string | null>(null);
+  private reposicaoCarregada = false;
+
   ngOnInit(): void {
     this.listarProdutos();
   }
@@ -129,6 +132,9 @@ export class LojaComponent implements OnInit {
     }
     if (indice === 2 && !this.relatorioCarregado) {
       this.carregarRelatorio();
+    }
+    if (indice === 3 && !this.reposicaoCarregada) {
+      this.carregarReposicaoEstoque();
     }
   }
 
@@ -213,7 +219,7 @@ export class LojaComponent implements OnInit {
   }
 
   estoqueBaixo(produto: Produto): boolean {
-    return produto.ativo && produto.quantidadeEstoque <= LIMITE_ESTOQUE_BAIXO;
+    return produto.ativo && produto.quantidadeEstoque < produto.estoqueMinimo;
   }
 
   resumoItens(venda: Venda): string {
@@ -241,6 +247,23 @@ export class LojaComponent implements OnInit {
       error: (erro) => {
         this.erroRelatorio.set(mensagemDeErro(erro, 'Não foi possível carregar o relatório de vendas.'));
         this.carregandoRelatorio.set(false);
+      },
+    });
+  }
+
+  carregarReposicaoEstoque(): void {
+    this.carregandoReposicao.set(true);
+    this.erroReposicao.set(null);
+
+    this.produtoService.reposicaoEstoque().subscribe({
+      next: (linhas) => {
+        this.reposicaoEstoque.set(linhas);
+        this.carregandoReposicao.set(false);
+        this.reposicaoCarregada = true;
+      },
+      error: (erro) => {
+        this.erroReposicao.set(mensagemDeErro(erro, 'Não foi possível carregar a sugestão de reposição.'));
+        this.carregandoReposicao.set(false);
       },
     });
   }
