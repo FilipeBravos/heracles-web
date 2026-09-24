@@ -123,6 +123,21 @@ export interface ResumoReavaliacaoVencida {
   total: number;
 }
 
+/**
+ * Evolução física média por unidade: a média do delta (última avaliação
+ * menos a primeira, no período) entre alunos com pelo menos duas
+ * avaliações. Um delta nulo significa que nenhum aluno tinha aquela
+ * medida nas duas pontas — não zero. Um aluno de plano de rede conta a
+ * evolução em cada unidade que o plano cobre.
+ */
+export interface LinhaEvolucaoFisicaPorUnidade {
+  unidadeNome: string;
+  quantidadeAlunos: number;
+  deltaPesoMedio: number | null;
+  deltaPercentualGorduraMedio: number | null;
+  deltaImcMedio: number | null;
+}
+
 /** Uma linha do painel de aniversariantes do mês. */
 export interface Aniversariante {
   alunoId: number;

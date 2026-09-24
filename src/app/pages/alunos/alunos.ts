@@ -10,7 +10,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DatePipe } from '@angular/common';
 
-import { LinhaReavaliacaoVencida, ResumoReavaliacaoVencida, Usuario } from '../../core/models';
+import { LinhaEvolucaoFisicaPorUnidade, LinhaReavaliacaoVencida, ResumoReavaliacaoVencida, Usuario } from '../../core/models';
 import { UsuarioService } from '../../core/services/usuario.service';
 import { podeExecutar } from '../../core/acesso';
 import { AuthService } from '../../core/services/auth.service';
@@ -89,14 +89,23 @@ export class AlunosComponent implements OnInit, OnDestroy {
   readonly paginaReavaliacaoVencida = signal(0);
   private reavaliacaoVencidaCarregada = false;
 
+  readonly colunasEvolucaoFisica = ['unidade', 'quantidade', 'deltaPeso', 'deltaGordura', 'deltaImc'];
+  readonly evolucaoFisica = signal<LinhaEvolucaoFisicaPorUnidade[]>([]);
+  readonly carregandoEvolucaoFisica = signal(false);
+  readonly erroEvolucaoFisica = signal<string | null>(null);
+  private evolucaoFisicaCarregada = false;
+
   ngOnInit(): void {
     this.listar();
   }
 
-  /** Só busca o alerta de reavaliação vencida quando a aba é aberta pela primeira vez. */
+  /** Só busca o alerta/relatório quando a aba correspondente é aberta pela primeira vez. */
   aoTrocarAba(indice: number): void {
     if (indice === 1 && !this.reavaliacaoVencidaCarregada) {
       this.listarReavaliacaoVencida();
+    }
+    if (indice === 2 && !this.evolucaoFisicaCarregada) {
+      this.carregarEvolucaoFisica();
     }
   }
 
@@ -291,5 +300,33 @@ export class AlunosComponent implements OnInit, OnDestroy {
   mudarPaginaReavaliacaoVencida(evento: PageEvent): void {
     this.paginaReavaliacaoVencida.set(evento.pageIndex);
     this.listarReavaliacaoVencida();
+  }
+
+  // ---------------------------------------------------------------
+  // Evolução física média por unidade
+  // ---------------------------------------------------------------
+
+  carregarEvolucaoFisica(): void {
+    this.carregandoEvolucaoFisica.set(true);
+    this.erroEvolucaoFisica.set(null);
+
+    this.usuarioService.evolucaoFisicaMediaPorUnidade().subscribe({
+      next: (linhas) => {
+        this.evolucaoFisica.set(linhas);
+        this.carregandoEvolucaoFisica.set(false);
+        this.evolucaoFisicaCarregada = true;
+      },
+      error: (erro) => {
+        this.erroEvolucaoFisica.set(mensagemDeErro(erro, 'Não foi possível carregar a evolução física.'));
+        this.carregandoEvolucaoFisica.set(false);
+      },
+    });
+  }
+
+  /** "+2,5 kg" ou "-1,3 kg" — o sinal fala mais rápido que a cor aqui, e funciona em texto puro. */
+  formatarDelta(valor: number | null, sufixo = ''): string {
+    if (valor === null) return '—';
+    const sinal = valor > 0 ? '+' : '';
+    return `${sinal}${valor}${sufixo}`.replace('.', ',');
   }
 }
