@@ -329,6 +329,55 @@
               <p class="px-5 py-10 text-center text-[12.5px] text-tinta-3">Nenhuma unidade com assinatura ativa.</p>
             }
           </section>
+
+          <!-- ============ Detalhamento por plano ============ -->
+          <section class="mt-4 rounded-marca border border-linha bg-papel" aria-labelledby="titulo-financeiro-plano">
+            <header class="border-b border-linha px-5 py-4">
+              <h2 id="titulo-financeiro-plano" class="h-rotulo">Por plano</h2>
+              <p class="mt-1 text-[12px] text-tinta-3">
+                Só plano em venda entra — um plano fora de linha é um capítulo fechado do catálogo, mesmo que
+                ainda tenha assinatura ativa rodando nele.
+              </p>
+            </header>
+
+            @if (f.porPlano.length) {
+              <div class="overflow-x-auto">
+                <table class="w-full text-[12.5px]">
+                  <thead>
+                    <tr class="border-b border-linha">
+                      <th scope="col" class="px-5 py-2 text-left font-semibold text-tinta-3">Plano</th>
+                      <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">MRR</th>
+                      <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Ativas</th>
+                      <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Ticket médio</th>
+                      <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Inadimplência</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (linha of f.porPlano; track linha.planoId) {
+                      <tr class="border-b border-linha last:border-0">
+                        <td class="px-5 py-2 text-tinta">{{ linha.planoNome }}</td>
+                        <td class="px-5 py-2 text-right tabular-nums font-semibold text-tinta">
+                          {{ linha.mrr | currency: 'BRL' }}
+                        </td>
+                        <td class="px-5 py-2 text-right tabular-nums text-tinta-2">{{ linha.assinaturasAtivas }}</td>
+                        <td class="px-5 py-2 text-right tabular-nums text-tinta-2">
+                          {{ linha.ticketMedio | currency: 'BRL' }}
+                        </td>
+                        <td class="px-5 py-2 text-right tabular-nums"
+                            [class.font-semibold]="linha.inadimplenciaEmReais > 0"
+                            [class.text-perigo-700]="linha.inadimplenciaEmReais > 0"
+                            [class.text-tinta-2]="linha.inadimplenciaEmReais === 0">
+                          {{ linha.inadimplenciaEmReais | currency: 'BRL' }}
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <p class="px-5 py-10 text-center text-[12.5px] text-tinta-3">Nenhum plano em venda com assinatura ativa.</p>
+            }
+          </section>
         }
       }
 
