@@ -228,3 +228,17 @@ export interface LinhaPresencaPorProfessor {
   presencas: number;
   taxaPresenca: number;
 }
+
+/**
+ * Um bloco de 30 minutos, por unidade e dia da semana, sem nenhum
+ * professor cobrindo — dentro do horário comercial fixo (06h-22h). Lacuna
+ * bruta da agenda, diferente da taxa de ocupação, que só olha professores
+ * que já têm horário cadastrado.
+ */
+export interface LinhaCoberturaHorario {
+  unidadeId: number;
+  unidadeNome: string;
+  diaSemana: DiaSemana;
+  horaInicio: string;
+  horaFim: string;
+}

@@ -21,6 +21,7 @@ import {
   HorarioProfessor,
   LinhaAvaliacaoProfessor,
   LinhaCancelamentoProfessor,
+  LinhaCoberturaHorario,
   LinhaNoShowPorHorario,
   LinhaOcupacaoPersonal,
   LinhaPresencaPorProfessor,
@@ -134,6 +135,12 @@ export class AgendaComponent implements OnInit {
   readonly erroSessoesRealizadas = signal<string | null>(null);
   private sessoesRealizadasCarregadas = false;
 
+  readonly colunasCobertura = ['unidade', 'diaHorario'];
+  readonly coberturaHorario = signal<LinhaCoberturaHorario[]>([]);
+  readonly carregandoCobertura = signal(false);
+  readonly erroCobertura = signal<string | null>(null);
+  private coberturaCarregada = false;
+
   readonly colunasFaltosos = ['posicao', 'aluno', 'faltas', 'presencas'];
   readonly relatorioPresenca = signal<PainelPresenca | null>(null);
   readonly carregandoRelatorioPresenca = signal(false);
@@ -193,6 +200,9 @@ export class AgendaComponent implements OnInit {
     }
     if (indice === 3 && !this.sessoesRealizadasCarregadas) {
       this.listarSessoesRealizadasPorProfessor();
+    }
+    if (indice === 3 && !this.coberturaCarregada) {
+      this.carregarCoberturaHorario();
     }
     if (indice === 4 && !this.relatorioPresencaCarregado) {
       this.carregarRelatorioPresenca();
@@ -459,6 +469,28 @@ export class AgendaComponent implements OnInit {
         this.carregandoSessoesRealizadas.set(false);
       },
     });
+  }
+
+  carregarCoberturaHorario(): void {
+    this.carregandoCobertura.set(true);
+    this.erroCobertura.set(null);
+
+    this.agendaService.coberturaHorario().subscribe({
+      next: (linhas) => {
+        this.coberturaHorario.set(linhas);
+        this.carregandoCobertura.set(false);
+        this.coberturaCarregada = true;
+      },
+      error: (erro) => {
+        this.erroCobertura.set(mensagemDeErro(erro, 'Não foi possível carregar a cobertura de horário.'));
+        this.carregandoCobertura.set(false);
+      },
+    });
+  }
+
+  /** "Terça 06:00–06:30" — dia da semana traduzido, junto do bloco de meia hora sem cobertura. */
+  diaEHorarioCobertura(linha: LinhaCoberturaHorario): string {
+    return `${ROTULO_DIA_SEMANA[linha.diaSemana]} ${linha.horaInicio.slice(0, 5)}–${linha.horaFim.slice(0, 5)}`;
   }
 
   // ---------------------------------------------------------------

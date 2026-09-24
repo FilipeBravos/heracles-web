@@ -12,6 +12,7 @@ import {
   ComparativoFisico,
   Contrato,
   EdicaoUsuario,
+  LinhaEvolucaoFisicaPorUnidade,
   LinhaReavaliacaoVencida,
   NovoUsuario,
   Pagina,
@@ -109,5 +110,11 @@ export class UsuarioService {
     const params = new HttpParams()
       .set('page', pagina).set('size', tamanho).set('diasSemReavaliacao', diasSemReavaliacao);
     return this.http.get<Pagina<LinhaReavaliacaoVencida>>(`${this.url}/reavaliacao-vencida`, { params });
+  }
+
+  /** Evolução física média por unidade: média do delta de peso, %gordura e IMC entre alunos com pelo menos duas avaliações no período. */
+  evolucaoFisicaMediaPorUnidade(dias = 365): Observable<LinhaEvolucaoFisicaPorUnidade[]> {
+    const params = new HttpParams().set('dias', dias);
+    return this.http.get<LinhaEvolucaoFisicaPorUnidade[]>(`${this.url}/relatorio/evolucao-fisica`, { params });
   }
 }
