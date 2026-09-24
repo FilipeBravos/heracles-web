@@ -83,6 +83,7 @@ export class LojaComponent implements OnInit {
   readonly colunasMaisVendidos = ['posicao', 'produto', 'quantidade', 'receita'];
   readonly colunasPorUnidade = ['unidade', 'faturamento', 'vendas', 'ticketMedio'];
   readonly colunasPorMetodoPagamento = ['unidade', 'pagamento', 'faturamento', 'vendas', 'ticketMedio'];
+  readonly colunasPorTipoCliente = ['tipo', 'faturamento', 'vendas', 'ticketMedio'];
   readonly relatorio = signal<PainelVendas | null>(null);
   readonly carregandoRelatorio = signal(false);
   readonly erroRelatorio = signal<string | null>(null);
