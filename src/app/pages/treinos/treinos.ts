@@ -10,7 +10,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { LinhaAlunoSemFicha, ResumoAlunosSemFicha, Treino } from '../../core/models';
+import { LinhaAdesaoTreino, LinhaAlunoSemFicha, ResumoAlunosSemFicha, Treino } from '../../core/models';
 import { TreinoService } from '../../core/services/treino.service';
 import { mensagemDeErro } from '../../core/services/erro-api';
 import { PaginadorIntl } from '../../core/paginador-intl';
@@ -59,14 +59,23 @@ export class TreinosComponent implements OnInit {
   readonly paginaSemFicha = signal(0);
   private semFichaCarregada = false;
 
+  readonly colunasAdesao = ['posicao', 'aluno', 'execucoes', 'taxa'];
+  readonly adesaoTreino = signal<LinhaAdesaoTreino[]>([]);
+  readonly carregandoAdesao = signal(false);
+  readonly erroAdesao = signal<string | null>(null);
+  private adesaoCarregada = false;
+
   ngOnInit(): void {
     this.listar();
   }
 
-  /** Só busca o alerta de alunos sem ficha quando a aba é aberta pela primeira vez. */
+  /** Só busca o alerta/relatório quando a aba correspondente é aberta pela primeira vez. */
   aoTrocarAba(indice: number): void {
     if (indice === 1 && !this.semFichaCarregada) {
       this.listarAlunosSemFicha();
+    }
+    if (indice === 2 && !this.adesaoCarregada) {
+      this.listarAdesaoTreino();
     }
   }
 
@@ -178,5 +187,26 @@ export class TreinosComponent implements OnInit {
   mudarPaginaSemFicha(evento: PageEvent): void {
     this.paginaSemFicha.set(evento.pageIndex);
     this.listarAlunosSemFicha();
+  }
+
+  // ---------------------------------------------------------------
+  // Adesão ao treino
+  // ---------------------------------------------------------------
+
+  listarAdesaoTreino(): void {
+    this.carregandoAdesao.set(true);
+    this.erroAdesao.set(null);
+
+    this.treinoService.relatorioAdesao().subscribe({
+      next: (linhas) => {
+        this.adesaoTreino.set(linhas);
+        this.carregandoAdesao.set(false);
+        this.adesaoCarregada = true;
+      },
+      error: (erro) => {
+        this.erroAdesao.set(mensagemDeErro(erro, 'Não foi possível carregar a adesão ao treino.'));
+        this.carregandoAdesao.set(false);
+      },
+    });
   }
 }

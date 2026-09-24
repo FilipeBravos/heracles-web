@@ -610,6 +610,16 @@ export interface LinhaFinanceiro {
   inadimplenciaEmReais: number;
 }
 
+/** Mesmo formato de LinhaFinanceiro, mas por plano — só plano em venda entra. */
+export interface LinhaFinanceiroPorPlano {
+  planoId: number;
+  planoNome: string;
+  mrr: number;
+  assinaturasAtivas: number;
+  ticketMedio: number;
+  inadimplenciaEmReais: number;
+}
+
 /**
  * O painel financeiro: o dinheiro, onde o painel de retenção mede alunos.
  *
@@ -631,6 +641,8 @@ export interface PainelFinanceiro {
   inadimplenciaEmReais: number;
   projecaoDoMes: number;
   porUnidade: LinhaFinanceiro[];
+  /** Só plano em venda entra — um plano fora de linha é um capítulo fechado do catálogo. */
+  porPlano: LinhaFinanceiroPorPlano[];
 }
 
 /**
