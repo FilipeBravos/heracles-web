@@ -3,7 +3,15 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { LinhaAdesaoTreino, LinhaAlunoSemFicha, Pagina, ResumoAlunosSemFicha, Treino, TreinoForm } from '../models';
+import {
+  LinhaAdesaoTreino,
+  LinhaAlunoSemFicha,
+  LinhaPermanenciaPorNivel,
+  Pagina,
+  ResumoAlunosSemFicha,
+  Treino,
+  TreinoForm,
+} from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class TreinoService {
@@ -48,5 +56,11 @@ export class TreinoService {
   relatorioAdesao(dias = 90, quantidadeMinima = 4): Observable<LinhaAdesaoTreino[]> {
     const params = new HttpParams().set('dias', dias).set('quantidadeMinima', quantidadeMinima);
     return this.http.get<LinhaAdesaoTreino[]>(`${this.urlExecucoes}/relatorio/adesao`, { params });
+  }
+
+  /** Tempo médio de permanência numa ficha antes da troca, por nível, do mais tempo pro menos. */
+  relatorioPermanencia(dias = 365): Observable<LinhaPermanenciaPorNivel[]> {
+    const params = new HttpParams().set('dias', dias);
+    return this.http.get<LinhaPermanenciaPorNivel[]>(`${this.url}/relatorio/permanencia`, { params });
   }
 }
