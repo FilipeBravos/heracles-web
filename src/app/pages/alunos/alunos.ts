@@ -10,7 +10,13 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DatePipe } from '@angular/common';
 
-import { LinhaEvolucaoFisicaPorUnidade, LinhaReavaliacaoVencida, ResumoReavaliacaoVencida, Usuario } from '../../core/models';
+import {
+  LinhaCoberturaAnamnesePorUnidade,
+  LinhaEvolucaoFisicaPorUnidade,
+  LinhaReavaliacaoVencida,
+  ResumoReavaliacaoVencida,
+  Usuario,
+} from '../../core/models';
 import { UsuarioService } from '../../core/services/usuario.service';
 import { podeExecutar } from '../../core/acesso';
 import { AuthService } from '../../core/services/auth.service';
@@ -95,6 +101,12 @@ export class AlunosComponent implements OnInit, OnDestroy {
   readonly erroEvolucaoFisica = signal<string | null>(null);
   private evolucaoFisicaCarregada = false;
 
+  readonly colunasCoberturaAnamnese = ['unidade', 'alunos', 'comAnamnese', 'percentual'];
+  readonly coberturaAnamnese = signal<LinhaCoberturaAnamnesePorUnidade[]>([]);
+  readonly carregandoCoberturaAnamnese = signal(false);
+  readonly erroCoberturaAnamnese = signal<string | null>(null);
+  private coberturaAnamneseCarregada = false;
+
   ngOnInit(): void {
     this.listar();
   }
@@ -106,6 +118,9 @@ export class AlunosComponent implements OnInit, OnDestroy {
     }
     if (indice === 2 && !this.evolucaoFisicaCarregada) {
       this.carregarEvolucaoFisica();
+    }
+    if (indice === 3 && !this.coberturaAnamneseCarregada) {
+      this.carregarCoberturaAnamnese();
     }
   }
 
@@ -328,5 +343,27 @@ export class AlunosComponent implements OnInit, OnDestroy {
     if (valor === null) return '—';
     const sinal = valor > 0 ? '+' : '';
     return `${sinal}${valor}${sufixo}`.replace('.', ',');
+  }
+
+  // ---------------------------------------------------------------
+  // Cobertura de anamnese por unidade
+  // ---------------------------------------------------------------
+
+  carregarCoberturaAnamnese(): void {
+    this.carregandoCoberturaAnamnese.set(true);
+    this.erroCoberturaAnamnese.set(null);
+
+    this.usuarioService.coberturaAnamnesePorUnidade().subscribe({
+      next: (linhas) => {
+        this.coberturaAnamnese.set(linhas);
+        this.carregandoCoberturaAnamnese.set(false);
+        this.coberturaAnamneseCarregada = true;
+      },
+      error: (erro) => {
+        this.erroCoberturaAnamnese.set(
+          mensagemDeErro(erro, 'Não foi possível carregar a cobertura de anamnese.'));
+        this.carregandoCoberturaAnamnese.set(false);
+      },
+    });
   }
 }

@@ -313,6 +313,27 @@ export interface Lembrete {
   dataEnvio: string;
 }
 
+/** "WhatsApp" ou "E-mail" — o rótulo que a tela mostra, não o valor cru do enum. */
+export const ROTULO_CANAL_LEMBRETE: Readonly<Record<CanalLembrete, string>> = {
+  WHATSAPP: 'WhatsApp',
+  EMAIL: 'E-mail',
+};
+
+/**
+ * Efetividade de um estágio/canal de lembrete de cobrança: quantos foram
+ * enviados no período e quantos converteram em pagamento, do pior pro
+ * melhor. `diasMediosParaConversao` é nulo quando nenhum lembrete deste
+ * grupo converteu — não há média para tirar de zero conversões.
+ */
+export interface LinhaEfetividadeLembrete {
+  estagio: EstagioLembrete;
+  canal: CanalLembrete;
+  totalEnviados: number;
+  totalConvertidos: number;
+  taxaConversao: number;
+  diasMediosParaConversao: number | null;
+}
+
 /** Uma linha do ranking de indicações: quantas matrículas o aluno trouxe. */
 export interface LinhaIndicacao {
   id: number;

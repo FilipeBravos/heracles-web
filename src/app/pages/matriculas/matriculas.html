@@ -750,5 +750,87 @@
         </div>
       </div>
     </mat-tab>
+
+    <!-- ============ Efetividade dos lembretes de cobrança ============ -->
+    <mat-tab label="Efetividade dos lembretes">
+      <div class="pt-5">
+        <p class="mb-4 text-[12.5px] text-tinta-3">
+          Últimos 90 dias — por estágio e canal, quantos lembretes de cobrança foram enviados e quantos
+          converteram em pagamento, do pior pro melhor. A conversão é atribuída à cobrança da assinatura com
+          vencimento mais próximo do envio, já que o lembrete não guarda a cobrança exata que originou o disparo.
+        </p>
+
+        @if (erroEfetividadeLembretes(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="listarEfetividadeLembretes()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        }
+
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="efetividadeLembretes()" class="h-tabela">
+              <ng-container matColumnDef="estagio">
+                <th mat-header-cell *matHeaderCellDef>Estágio</th>
+                <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ rotuloEstagioLembrete(l) }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="canal">
+                <th mat-header-cell *matHeaderCellDef>Canal</th>
+                <td mat-cell *matCellDef="let l" class="text-tinta-2">{{ rotuloCanalDaLinha(l) }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="enviados">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Enviados</th>
+                <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                  {{ l.totalEnviados }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="convertidos">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Convertidos</th>
+                <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                  {{ l.totalConvertidos }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="taxa">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Taxa de conversão</th>
+                <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold"
+                    [class.text-perigo-700]="l.taxaConversao < 50"
+                    [class.text-tinta]="l.taxaConversao >= 50">
+                  {{ l.taxaConversao.toFixed(1).replace('.', ',') }}%
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="diasMedios">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Dias até pagar</th>
+                <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                  {{ diasMediosFormatado(l) }}
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasEfetividadeLembretes"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasEfetividadeLembretes"></tr>
+            </table>
+          </div>
+
+          @if (carregandoEfetividadeLembretes()) {
+            <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando efetividade dos lembretes…</span>
+            </div>
+          } @else if (efetividadeLembretes().length === 0 && !erroEfetividadeLembretes()) {
+            <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="notifications"></mat-icon>
+              <p class="text-[14px] font-semibold text-tinta">Nenhum lembrete enviado no período</p>
+            </div>
+          }
+        </div>
+      </div>
+    </mat-tab>
   </mat-tab-group>
 </div>
