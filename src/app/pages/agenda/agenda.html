@@ -650,6 +650,58 @@
               </div>
             }
           </div>
+
+          <h2 class="h-rotulo mb-2 mt-6">Cobertura de horário</h2>
+          <p class="mb-4 text-[12.5px] text-tinta-3">
+            Blocos de 30 minutos, por unidade, sem nenhum professor cobrindo — dentro do horário comercial
+            (06h às 22h). Diferente da ocupação acima, que só olha quem já tem horário cadastrado.
+          </p>
+
+          @if (erroCobertura(); as mensagem) {
+            <div role="alert"
+                 class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+              <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+              </span>
+              <button type="button" (click)="carregarCoberturaHorario()"
+                      class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+            </div>
+          }
+
+          <div class="h-painel overflow-hidden">
+            <div class="overflow-x-auto">
+              <table mat-table [dataSource]="coberturaHorario()" class="h-tabela">
+                <ng-container matColumnDef="unidade">
+                  <th mat-header-cell *matHeaderCellDef>Unidade</th>
+                  <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.unidadeNome }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="diaHorario">
+                  <th mat-header-cell *matHeaderCellDef>Sem cobertura</th>
+                  <td mat-cell *matCellDef="let l" class="whitespace-nowrap tabular-nums text-tinta-2">
+                    {{ diaEHorarioCobertura(l) }}
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="colunasCobertura"></tr>
+                <tr mat-row *matRowDef="let row; columns: colunasCobertura"></tr>
+              </table>
+            </div>
+
+            @if (carregandoCobertura()) {
+              <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+                <mat-spinner diameter="20"></mat-spinner><span>Carregando cobertura…</span>
+              </div>
+            } @else if (coberturaHorario().length === 0 && !erroCobertura()) {
+              <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+                <mat-icon class="!h-7 !w-7 !text-[28px] text-ok-700" svgIcon="check_circle"></mat-icon>
+                <p class="text-[14px] font-semibold text-tinta">Horário comercial totalmente coberto</p>
+                <p class="max-w-sm text-[13px] text-tinta-3">
+                  Toda unidade tem pelo menos um professor disponível em qualquer bloco de 06h às 22h.
+                </p>
+              </div>
+            }
+          </div>
         </div>
       </mat-tab>
     }

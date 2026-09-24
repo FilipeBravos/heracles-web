@@ -14,6 +14,7 @@ import {
   HorarioProfessorForm,
   LinhaAvaliacaoProfessor,
   LinhaCancelamentoProfessor,
+  LinhaCoberturaHorario,
   LinhaNoShowPorHorario,
   LinhaOcupacaoPersonal,
   LinhaPresenca,
@@ -165,6 +166,11 @@ export class AgendaService {
   sessoesRealizadasPorProfessor(dias = 90): Observable<LinhaSessoesPorProfessor[]> {
     const params = new HttpParams().set('dias', dias);
     return this.http.get<LinhaSessoesPorProfessor[]>(`${this.urlPersonal}/sessoes-realizadas`, { params });
+  }
+
+  /** Blocos de 30 minutos, por unidade e dia da semana, sem nenhum professor cobrindo (06h-22h). */
+  coberturaHorario(): Observable<LinhaCoberturaHorario[]> {
+    return this.http.get<LinhaCoberturaHorario[]>(`${this.urlPersonal}/cobertura-horario`);
   }
 }
 
