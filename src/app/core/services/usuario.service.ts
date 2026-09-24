@@ -12,6 +12,7 @@ import {
   ComparativoFisico,
   Contrato,
   EdicaoUsuario,
+  LinhaCoberturaAnamnesePorUnidade,
   LinhaEvolucaoFisicaPorUnidade,
   LinhaReavaliacaoVencida,
   NovoUsuario,
@@ -116,5 +117,10 @@ export class UsuarioService {
   evolucaoFisicaMediaPorUnidade(dias = 365): Observable<LinhaEvolucaoFisicaPorUnidade[]> {
     const params = new HttpParams().set('dias', dias);
     return this.http.get<LinhaEvolucaoFisicaPorUnidade[]>(`${this.url}/relatorio/evolucao-fisica`, { params });
+  }
+
+  /** Cobertura de anamnese por unidade: fração de alunos com matrícula vigente que preencheram, do pior pro melhor. */
+  coberturaAnamnesePorUnidade(): Observable<LinhaCoberturaAnamnesePorUnidade[]> {
+    return this.http.get<LinhaCoberturaAnamnesePorUnidade[]>(`${this.url}/relatorio/cobertura-anamnese`);
   }
 }

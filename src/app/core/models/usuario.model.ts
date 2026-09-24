@@ -138,6 +138,19 @@ export interface LinhaEvolucaoFisicaPorUnidade {
   deltaImcMedio: number | null;
 }
 
+/**
+ * Cobertura de anamnese por unidade: entre alunos com matrícula vigente,
+ * quantos já preencheram a anamnese, em percentual — do pior pro melhor.
+ * Um aluno de plano de rede conta uma vez em cada unidade que o plano
+ * cobre, mesmo espalhamento de LinhaEvolucaoFisicaPorUnidade.
+ */
+export interface LinhaCoberturaAnamnesePorUnidade {
+  unidadeNome: string;
+  quantidadeAlunos: number;
+  quantidadeComAnamnese: number;
+  percentualCobertura: number;
+}
+
 /** Uma linha do painel de aniversariantes do mês. */
 export interface Aniversariante {
   alunoId: number;
