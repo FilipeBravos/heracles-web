@@ -105,6 +105,21 @@ export interface ResumoAlunosSemFicha {
 }
 
 /**
+ * Adesão ao treino de um aluno no período: volume prescrito (séries vezes
+ * repetições mínimas do exercício) contra volume realizado, do pior pro
+ * melhor. Só entram execuções cujo exercício ainda existe na ficha de
+ * origem — sem a prescrição vigente, não há volume prescrito pra comparar.
+ */
+export interface LinhaAdesaoTreino {
+  alunoId: number;
+  alunoNome: string;
+  quantidadeExecucoes: number;
+  volumePrescritoTotal: number;
+  volumeRealizadoTotal: number;
+  taxaAdesao: number;
+}
+
+/**
  * Uma ficha que o aluno já treinou e não treina mais.
  *
  * Nome, foco e nível vêm do registro histórico, não da ficha viva: ela

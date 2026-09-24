@@ -193,5 +193,71 @@
         </div>
       </div>
     </mat-tab>
+
+    <mat-tab label="Adesão ao treino">
+      <div class="pt-5">
+        <p class="mb-4 text-[12.5px] text-tinta-3">
+          Últimos 90 dias — volume prescrito (séries vezes repetições mínimas) contra volume realizado, por
+          aluno, do pior pro melhor. Só entra quem já tem pelo menos 4 execuções registradas.
+        </p>
+
+        @if (erroAdesao(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="listarAdesaoTreino()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        }
+
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="adesaoTreino()" class="h-tabela">
+              <ng-container matColumnDef="posicao">
+                <th mat-header-cell *matHeaderCellDef class="!w-12">#</th>
+                <td mat-cell *matCellDef="let l; let i = index" class="tabular-nums text-tinta-3">{{ i + 1 }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="aluno">
+                <th mat-header-cell *matHeaderCellDef>Aluno</th>
+                <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.alunoNome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="execucoes">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Execuções</th>
+                <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                  {{ l.quantidadeExecucoes }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="taxa">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Adesão</th>
+                <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold"
+                    [class.text-perigo-700]="l.taxaAdesao < 80"
+                    [class.text-tinta]="l.taxaAdesao >= 80">
+                  {{ l.taxaAdesao.toFixed(1).replace('.', ',') }}%
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasAdesao"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasAdesao"></tr>
+            </table>
+          </div>
+
+          @if (carregandoAdesao()) {
+            <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando adesão…</span>
+            </div>
+          } @else if (adesaoTreino().length === 0 && !erroAdesao()) {
+            <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="fitness_center"></mat-icon>
+              <p class="text-[14px] font-semibold text-tinta">Nenhum aluno com execuções suficientes ainda</p>
+            </div>
+          }
+        </div>
+      </div>
+    </mat-tab>
   </mat-tab-group>
 </div>
