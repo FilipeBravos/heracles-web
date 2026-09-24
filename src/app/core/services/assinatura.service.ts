@@ -15,6 +15,7 @@ import {
   LinhaAlunoInativo,
   LinhaAtrasoPagamento,
   LinhaComissaoIndicacao,
+  LinhaEfetividadeLembrete,
   LinhaExecucaoRenovacaoAutomatica,
   LinhaInadimplencia,
   LinhaIndicacao,
@@ -191,5 +192,11 @@ export class AssinaturaService {
   atrasoPagamento(dias = 90): Observable<LinhaAtrasoPagamento[]> {
     const params = new HttpParams().set('dias', dias);
     return this.http.get<LinhaAtrasoPagamento[]>(`${this.url}/atraso-pagamento`, { params });
+  }
+
+  /** Efetividade dos lembretes de cobrança: taxa de conversão em pagamento por estágio e canal, do pior pro melhor. */
+  efetividadeLembretes(dias = 90): Observable<LinhaEfetividadeLembrete[]> {
+    const params = new HttpParams().set('dias', dias);
+    return this.http.get<LinhaEfetividadeLembrete[]>(`${this.url}/efetividade-lembretes`, { params });
   }
 }

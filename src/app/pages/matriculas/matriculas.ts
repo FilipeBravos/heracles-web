@@ -15,11 +15,13 @@ import {
   CLASSE_SITUACAO,
   LinhaAlunoInativo,
   LinhaComissaoIndicacao,
+  LinhaEfetividadeLembrete,
   LinhaExecucaoRenovacaoAutomatica,
   LinhaInadimplencia,
   LinhaIndicacao,
   LinhaMotivoCancelamento,
   Plano,
+  ROTULO_CANAL_LEMBRETE,
   ROTULO_FORMA_PAGAMENTO,
   ROTULO_MOTIVO_CANCELAMENTO,
   ROTULO_SITUACAO,
@@ -141,6 +143,12 @@ export class MatriculasComponent implements OnInit {
   readonly paginaRenovacaoAutomatica = signal(0);
   private renovacaoAutomaticaCarregada = false;
 
+  readonly colunasEfetividadeLembretes = ['estagio', 'canal', 'enviados', 'convertidos', 'taxa', 'diasMedios'];
+  readonly efetividadeLembretes = signal<LinhaEfetividadeLembrete[]>([]);
+  readonly carregandoEfetividadeLembretes = signal(false);
+  readonly erroEfetividadeLembretes = signal<string | null>(null);
+  private efetividadeLembretesCarregada = false;
+
   ngOnInit(): void {
     this.listarAssinaturas();
   }
@@ -200,6 +208,9 @@ export class MatriculasComponent implements OnInit {
     }
     if (indice === 6 && !this.renovacaoAutomaticaCarregada) {
       this.listarRenovacaoAutomatica();
+    }
+    if (indice === 7 && !this.efetividadeLembretesCarregada) {
+      this.listarEfetividadeLembretes();
     }
   }
 
@@ -433,6 +444,43 @@ export class MatriculasComponent implements OnInit {
   mudarPaginaRenovacaoAutomatica(evento: PageEvent): void {
     this.paginaRenovacaoAutomatica.set(evento.pageIndex);
     this.listarRenovacaoAutomatica();
+  }
+
+  // ---------------------------------------------------------------
+  // Efetividade dos lembretes de cobrança
+  // ---------------------------------------------------------------
+
+  listarEfetividadeLembretes(): void {
+    this.carregandoEfetividadeLembretes.set(true);
+    this.erroEfetividadeLembretes.set(null);
+
+    this.assinaturaService.efetividadeLembretes().subscribe({
+      next: (linhas) => {
+        this.efetividadeLembretes.set(linhas);
+        this.carregandoEfetividadeLembretes.set(false);
+        this.efetividadeLembretesCarregada = true;
+      },
+      error: (erro) => {
+        this.erroEfetividadeLembretes.set(
+          mensagemDeErro(erro, 'Não foi possível carregar a efetividade dos lembretes.'));
+        this.carregandoEfetividadeLembretes.set(false);
+      },
+    });
+  }
+
+  rotuloEstagioLembrete(linha: LinhaEfetividadeLembrete): string {
+    return ROTULO_SITUACAO[linha.estagio];
+  }
+
+  rotuloCanalDaLinha(linha: LinhaEfetividadeLembrete): string {
+    return ROTULO_CANAL_LEMBRETE[linha.canal];
+  }
+
+  /** "—" quando nenhum lembrete deste grupo converteu — não há média para tirar de zero conversões. */
+  diasMediosFormatado(linha: LinhaEfetividadeLembrete): string {
+    return linha.diasMediosParaConversao !== null
+      ? `${linha.diasMediosParaConversao.toFixed(1).replace('.', ',')} dias`
+      : '—';
   }
 
   // ---------------------------------------------------------------
