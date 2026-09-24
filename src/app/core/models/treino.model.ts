@@ -120,6 +120,16 @@ export interface LinhaAdesaoTreino {
 }
 
 /**
+ * Tempo médio de permanência numa ficha antes da troca, por nível, entre
+ * períodos encerrados no período consultado — do mais tempo pro menos.
+ */
+export interface LinhaPermanenciaPorNivel {
+  nivel: string;
+  quantidade: number;
+  diasMedios: number;
+}
+
+/**
  * Uma ficha que o aluno já treinou e não treina mais.
  *
  * Nome, foco e nível vêm do registro histórico, não da ficha viva: ela

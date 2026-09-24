@@ -191,6 +191,14 @@ export interface LinhaVendaPorMetodoPagamento {
   ticketMedio: number;
 }
 
+/** Faturamento, número de vendas e ticket médio no período, separado entre aluno matriculado e visitante. */
+export interface LinhaVendaPorTipoCliente {
+  vendaParaAluno: boolean;
+  faturamentoTotal: number;
+  quantidadeVendas: number;
+  ticketMedio: number;
+}
+
 /**
  * O relatório de vendas da loja: o resumo do período, os produtos mais
  * vendidos e a comparação entre unidades.
@@ -204,6 +212,8 @@ export interface PainelVendas {
   porUnidade: LinhaVendaPorUnidade[];
   /** Por unidade, e dentro dela da maior receita pra menor forma de pagamento. */
   porMetodoPagamento: LinhaVendaPorMetodoPagamento[];
+  /** Aluno matriculado primeiro, visitante depois — só entra quem teve venda no período. */
+  porTipoCliente: LinhaVendaPorTipoCliente[];
 }
 
 export const METODOS_PAGAMENTO: { valor: MetodoPagamento; rotulo: string }[] = [

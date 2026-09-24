@@ -10,7 +10,13 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { LinhaAdesaoTreino, LinhaAlunoSemFicha, ResumoAlunosSemFicha, Treino } from '../../core/models';
+import {
+  LinhaAdesaoTreino,
+  LinhaAlunoSemFicha,
+  LinhaPermanenciaPorNivel,
+  ResumoAlunosSemFicha,
+  Treino,
+} from '../../core/models';
 import { TreinoService } from '../../core/services/treino.service';
 import { mensagemDeErro } from '../../core/services/erro-api';
 import { PaginadorIntl } from '../../core/paginador-intl';
@@ -65,6 +71,12 @@ export class TreinosComponent implements OnInit {
   readonly erroAdesao = signal<string | null>(null);
   private adesaoCarregada = false;
 
+  readonly colunasPermanencia = ['nivel', 'quantidade', 'diasMedios'];
+  readonly permanenciaTreino = signal<LinhaPermanenciaPorNivel[]>([]);
+  readonly carregandoPermanencia = signal(false);
+  readonly erroPermanencia = signal<string | null>(null);
+  private permanenciaCarregada = false;
+
   ngOnInit(): void {
     this.listar();
   }
@@ -76,6 +88,9 @@ export class TreinosComponent implements OnInit {
     }
     if (indice === 2 && !this.adesaoCarregada) {
       this.listarAdesaoTreino();
+    }
+    if (indice === 3 && !this.permanenciaCarregada) {
+      this.listarPermanenciaTreino();
     }
   }
 
@@ -206,6 +221,27 @@ export class TreinosComponent implements OnInit {
       error: (erro) => {
         this.erroAdesao.set(mensagemDeErro(erro, 'Não foi possível carregar a adesão ao treino.'));
         this.carregandoAdesao.set(false);
+      },
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // Permanência na ficha
+  // ---------------------------------------------------------------
+
+  listarPermanenciaTreino(): void {
+    this.carregandoPermanencia.set(true);
+    this.erroPermanencia.set(null);
+
+    this.treinoService.relatorioPermanencia().subscribe({
+      next: (linhas) => {
+        this.permanenciaTreino.set(linhas);
+        this.carregandoPermanencia.set(false);
+        this.permanenciaCarregada = true;
+      },
+      error: (erro) => {
+        this.erroPermanencia.set(mensagemDeErro(erro, 'Não foi possível carregar a permanência na ficha.'));
+        this.carregandoPermanencia.set(false);
       },
     });
   }
