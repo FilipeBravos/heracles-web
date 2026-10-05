@@ -10,6 +10,7 @@ import { Financeiro } from './pages/financeiro/financeiro';
 import { EquipamentoComponent } from './pages/equipamento/equipamento';
 import { SuplementosComponent } from './pages/suplementos/suplementos';
 import { PlanosComponent } from './pages/planos/planos';
+import { ConfiguracoesComponent } from './pages/configuracoes/configuracoes';
 
 export const routes: Routes = [
   // 1. Área Pública
@@ -75,6 +76,13 @@ export const routes: Routes = [
     component: PlanosComponent,
     canActivate: [authGuard, roleGuard],
     data: { roles: ['PROFESSOR', 'ADMIN'] } 
+  },
+
+  {
+    path: 'confiuguracoes',
+    component: ConfiguracoesComponent,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ADMIN', 'SECRETARIA', 'RECEPCAO'] } 
   },
 
 ];

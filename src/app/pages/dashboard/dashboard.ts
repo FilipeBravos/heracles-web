@@ -1,12 +1,13 @@
 import { Component, OnInit, signal } from '@angular/core'; 
 import { CommonModule } from '@angular/common';
 import { DashboardAlunoComponent } from './dashboard-aluno/dashboard-aluno'; 
-import { DashboardProfessorComponent } from './dashboard-professor/dashboard-professor'; 
+import { DashboardProfessorComponent } from './dashboard-professor/dashboard-professor';
+import { DashboardAdministrativoComponent } from "./dashboard-administrativo/dashboard-administrativo"; 
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, DashboardAlunoComponent, DashboardProfessorComponent],
+  imports: [CommonModule, DashboardAlunoComponent, DashboardProfessorComponent, DashboardAdministrativoComponent],
   templateUrl: './dashboard.html'
 })
 export class DashboardComponent implements OnInit {

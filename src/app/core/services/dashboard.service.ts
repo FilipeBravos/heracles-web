@@ -33,6 +33,23 @@ export interface AulaResumo {
   totalAlunos: number;
 }
 
+export interface DadosDashboardAdmin {
+  totalAlunos: number;
+  crescimentoAlunos: string;
+  unidadesAtivas: number;
+  avaliacoesPendentes: number;
+  faturamentoPrevisto: number;
+  // Dados para os gráficos
+  graficoMatriculas: {
+    meses: string[];
+    quantidades: number[];
+  };
+  graficoModalidades: {
+    labels: string[];
+    quantidades: number[];
+  };
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -47,4 +64,9 @@ export class DashboardService {
   getDadosProfessor(): Observable<DadosDashboardProfessor> {
     return this.http.get<DadosDashboardProfessor>(`${this.apiUrl}/professor`);
   }
+
+  getDadosAdmin() {
+  return this.http.get<DadosDashboardAdmin>(`${this.apiUrl}/admin`);
+  }
 }
+

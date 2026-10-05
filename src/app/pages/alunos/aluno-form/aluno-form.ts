@@ -1,11 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import {
-  MatDialogRef,
-  MatDialogModule,
-  MAT_DIALOG_DATA,
-} from '@angular/material/dialog';
+import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { HttpClient } from '@angular/common/http';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -16,18 +12,12 @@ import { MatOption, MatSelectModule } from '@angular/material/select';
   selector: 'app-aluno-form',
   standalone: true,
   imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatSelectModule,
-    MatInputModule,
-    MatButtonModule,
-    MatOption,
+    CommonModule, ReactiveFormsModule, MatDialogModule, MatFormFieldModule,
+    MatSelectModule, MatInputModule, MatButtonModule, MatOption,
   ],
   templateUrl: './aluno-form.html',
 })
-export class AlunoForm {
+export class AlunoForm implements OnInit {
   private fb = inject(FormBuilder);
   private http = inject(HttpClient);
   public dialogRef = inject(MatDialogRef<AlunoForm>);
@@ -35,71 +25,54 @@ export class AlunoForm {
 
   isEditMode = false;
 
-  // Estrutura do Aluno baseada no seu PostgreSQL
+  // 🌟 Formulário blindado com as exatas colunas da tabela core.alunos
   alunoForm = this.fb.group({
-    nome: this.fb.control('', {
-      nonNullable: true,
-      validators: [Validators.required],
-    }),
-    cpf: this.fb.control('', {
-      nonNullable: true,
-      validators: [Validators.required],
-    }),
-    email: this.fb.control('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.email],
-    }),
-    telefone: this.fb.control('', {
-      nonNullable: true,
-      validators: [Validators.required],
-    }),
-    status: this.fb.control('ATIVO'), // Valor padrão oculto
-    tipoPerfil: this.fb.control('ALUNO'), // Valor padrão oculto
-    senhaHash: this.fb.control('123456'), // Senha padrão inicial para o MVP
+    nome: this.fb.control('', { validators: [Validators.required] }),
+    cpf: this.fb.control('', { validators: [Validators.required] }),
+    email: this.fb.control('', { validators: [Validators.required, Validators.email] }),
+    telefone: this.fb.control('', { validators: [Validators.required] }),
+    dataNascimento: this.fb.control('', { validators: [Validators.required] }), // Para o % de Gordura
+    sexo: this.fb.control('', { validators: [Validators.required] }), // Para o % de Gordura
+    unidadeId: this.fb.control<number | null>(null, { validators: [Validators.required] }) // Filial
   });
 
   ngOnInit() {
-    // Se recebeu dados, significa que clicamos no botão de Editar!
     if (this.data && this.data.aluno) {
       this.isEditMode = true;
-      // O patchValue preenche os campos do formulário automaticamente
       this.alunoForm.patchValue(this.data.aluno);
     }
   }
 
   salvar() {
-    const formValue = this.alunoForm.value;
+    if (this.alunoForm.valid) {
+      const formValue = this.alunoForm.value;
 
-    if (this.alunoForm.valid && formValue) {
+      // 🌟 Monta o Payload DTO exatamente como o Spring Boot espera
       const dadosParaEnviar = {
         nome: formValue.nome,
         email: formValue.email,
         telefone: formValue.telefone,
         cpf: (formValue.cpf ?? '').replace(/\D/g, ''),
-        tipoPerfil: formValue.tipoPerfil || 'ALUNO',
-        senha: formValue.senhaHash,
+        dataNascimento: formValue.dataNascimento,
+        sexo: formValue.sexo,
+        unidadeId: formValue.unidadeId
       };
 
-      if (this.isEditMode) {
-        const id = this.data.aluno.id;
+      // 🌟 Aponta para a Controller exclusiva de Alunos
+      const url = 'http://localhost:8080/api/alunos';
 
-        const payloadAtualizacao = {
-          ...dadosParaEnviar,
-          id: id,
-        };
-        this.http
-          .put(`http://localhost:8080/api/usuarios/${id}`, payloadAtualizacao)
-          .subscribe({
-            next: () => this.dialogRef.close(true),
-            error: (err) => console.error('Erro ao atualizar aluno', err),
-          });
+      if (this.isEditMode) {
+        // Envia o Put de atualização
+        this.http.put(url, { ...dadosParaEnviar, id: this.data.aluno.id }).subscribe({
+          next: () => this.dialogRef.close(true),
+          error: (err) => console.error('Erro ao atualizar aluno', err),
+        });
       } else {
-        this.http
-          .post('http://localhost:8080/api/usuarios', dadosParaEnviar)
-          .subscribe({
-            next: () => this.dialogRef.close(true),
-            error: (err) => console.error('Erro ao criar aluno', err),
-          });
+        // Envia o Post de criação
+        this.http.post(url, dadosParaEnviar).subscribe({
+          next: () => this.dialogRef.close(true),
+          error: (err) => console.error('Erro ao criar aluno', err),
+        });
       }
     }
   }

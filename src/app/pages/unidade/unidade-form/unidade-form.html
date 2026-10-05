@@ -1,0 +1,41 @@
+<div class="p-6">
+  <h2 mat-dialog-title class="!p-0 !mb-6 text-2xl font-bold text-gray-800">
+    Cadastrar Nova Unidade
+  </h2>
+  <mat-dialog-content class="!p-0">
+    <form [formGroup]="unidadeForm" class="flex flex-col gap-4 mt-2">
+      
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Nome da Unidade</mat-label>
+        <input matInput formControlName="nome" placeholder="Ex: Heracles Prime" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Tipo de Modalidade Principal</mat-label>
+        <mat-select formControlName="tipoModalidade">
+          <mat-option value="ACADEMIA">Academia (Musculação)</mat-option>
+          <mat-option value="CROSSFIT">Box de Crossfit</mat-option>
+          <mat-option value="PILATES">Studio de Pilates</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="grid grid-cols-2 gap-4">
+        <mat-form-field appearance="outline">
+          <mat-label>Telefone de Contato</mat-label>
+          <input matInput formControlName="telefone" placeholder="(00) 0000-0000" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Endereço Completo</mat-label>
+          <input matInput formControlName="endereco" placeholder="Rua X, 123" />
+        </mat-form-field>
+      </div>
+
+    </form>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end" class="!p-0 !mt-8">
+    <button mat-button mat-dialog-close class="text-gray-500">Cancelar</button>
+    <button mat-flat-button color="primary" [disabled]="unidadeForm.invalid" (click)="salvar()">
+      Criar Unidade
+    </button>
+  </mat-dialog-actions>
+</div>

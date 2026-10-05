@@ -13,46 +13,42 @@
       <div class="grid grid-cols-2 gap-4">
         <mat-form-field appearance="outline" class="w-full">
           <mat-label>E-mail</mat-label>
-          <input
-            matInput
-            type="email"
-            formControlName="email"
-            placeholder="maria@email.com"
-          />
+          <input matInput type="email" formControlName="email" placeholder="maria@email.com" />
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="w-full">
           <mat-label>Telefone / WhatsApp</mat-label>
-          <input
-            matInput
-            formControlName="telefone"
-            placeholder="(11) 99999-9999"
-          />
+          <input matInput formControlName="telefone" placeholder="(11) 99999-9999" />
         </mat-form-field>
       </div>
 
-      <mat-form-field appearance="outline" class="w-full">
-        <mat-label>CPF</mat-label>
-        <input matInput formControlName="cpf" placeholder="000.000.000-00" />
-      </mat-form-field>
-
       <div class="grid grid-cols-2 gap-4">
         <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Senha</mat-label>
-          <input
-            matInput
-            type="password"
-            formControlName="senhaHash"
-            placeholder="********"
-          />
+          <mat-label>CPF</mat-label>
+          <input matInput formControlName="cpf" placeholder="000.000.000-00" />
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Tipo de Perfil</mat-label>
-          <mat-select formControlName="tipoPerfil">
-            <mat-option value="ALUNO">Aluno</mat-option>
-            <mat-option value="PROFESSOR">Professor / Personal</mat-option>
-            <mat-option value="ADMIN">Administrador</mat-option>
+          <mat-label>Data de Nascimento</mat-label>
+          <input matInput type="date" formControlName="dataNascimento" />
+        </mat-form-field>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Sexo Biológico</mat-label>
+          <mat-select formControlName="sexo">
+            <mat-option value="MASCULINO">Masculino</mat-option>
+            <mat-option value="FEMININO">Feminino</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Unidade de Matrícula</mat-label>
+          <mat-select formControlName="unidadeId">
+            <mat-option [value]="1">Heracles Matrix (Musculação)</mat-option>
+            <mat-option [value]="2">Heracles Box (Cross Training)</mat-option>
+            <mat-option [value]="3">Heracles Studio (Pilates)</mat-option>
           </mat-select>
         </mat-form-field>
       </div>
