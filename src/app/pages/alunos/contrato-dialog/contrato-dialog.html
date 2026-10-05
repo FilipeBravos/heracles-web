@@ -1,0 +1,48 @@
+<div>
+  <div class="border-b border-linha px-6 py-5">
+    <h2 mat-dialog-title class="!m-0 !p-0 font-display !text-[22px] !font-bold !leading-tight text-tinta">
+      Contrato de adesão
+    </h2>
+    <p class="mt-1 text-[12.5px] text-tinta-3">
+      Assinado por <strong class="font-semibold text-tinta-2">{{ data.aluno.nome }}</strong> no cadastro.
+    </p>
+  </div>
+
+  <mat-dialog-content class="!px-6 !pt-5 !pb-2">
+    @if (erro(); as mensagem) {
+      <div role="alert"
+           class="mb-4 flex items-start gap-2.5 rounded-marca border border-perigo-200 bg-perigo-50 px-4 py-3">
+        <mat-icon class="!mt-px !h-[18px] !w-[18px] !text-[18px] text-perigo-700" svgIcon="error"></mat-icon>
+        <span class="text-[12.5px] leading-snug text-perigo-700">{{ mensagem }}</span>
+      </div>
+    }
+
+    @if (carregando()) {
+      <div class="flex items-center gap-3 py-4 text-[13px] text-tinta-3">
+        <mat-spinner diameter="20"></mat-spinner>
+        <span>Carregando contrato…</span>
+      </div>
+    } @else if (contrato(); as c) {
+      @if (c.assinado) {
+        <div class="mb-4 rounded-marca border border-ok-200 bg-ok-50 px-4 py-3">
+          <p class="text-[13px] font-semibold text-ok-700">Assinado por {{ c.nomeDigitado }}</p>
+          <p class="mt-0.5 text-[12px] text-ok-700">em {{ c.assinadoEm | date: 'dd/MM/yyyy HH:mm' }}</p>
+        </div>
+        <div class="max-h-72 overflow-y-auto whitespace-pre-line rounded-marca-sm bg-fundo-2 px-4 py-3 text-[12.5px] leading-relaxed text-tinta-2">
+          {{ c.textoContrato }}
+        </div>
+      } @else {
+        <div class="flex flex-col items-center gap-2.5 px-4 py-10 text-center">
+          <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="assignment_turned_in"></mat-icon>
+          <p class="text-[13px] text-tinta-3">
+            Sem contrato assinado — cadastro anterior a esta funcionalidade.
+          </p>
+        </div>
+      }
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="!gap-2 border-t border-linha !px-6 !py-4">
+    <button mat-button mat-dialog-close type="button" class="!text-tinta-2">Fechar</button>
+  </mat-dialog-actions>
+</div>

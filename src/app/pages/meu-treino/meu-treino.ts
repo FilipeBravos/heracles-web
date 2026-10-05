@@ -1,59 +1,160 @@
-import { ChangeDetectorRef, Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatCardModule } from '@angular/material/card';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { TreinoService } from '../../core/services/treino.service';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
+import { Exercicio, HistoricoTreino, Treino, descreverPeriodo, descreverPrescricao } from '../../core/models';
+import { AuthService } from '../../core/services/auth.service';
+import { MinhaAreaService } from '../../core/services/minha-area.service';
+import { mensagemDeErro } from '../../core/services/erro-api';
+import { RegistroExecucaoDialogComponent } from './registro-execucao-dialog/registro-execucao-dialog';
+
+/**
+ * A área do aluno.
+ *
+ * É a única tela que ele alcança, e o uso real é no salão, no celular,
+ * entre uma série e outra — daí a ficha aberta de uma vez, sem
+ * acordeão, e a prescrição em destaque ao lado de cada exercício.
+ */
 @Component({
   selector: 'app-meu-treino',
   standalone: true,
-  imports: [
-    CommonModule, 
-    MatTabsModule, 
-    MatCheckboxModule, 
-    MatCardModule, 
-    MatIconModule
-  ],
-  templateUrl: './meu-treino.html'
+  imports: [MatButtonModule, MatIconModule, MatProgressSpinnerModule],
+  templateUrl: './meu-treino.html',
 })
 export class MeuTreinoComponent implements OnInit {
-  private treinoService = inject(TreinoService);
+  private readonly minhaArea = inject(MinhaAreaService);
+  private readonly auth = inject(AuthService);
+  private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
 
-  private cdr = inject(ChangeDetectorRef);
-  
+  readonly carregando = signal(true);
+  readonly erro = signal<string | null>(null);
+  readonly fichas = signal<Treino[]>([]);
 
-  treinos = signal<any[]>([]);
+  /** Índice da ficha aberta. Com uma só, não há o que escolher. */
+  readonly selecionada = signal(0);
 
-  ngOnInit() {
-    this.treinoService.listarMeusTreinos().subscribe({
-      next: (dados) => {
-        const treinosFormatados = dados.map(t => ({
-          ...t,
-          listaExercicios: t.descricao ? t.descricao.split('\n').filter((e: string) => e.trim() !== '') : []
-        }));
-        
-        this.treinos.set(treinosFormatados);
+  readonly primeiroNome = computed(
+    () => this.auth.usuario()?.nome.trim().split(/\s+/)[0] ?? ''
+  );
+
+  readonly fichaAberta = computed<Treino | null>(
+    () => this.fichas()[this.selecionada()] ?? null
+  );
+
+  readonly prescricao = descreverPrescricao;
+  readonly periodo = descreverPeriodo;
+
+  /** Fechado por padrão: quem abre a tela no meio da série quer a ficha, não a lista de fichas antigas. */
+  readonly historicoAberto = signal(false);
+  readonly carregandoHistorico = signal(false);
+  readonly erroHistorico = signal<string | null>(null);
+  readonly historico = signal<HistoricoTreino[]>([]);
+  private historicoCarregado = false;
+
+  ngOnInit(): void {
+    this.carregar();
+  }
+
+  carregar(): void {
+    this.carregando.set(true);
+    this.erro.set(null);
+
+    this.minhaArea.meusTreinos().subscribe({
+      next: (fichas) => {
+        this.fichas.set(fichas);
+        this.selecionada.set(this.primeiraComExercicios(fichas));
+        this.carregando.set(false);
       },
-      error: (err) => console.error('Erro ao buscar meus treinos', err)
+      error: (erro) => {
+        this.erro.set(mensagemDeErro(erro, 'Não foi possível carregar seu treino.'));
+        this.carregando.set(false);
+      },
     });
   }
 
- toggleExercicio(exercicio: any) {
-    this.treinoService.toggleExercicioConcluido(exercicio.id).subscribe({
-      next: (isConcluido) => {
-        exercicio.concluidoHoje = isConcluido;
-        console.log(`Exercício ${exercicio.nome} está concluído?`, isConcluido);
-        
-        this.cdr.detectChanges();
+  /**
+   * Abre na primeira ficha que tem exercícios.
+   *
+   * A ordem vem alfabética da API, e uma ficha ainda vazia pode cair em
+   * primeiro — abrir nela mostraria "sem exercícios" a quem tem treino
+   * montado ao lado. Se nenhuma tiver, a primeira serve.
+   */
+  private primeiraComExercicios(fichas: Treino[]): number {
+    const indice = fichas.findIndex((ficha) => ficha.exercicios.length > 0);
+    return indice >= 0 ? indice : 0;
+  }
+
+  /**
+   * Séries × repetições mínimas da ficha, como a API calcula.
+   *
+   * Uma ficha recém-criada pode não ter exercício nenhum ainda; nesse
+   * caso o número seria zero e não diz nada, então nem aparece.
+   */
+  mostraVolume(ficha: Treino): boolean {
+    return ficha.volumePrescritoMinimo > 0;
+  }
+
+  /** As duas linhas de apoio do exercício, quando existem. */
+  detalhes(exercicio: Exercicio): string[] {
+    return [exercicio.carga, exercicio.observacoes].filter(
+      (texto): texto is string => !!texto && texto.trim().length > 0
+    );
+  }
+
+  /** Abre o registro de execução — carga e repetições que o aluno de fato fez, não a prescrição. */
+  registrarExecucao(exercicio: Exercicio): void {
+    if (exercicio.id === null) return;
+
+    this.dialog
+      .open(RegistroExecucaoDialogComponent, {
+        width: '480px',
+        data: { exercicioId: exercicio.id, exercicioNome: exercicio.nome },
+      })
+      .afterClosed()
+      .subscribe((registrou) => {
+        if (registrou) {
+          this.snackBar.open('Execução registrada.', 'Fechar', { duration: 4000 });
+        }
+      });
+  }
+
+  /**
+   * Abre ou fecha a lista de fichas anteriores, carregando na primeira vez.
+   *
+   * Não entra em `carregar()`: é informação secundária, e pedi-la de
+   * saída atrasaria a ficha de hoje — a que importa para quem abriu a
+   * tela no meio de uma série — atrás de uma consulta que a maioria das
+   * vezes ninguém vai olhar.
+   */
+  alternarHistorico(): void {
+    this.historicoAberto.set(!this.historicoAberto());
+    if (this.historicoAberto() && !this.historicoCarregado) {
+      this.carregarHistorico();
+    }
+  }
+
+  recarregarHistorico(): void {
+    this.carregarHistorico();
+  }
+
+  private carregarHistorico(): void {
+    this.carregandoHistorico.set(true);
+    this.erroHistorico.set(null);
+
+    this.minhaArea.historicoDeTreinos().subscribe({
+      next: (historico) => {
+        this.historico.set(historico);
+        this.historicoCarregado = true;
+        this.carregandoHistorico.set(false);
       },
-      error: (err) => {
-        console.error('Erro ao salvar progresso do exercício:', err);
-        exercicio.concluidoHoje = !exercicio.concluidoHoje;
-        
-        this.cdr.detectChanges();
-      }
+      error: (erro) => {
+        this.erroHistorico.set(mensagemDeErro(erro, 'Não foi possível carregar seu histórico.'));
+        this.carregandoHistorico.set(false);
+      },
     });
   }
 }

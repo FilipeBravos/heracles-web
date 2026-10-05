@@ -1,63 +1,56 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-export interface Equipamento {
-  id?: number;
-  marca: string;
-  modelo: string;
-  quantidade: number;
-  dataUltimaManutencao?: string;
-  descricaoUltimaManutencao?: string;
-  totalManutencoes: number;
-  totalGastoManutencao: number;
-}
+import { environment } from '../../../environments/environment';
+import {
+  ChamadoManutencao,
+  Equipamento,
+  EquipamentoForm,
+  LinhaManutencaoPreventiva,
+  Pagina,
+  PainelManutencao,
+} from '../models';
 
-export interface LancamentoManutencao {
-  data: string;
-  descricao: string;
-  valor: number;
-}
-
-export interface HistoricoManutencao {
-  id: number;
-  dataManutencao: string;
-  descricao: string;
-  valor: number;
-}
-
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class EquipamentoService {
-  private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/api/equipamentos';
+  private readonly http = inject(HttpClient);
+  private readonly url = `${environment.apiUrl}/equipamentos`;
 
-  listar(): Observable<Equipamento[]> {
-    return this.http.get<Equipamento[]>(this.apiUrl);
+  listar(pagina = 0, tamanho = 20): Observable<Pagina<Equipamento>> {
+    const params = new HttpParams().set('page', pagina).set('size', tamanho);
+    return this.http.get<Pagina<Equipamento>>(this.url, { params });
   }
 
-  salvar(dados: Equipamento): Observable<Equipamento> {
-    return this.http.post<Equipamento>(this.apiUrl, dados);
+  criar(equipamento: EquipamentoForm): Observable<Equipamento> {
+    return this.http.post<Equipamento>(this.url, equipamento);
   }
 
-  registrarManutencao(id: number, dados: LancamentoManutencao): Observable<Equipamento> {
-    return this.http.post<Equipamento>(`${this.apiUrl}/${id}/manutencao`, dados);
+  atualizar(id: number, equipamento: EquipamentoForm): Observable<Equipamento> {
+    return this.http.put<Equipamento>(`${this.url}/${id}`, equipamento);
   }
 
-  obterHistorico(equipamentoId: number): Observable<HistoricoManutencao[]> {
-    return this.http.get<HistoricoManutencao[]>(`${this.apiUrl}/${equipamentoId}/historico`);
+  historico(id: number): Observable<ChamadoManutencao[]> {
+    return this.http.get<ChamadoManutencao[]>(`${this.url}/${id}/chamados`);
   }
 
-  atualizar(id: number, dados: Equipamento): Observable<Equipamento> {
-    return this.http.put<Equipamento>(`${this.apiUrl}/${id}`, dados);
+  /** Abrir chamado também tira o equipamento de operação, na API. */
+  abrirChamado(id: number, descricaoProblema: string): Observable<ChamadoManutencao> {
+    return this.http.post<ChamadoManutencao>(`${this.url}/${id}/chamados`, { descricaoProblema });
   }
 
-  atualizarManutencao(manutencaoId: number, dados: LancamentoManutencao): Observable<HistoricoManutencao> {
-    return this.http.put<HistoricoManutencao>(`${this.apiUrl}/manutencao/${manutencaoId}`, dados);
+  resolverChamado(chamadoId: number, custoReparo: number | null): Observable<ChamadoManutencao> {
+    return this.http.put<ChamadoManutencao>(`${this.url}/chamados/${chamadoId}/resolver`, { custoReparo });
   }
 
-  deletar(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  /** Painel de manutenção: custo, tempo médio de resolução, equipamentos mais problemáticos e comparação por unidade. */
+  relatorio(dias = 90): Observable<PainelManutencao> {
+    const params = new HttpParams().set('dias', dias);
+    return this.http.get<PainelManutencao>(`${this.url}/relatorio`, { params });
+  }
+
+  /** Equipamentos com manutenção preventiva vencida ou vencendo, do mais atrasado pro mais recente. */
+  relatorioManutencaoPreventiva(): Observable<LinhaManutencaoPreventiva[]> {
+    return this.http.get<LinhaManutencaoPreventiva[]>(`${this.url}/relatorio/manutencao-preventiva`);
   }
 }

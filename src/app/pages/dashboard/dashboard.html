@@ -1,31 +1,149 @@
-@switch (perfilUsuario()) {
-  
-@case ('ALUNO') {
-    <app-dashboard-aluno></app-dashboard-aluno>
+<div class="flex h-screen overflow-hidden bg-fundo">
+  <!-- Barra superior: só existe abaixo de lg, onde a navegação vira gaveta. -->
+  <header class="fixed inset-x-0 top-0 z-30 flex h-14 items-center gap-3 border-b border-grafite-800
+                 bg-grafite-900 px-4 lg:hidden">
+    <button type="button" (click)="alternarMenu()"
+            class="-ml-1 flex h-10 w-10 items-center justify-center rounded-marca text-grafite-300 hover:text-white"
+            [attr.aria-expanded]="menuAberto()" aria-controls="nav-lateral" aria-label="Abrir navegação">
+      <mat-icon class="!h-6 !w-6 !text-[24px]" [svgIcon]="menuAberto() ? 'close' : 'menu'"></mat-icon>
+    </button>
+    <span class="font-display text-[20px] font-bold uppercase tracking-[0.08em] text-white">Herácles</span>
+  </header>
+
+  @if (menuAberto()) {
+    <div class="fixed inset-0 z-30 bg-grafite-950/60 lg:hidden" (click)="fecharMenu()" aria-hidden="true"></div>
   }
 
-  @case ('PROFESSOR') {
-    <app-dashboard-professor></app-dashboard-professor>
-  }
-
-  @case ('ADMIN') {
-    <app-dashboard-administrativo></app-dashboard-administrativo>
-  }
-
-  @case ('SECRETARIA') {
-    <app-dashboard-administrativo></app-dashboard-administrativo>
-  }
-
-  @case ('RECEPCAO') {
-    <app-dashboard-administrativo></app-dashboard-administrativo>
-  }
-
-
-  @default {
-    <div class="flex flex-col items-center justify-center min-h-[400px] text-gray-400">
-      <p class="text-lg italic">Verificando suas permissões de acesso...</p>
-      <p class="text-xs text-gray-500 mt-1">Se o painel persistir aqui, realize o login novamente.</p>
+  <!-- ============ Navegação ============ -->
+  <aside id="nav-lateral"
+         class="fixed inset-y-0 left-0 z-40 flex w-[248px] shrink-0 flex-col bg-grafite-900 text-grafite-300
+                transition-transform duration-200 ease-out lg:static lg:translate-x-0"
+         [class.translate-x-0]="menuAberto()"
+         [class.-translate-x-full]="!menuAberto()">
+    <div class="px-5 pt-6 pb-5">
+      <h1 class="font-display text-[26px] font-bold uppercase leading-none tracking-[0.08em] text-white">
+        Herácles
+      </h1>
+      <div class="mt-2.5 h-px w-9 bg-bronze-600"></div>
+      <p class="mt-2.5 text-[10px] font-bold uppercase tracking-[0.14em] text-grafite-400">
+        Gestão de unidade
+      </p>
     </div>
-  }
 
-}
+    <nav class="flex-1 overflow-y-auto px-3 py-2" aria-label="Navegação principal">
+      @for (area of areasPrincipais(); track area.rota) {
+        <a [routerLink]="area.rota" routerLinkActive="ativo"
+           [routerLinkActiveOptions]="{ exact: area.rota === '/dashboard' }" class="item-nav">
+          <span class="trilho"></span>
+          <mat-icon class="!h-5 !w-5 !text-[20px]" [svgIcon]="area.icone"></mat-icon>
+          <span>{{ area.rotulo }}</span>
+        </a>
+      }
+
+      @if (areasDeOperacao().length) {
+        <!-- Operação da unidade: balcão e salão. A faixa só existe se o
+             perfil alcança algo dentro dela. -->
+        <p class="h-rotulo !px-3 !pt-5 !pb-2 !text-grafite-400">Operação</p>
+
+        @for (area of areasDeOperacao(); track area.rota) {
+          <a [routerLink]="area.rota" routerLinkActive="ativo" class="item-nav">
+            <span class="trilho"></span>
+            <mat-icon class="!h-5 !w-5 !text-[20px]" [svgIcon]="area.icone"></mat-icon>
+            <span>{{ area.rotulo }}</span>
+          </a>
+        }
+      }
+
+      @if (areasDeConta().length) {
+        <!-- Conta do próprio usuário: sem rótulo de faixa, porque não é
+             "Operação" nem uma área de um perfil só — só um espaço a mais
+             antes do cartão de usuário separa das faixas de cima. -->
+        <div class="mt-5 border-t border-grafite-800 pt-2">
+          @for (area of areasDeConta(); track area.rota) {
+            <a [routerLink]="area.rota" routerLinkActive="ativo" class="item-nav">
+              <span class="trilho"></span>
+              <mat-icon class="!h-5 !w-5 !text-[20px]" [svgIcon]="area.icone"></mat-icon>
+              <span>{{ area.rotulo }}</span>
+            </a>
+          }
+        </div>
+      }
+
+    </nav>
+
+    @if (usuario(); as u) {
+      <div class="relative border-t border-grafite-800 px-4 py-3.5">
+        @if (painelNotificacoesAberto()) {
+          <div class="fixed inset-0 z-40" (click)="fecharPainelNotificacoes()" aria-hidden="true"></div>
+
+          <div class="absolute bottom-full left-0 z-50 mb-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden
+                      rounded-marca border border-grafite-800 bg-grafite-900 shadow-xl">
+            <div class="flex items-center justify-between border-b border-grafite-800 px-4 py-2.5">
+              <p class="text-[12px] font-bold uppercase tracking-[0.08em] text-white">Notificações</p>
+              @if (naoLidas()) {
+                <button type="button" (click)="marcarTodasComoLidas()"
+                        class="text-[11px] font-semibold text-bronze-500 hover:text-bronze-400">
+                  Marcar todas como lidas
+                </button>
+              }
+            </div>
+
+            <div class="max-h-96 overflow-y-auto">
+              @for (n of notificacoes(); track n.id) {
+                <button type="button" (click)="marcarComoLida(n)"
+                        class="flex w-full items-start gap-2.5 border-b border-grafite-800/60 px-4 py-3 text-left
+                               last:border-b-0 hover:bg-grafite-800/60"
+                        [class.opacity-50]="n.lida">
+                  <mat-icon class="!h-5 !w-5 shrink-0 !text-[20px] !text-bronze-500"
+                            [svgIcon]="iconeTipoNotificacao[n.tipo]"></mat-icon>
+                  <span class="min-w-0 flex-1">
+                    <span class="block truncate text-[12.5px] font-semibold text-white">{{ n.titulo }}</span>
+                    <span class="block text-[11.5px] text-grafite-400">{{ n.mensagem }}</span>
+                    <span class="mt-0.5 block text-[10px] text-grafite-500">{{ n.criadaEm | date: 'dd/MM HH:mm' }}</span>
+                  </span>
+                  @if (!n.lida) {
+                    <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-bronze-500" aria-hidden="true"></span>
+                  }
+                </button>
+              } @empty {
+                <p class="px-4 py-6 text-center text-[12px] text-grafite-400">Nenhuma notificação por aqui.</p>
+              }
+            </div>
+          </div>
+        }
+
+        <div class="flex items-center gap-3">
+          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-marca bg-bronze-600
+                      text-[12.5px] font-bold tracking-wide text-white">
+            {{ iniciais() }}
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-[13px] font-semibold text-white">{{ u.nome }}</p>
+            <p class="truncate text-[11px] text-grafite-400">{{ perfilLegivel() }}</p>
+          </div>
+          <button mat-icon-button type="button" (click)="alternarPainelNotificacoes()"
+                  matTooltip="Notificações" aria-label="Abrir notificações"
+                  class="relative !z-50 !h-9 !w-9 shrink-0 !text-grafite-400 hover:!text-white">
+            <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="notifications"></mat-icon>
+            @if (naoLidas()) {
+              <span class="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full
+                           bg-bronze-600 px-1 text-[9px] font-bold leading-none text-white">
+                {{ naoLidas() > 9 ? '9+' : naoLidas() }}
+              </span>
+            }
+          </button>
+          <button mat-icon-button type="button" (click)="sair()"
+                  matTooltip="Sair" aria-label="Sair do sistema"
+                  class="!h-9 !w-9 shrink-0 !text-grafite-400 hover:!text-white">
+            <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="logout"></mat-icon>
+          </button>
+        </div>
+      </div>
+    }
+  </aside>
+
+  <!-- ============ Conteúdo ============ -->
+  <main class="flex-1 overflow-y-auto pt-14 lg:pt-0">
+    <router-outlet></router-outlet>
+  </main>
+</div>

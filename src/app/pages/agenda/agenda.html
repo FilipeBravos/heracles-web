@@ -1,143 +1,940 @@
-<div class="p-6 max-w-7xl mx-auto">
-  
-  <div class="flex justify-between items-center mb-8">
-    <h2 class="text-3xl font-bold text-gray-800">Cronograma de Aulas</h2>
+<div class="mx-auto max-w-[1180px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+  <header class="h-cabecalho">
+    <div>
+      <h1>Agenda</h1>
+      <p>Aulas em grupo, sessões de personal e o horário de cada professor.</p>
+    </div>
+  </header>
 
-    @if (perfilUsuario === 'PROFESSOR' || perfilUsuario === 'ADMIN') {
-    <button mat-flat-button color="primary" (click)="abrirModalNovaAula()">
-      <mat-icon>add</mat-icon> Nova Aula
-    </button>
+  <mat-tab-group (selectedIndexChange)="aoTrocarAba($event)" animationDuration="0ms">
+    <!-- ============ Aulas em grupo ============ -->
+    <mat-tab label="Aulas em grupo">
+      <div class="pt-5">
+        @if (podeGerenciarAula()) {
+          <div class="mb-4 flex justify-end">
+            <button mat-flat-button color="primary" (click)="abrirFormularioAula()">
+              <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+              Nova aula
+            </button>
+          </div>
+        }
+
+        @if (erroAulas(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="listarAulas()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        }
+
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="aulas()" class="h-tabela">
+              <ng-container matColumnDef="nome">
+                <th mat-header-cell *matHeaderCellDef>Aula</th>
+                <td mat-cell *matCellDef="let a" class="font-semibold text-tinta">{{ a.nome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="professor">
+                <th mat-header-cell *matHeaderCellDef>Professor</th>
+                <td mat-cell *matCellDef="let a" class="text-tinta-2">{{ a.professorNome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="unidade">
+                <th mat-header-cell *matHeaderCellDef>Unidade</th>
+                <td mat-cell *matCellDef="let a" class="text-tinta-2">{{ a.unidadeNome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="dataHora">
+                <th mat-header-cell *matHeaderCellDef>Quando</th>
+                <td mat-cell *matCellDef="let a" class="whitespace-nowrap tabular-nums text-tinta-2">
+                  {{ a.dataHora | date: 'dd/MM/yyyy HH:mm' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="vagas">
+                <th mat-header-cell *matHeaderCellDef>Vagas</th>
+                <td mat-cell *matCellDef="let a" class="tabular-nums text-tinta-2">
+                  {{ a.vagasOcupadas }} / {{ a.capacidadeMaxima }}
+                  @if (a.vagasEspera > 0) {
+                    <span class="ml-1.5 h-etiqueta h-etiqueta--neutra">+{{ a.vagasEspera }} na espera</span>
+                  }
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Situação</th>
+                <td mat-cell *matCellDef="let a">
+                  <span class="h-etiqueta" [class]="a.status === 'ATIVA' ? 'h-etiqueta--ok' : 'h-etiqueta--neutra'">
+                    {{ a.status === 'ATIVA' ? 'Ativa' : 'Cancelada' }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="acoes">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Ações</th>
+                <td mat-cell *matCellDef="let a" class="!text-right whitespace-nowrap">
+                  @if (a.status === 'ATIVA') {
+                    @if (podeMarcarVaga()) {
+                      <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-ok-700"
+                              (click)="abrirMarcarVaga(a)"
+                              matTooltip="Marcar vaga" aria-label="Marcar vaga">
+                        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="how_to_reg"></mat-icon>
+                      </button>
+                      <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-perigo-700"
+                              (click)="abrirDesmarcarVaga(a)"
+                              matTooltip="Desmarcar vaga" aria-label="Desmarcar vaga">
+                        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="person_off"></mat-icon>
+                      </button>
+                    }
+                    @if (podeConfirmarPresenca(a)) {
+                      <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
+                              (click)="abrirConfirmarPresenca(a)"
+                              matTooltip="Confirmar presenças" aria-label="Confirmar presenças">
+                        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="assignment_turned_in"></mat-icon>
+                      </button>
+                    }
+                    @if (podeGerenciarAula()) {
+                      <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-perigo-700"
+                              (click)="cancelarAula(a)"
+                              matTooltip="Cancelar aula" aria-label="Cancelar aula">
+                        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="delete"></mat-icon>
+                      </button>
+                    }
+                  }
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasAula"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasAula"></tr>
+            </table>
+          </div>
+
+          @if (carregandoAulas()) {
+            <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando aulas…</span>
+            </div>
+          } @else if (aulas().length === 0 && !erroAulas()) {
+            <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="schedule"></mat-icon>
+              <p class="text-[14px] font-semibold text-tinta">Nenhuma aula agendada</p>
+              <p class="max-w-sm text-[13px] text-tinta-3">
+                @if (podeGerenciarAula()) {
+                  Crie uma aula em grupo para o aluno reservar a vaga pelo app.
+                } @else {
+                  Nenhuma aula foi agendada ainda.
+                }
+              </p>
+            </div>
+          }
+
+          @if (totalAulas() > 0) {
+            <mat-paginator [length]="totalAulas()" [pageIndex]="paginaAulas()" [pageSize]="20"
+                           [pageSizeOptions]="[10, 20, 50]" (page)="mudarPaginaAulas($event)"></mat-paginator>
+          }
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- ============ Personal ============ -->
+    <mat-tab label="Personal">
+      <div class="pt-5">
+        @if (podeGerenciarPersonal()) {
+          <div class="mb-4 flex justify-end">
+            <button mat-flat-button color="primary" (click)="abrirFormularioPersonal()">
+              <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+              Nova sessão
+            </button>
+          </div>
+        }
+
+        @if (erroPersonal(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="listarPersonal()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        }
+
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="sessoesPersonal()" class="h-tabela">
+              <ng-container matColumnDef="aluno">
+                <th mat-header-cell *matHeaderCellDef>Aluno</th>
+                <td mat-cell *matCellDef="let s" class="font-semibold text-tinta">{{ s.alunoNome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="professor">
+                <th mat-header-cell *matHeaderCellDef>Professor</th>
+                <td mat-cell *matCellDef="let s" class="text-tinta-2">{{ s.professorNome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="unidade">
+                <th mat-header-cell *matHeaderCellDef>Unidade</th>
+                <td mat-cell *matCellDef="let s" class="text-tinta-2">{{ s.unidadeNome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="dataHora">
+                <th mat-header-cell *matHeaderCellDef>Quando</th>
+                <td mat-cell *matCellDef="let s" class="whitespace-nowrap tabular-nums text-tinta-2">
+                  {{ s.dataHora | date: 'dd/MM/yyyy HH:mm' }} · {{ s.duracaoMinutos }} min
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="observacoes">
+                <th mat-header-cell *matHeaderCellDef>Observações</th>
+                <td mat-cell *matCellDef="let s" class="text-tinta-2">{{ s.observacoes ?? '—' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="nota">
+                <th mat-header-cell *matHeaderCellDef>Avaliação</th>
+                <td mat-cell *matCellDef="let s">
+                  @if (s.notaAvaliacao) {
+                    <span class="font-semibold tabular-nums text-bronze-700"
+                          [matTooltip]="s.comentarioAvaliacao ?? ''" [matTooltipDisabled]="!s.comentarioAvaliacao">
+                      {{ s.notaAvaliacao }}/5
+                    </span>
+                  } @else {
+                    <span class="text-[12.5px] italic text-tinta-3">
+                      {{ s.status === 'REALIZADA' ? 'Ainda não avaliada' : '—' }}
+                    </span>
+                  }
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Situação</th>
+                <td mat-cell *matCellDef="let s">
+                  <span class="h-etiqueta" [class]="classeStatusPersonal(s.status)">
+                    {{ rotuloStatusPersonal(s.status) }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="acoes">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Ações</th>
+                <td mat-cell *matCellDef="let s" class="!text-right whitespace-nowrap">
+                  @if (podeMarcarRealizada(s)) {
+                    <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-ok-700"
+                            (click)="marcarSessaoPersonalRealizada(s)"
+                            matTooltip="Confirmar que a sessão aconteceu" aria-label="Marcar como realizada">
+                      <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="check_circle"></mat-icon>
+                    </button>
+                  }
+                  @if (s.status === 'AGENDADO' && podeGerenciarPersonal()) {
+                    <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-perigo-700"
+                            (click)="cancelarSessaoPersonal(s)"
+                            matTooltip="Cancelar sessão" aria-label="Cancelar sessão">
+                      <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="delete"></mat-icon>
+                    </button>
+                  }
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasPersonal"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasPersonal"></tr>
+            </table>
+          </div>
+
+          @if (carregandoPersonal()) {
+            <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando sessões de personal…</span>
+            </div>
+          } @else if (sessoesPersonal().length === 0 && !erroPersonal()) {
+            <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="fitness_center"></mat-icon>
+              <p class="text-[14px] font-semibold text-tinta">Nenhuma sessão de personal agendada</p>
+              <p class="max-w-sm text-[13px] text-tinta-3">
+                @if (podeGerenciarPersonal()) {
+                  Agende uma sessão individual a pedido do aluno.
+                } @else {
+                  Nenhuma sessão foi agendada ainda.
+                }
+              </p>
+            </div>
+          }
+
+          @if (totalPersonal() > 0) {
+            <mat-paginator [length]="totalPersonal()" [pageIndex]="paginaPersonal()" [pageSize]="20"
+                           [pageSizeOptions]="[10, 20, 50]" (page)="mudarPaginaPersonal($event)"></mat-paginator>
+          }
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- ============ Horários de professor ============ -->
+    <mat-tab label="Horários dos professores">
+      <div class="pt-5">
+        <mat-form-field appearance="outline" class="w-full max-w-xs">
+          <mat-label>Professor</mat-label>
+          <mat-select [value]="professorSelecionado()"
+                      (selectionChange)="aoTrocarProfessor($event.value)">
+            @for (p of professores(); track p.id) {
+              <mat-option [value]="p.id">{{ p.nome }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        @if (erroHorarios(); as mensagem) {
+          <div role="alert"
+               class="mb-5 mt-3 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+          </div>
+        }
+
+        @if (podeGerenciarHorario() && professorSelecionado()) {
+          <form [formGroup]="formHorario" class="mb-5 flex flex-wrap items-end gap-3 rounded-marca border border-linha px-4 py-4"
+                (ngSubmit)="adicionarHorario()">
+            <mat-form-field appearance="outline" class="!w-36">
+              <mat-label>Dia</mat-label>
+              <mat-select formControlName="diaSemana">
+                @for (d of dias; track d.valor) {
+                  <mat-option [value]="d.valor">{{ d.rotulo }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="!w-28">
+              <mat-label>Início</mat-label>
+              <input matInput type="time" formControlName="horaInicio">
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="!w-28">
+              <mat-label>Fim</mat-label>
+              <input matInput type="time" formControlName="horaFim">
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="!w-48">
+              <mat-label>Unidade</mat-label>
+              <mat-select formControlName="unidadeId">
+                @for (u of unidades(); track u.id) {
+                  <mat-option [value]="u.id">{{ u.nome }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <button mat-flat-button color="primary" type="button" class="!h-11"
+                    [disabled]="formHorario.invalid" (click)="adicionarHorario()">
+              <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+              Adicionar
+            </button>
+          </form>
+        }
+
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="horarios()" class="h-tabela">
+              <ng-container matColumnDef="diaSemana">
+                <th mat-header-cell *matHeaderCellDef>Dia</th>
+                <td mat-cell *matCellDef="let h" class="font-semibold text-tinta">{{ rotuloDoDia(h.diaSemana) }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="horario">
+                <th mat-header-cell *matHeaderCellDef>Horário</th>
+                <td mat-cell *matCellDef="let h" class="tabular-nums text-tinta-2">
+                  {{ h.horaInicio.slice(0, 5) }} – {{ h.horaFim.slice(0, 5) }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="unidade">
+                <th mat-header-cell *matHeaderCellDef>Unidade</th>
+                <td mat-cell *matCellDef="let h" class="text-tinta-2">{{ h.unidadeNome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="acoes">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Ações</th>
+                <td mat-cell *matCellDef="let h" class="!text-right whitespace-nowrap">
+                  @if (podeGerenciarHorario()) {
+                    <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-perigo-700"
+                            (click)="removerHorario(h)"
+                            matTooltip="Remover horário" aria-label="Remover horário">
+                      <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="delete"></mat-icon>
+                    </button>
+                  }
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasHorario"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasHorario"></tr>
+            </table>
+          </div>
+
+          @if (carregandoHorarios()) {
+            <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando horários…</span>
+            </div>
+          } @else if (!professorSelecionado() && !erroHorarios()) {
+            <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="schedule"></mat-icon>
+              <p class="text-[14px] font-semibold text-tinta">Nenhum professor cadastrado</p>
+              <p class="max-w-sm text-[13px] text-tinta-3">
+                Cadastre um professor na tela de Alunos para dar a ele um horário.
+              </p>
+            </div>
+          } @else if (horarios().length === 0 && !erroHorarios() && professorSelecionado()) {
+            <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="schedule"></mat-icon>
+              <p class="text-[14px] font-semibold text-tinta">Nenhum horário cadastrado</p>
+              <p class="max-w-sm text-[13px] text-tinta-3">
+                @if (podeGerenciarHorario()) {
+                  Adicione um bloco de disponibilidade para este professor.
+                } @else {
+                  Este professor ainda não tem horário cadastrado.
+                }
+              </p>
+            </div>
+          }
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- ============ Avaliações de personal ============ -->
+    @if (podeVerAvaliacoesPersonal()) {
+      <mat-tab label="Avaliações">
+        <div class="pt-5">
+          <p class="mb-4 text-[12.5px] text-tinta-3">
+            Nota média das sessões de personal já avaliadas pelo aluno, do melhor pro pior — o professor
+            também vê a própria nota na aba Personal, sessão a sessão. Só entra quem já tem pelo menos 3
+            avaliações: com menos que isso, uma única sessão decidiria a posição sozinha.
+          </p>
+
+          @if (erroAvaliacoes(); as mensagem) {
+            <div role="alert"
+                 class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+              <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+              </span>
+              <button type="button" (click)="listarAvaliacoesPorProfessor()"
+                      class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+            </div>
+          }
+
+          <div class="h-painel overflow-hidden">
+            <div class="overflow-x-auto">
+              <table mat-table [dataSource]="avaliacoesPorProfessor()" class="h-tabela">
+                <ng-container matColumnDef="posicao">
+                  <th mat-header-cell *matHeaderCellDef class="!w-12">#</th>
+                  <td mat-cell *matCellDef="let l; let i = index" class="tabular-nums text-tinta-3">{{ i + 1 }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="professor">
+                  <th mat-header-cell *matHeaderCellDef>Professor</th>
+                  <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.professorNome }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="notaMedia">
+                  <th mat-header-cell *matHeaderCellDef class="!text-right">Nota média</th>
+                  <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold text-tinta">
+                    {{ l.notaMedia.toFixed(1).replace('.', ',') }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="quantidade">
+                  <th mat-header-cell *matHeaderCellDef class="!text-right">Avaliações</th>
+                  <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                    {{ l.quantidade }}
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="colunasAvaliacoes"></tr>
+                <tr mat-row *matRowDef="let row; columns: colunasAvaliacoes"></tr>
+              </table>
+            </div>
+
+            @if (carregandoAvaliacoes()) {
+              <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+                <mat-spinner diameter="20"></mat-spinner><span>Carregando avaliações…</span>
+              </div>
+            } @else if (avaliacoesPorProfessor().length === 0 && !erroAvaliacoes()) {
+              <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+                <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="fitness_center"></mat-icon>
+                <p class="text-[14px] font-semibold text-tinta">Nenhuma avaliação ainda</p>
+                <p class="max-w-sm text-[13px] text-tinta-3">
+                  Quando um aluno avaliar uma sessão de personal já realizada, ela aparece aqui.
+                </p>
+              </div>
+            }
+          </div>
+
+          <h2 class="h-rotulo mb-2 mt-6">Cancelamento em cima da hora</h2>
+          <p class="mb-4 text-[12.5px] text-tinta-3">
+            Últimos 90 dias — só cancelamentos com menos de 24h de antecedência contam, é o que de fato
+            atrapalha a agenda do professor. Só entra quem já tem pelo menos 4 sessões finalizadas.
+          </p>
+
+          @if (erroCancelamentos(); as mensagem) {
+            <div role="alert"
+                 class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+              <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+              </span>
+              <button type="button" (click)="listarCancelamentosPorProfessor()"
+                      class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+            </div>
+          }
+
+          <div class="h-painel overflow-hidden">
+            <div class="overflow-x-auto">
+              <table mat-table [dataSource]="cancelamentosPorProfessor()" class="h-tabela">
+                <ng-container matColumnDef="posicao">
+                  <th mat-header-cell *matHeaderCellDef class="!w-12">#</th>
+                  <td mat-cell *matCellDef="let l; let i = index" class="tabular-nums text-tinta-3">{{ i + 1 }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="professor">
+                  <th mat-header-cell *matHeaderCellDef>Professor</th>
+                  <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.professorNome }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="total">
+                  <th mat-header-cell *matHeaderCellDef class="!text-right">Sessões</th>
+                  <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                    {{ l.totalSessoes }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="emCimaDaHora">
+                  <th mat-header-cell *matHeaderCellDef class="!text-right">Em cima da hora</th>
+                  <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                    {{ l.cancelamentosEmCimaDaHora }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="taxa">
+                  <th mat-header-cell *matHeaderCellDef class="!text-right">Taxa</th>
+                  <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold text-perigo-700">
+                    {{ l.taxaCancelamento.toFixed(1).replace('.', ',') }}%
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="colunasCancelamentos"></tr>
+                <tr mat-row *matRowDef="let row; columns: colunasCancelamentos"></tr>
+              </table>
+            </div>
+
+            @if (carregandoCancelamentos()) {
+              <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+                <mat-spinner diameter="20"></mat-spinner><span>Carregando cancelamentos…</span>
+              </div>
+            } @else if (cancelamentosPorProfessor().length === 0 && !erroCancelamentos()) {
+              <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+                <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="check_circle"></mat-icon>
+                <p class="text-[14px] font-semibold text-tinta">Nenhum professor com amostra suficiente ainda</p>
+              </div>
+            }
+          </div>
+
+          <h2 class="h-rotulo mb-2 mt-6">Ocupação da agenda</h2>
+          <p class="mb-4 text-[12.5px] text-tinta-3">
+            Últimos 90 dias — horas disponíveis, a partir do horário configurado de cada professor, contra
+            horas efetivamente ocupadas por sessões realizadas. Do menos ocupado pro mais ocupado. Só entra
+            quem tem horário cadastrado.
+          </p>
+
+          @if (erroOcupacao(); as mensagem) {
+            <div role="alert"
+                 class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+              <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+              </span>
+              <button type="button" (click)="listarOcupacaoPorProfessor()"
+                      class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+            </div>
+          }
+
+          <div class="h-painel overflow-hidden">
+            <div class="overflow-x-auto">
+              <table mat-table [dataSource]="ocupacaoPorProfessor()" class="h-tabela">
+                <ng-container matColumnDef="posicao">
+                  <th mat-header-cell *matHeaderCellDef class="!w-12">#</th>
+                  <td mat-cell *matCellDef="let l; let i = index" class="tabular-nums text-tinta-3">{{ i + 1 }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="professor">
+                  <th mat-header-cell *matHeaderCellDef>Professor</th>
+                  <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.professorNome }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="disponiveis">
+                  <th mat-header-cell *matHeaderCellDef class="!text-right">Disponíveis</th>
+                  <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                    {{ l.horasDisponiveis.toFixed(1).replace('.', ',') }}h
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="ocupadas">
+                  <th mat-header-cell *matHeaderCellDef class="!text-right">Ocupadas</th>
+                  <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                    {{ l.horasOcupadas.toFixed(1).replace('.', ',') }}h
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="taxa">
+                  <th mat-header-cell *matHeaderCellDef class="!text-right">Taxa</th>
+                  <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold text-tinta">
+                    {{ l.taxaOcupacao.toFixed(1).replace('.', ',') }}%
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="colunasOcupacao"></tr>
+                <tr mat-row *matRowDef="let row; columns: colunasOcupacao"></tr>
+              </table>
+            </div>
+
+            @if (carregandoOcupacao()) {
+              <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+                <mat-spinner diameter="20"></mat-spinner><span>Carregando ocupação…</span>
+              </div>
+            } @else if (ocupacaoPorProfessor().length === 0 && !erroOcupacao()) {
+              <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+                <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="schedule"></mat-icon>
+                <p class="text-[14px] font-semibold text-tinta">Nenhum professor com horário cadastrado ainda</p>
+              </div>
+            }
+          </div>
+
+          <h2 class="h-rotulo mb-2 mt-6">Sessões realizadas</h2>
+          <p class="mb-4 text-[12.5px] text-tinta-3">
+            Últimos 90 dias — contagem direta de sessões de personal realizadas por professor, do mais
+            cheio pro menos cheio.
+          </p>
+
+          @if (erroSessoesRealizadas(); as mensagem) {
+            <div role="alert"
+                 class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+              <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+              </span>
+              <button type="button" (click)="listarSessoesRealizadasPorProfessor()"
+                      class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+            </div>
+          }
+
+          <div class="h-painel overflow-hidden">
+            <div class="overflow-x-auto">
+              <table mat-table [dataSource]="sessoesRealizadasPorProfessor()" class="h-tabela">
+                <ng-container matColumnDef="posicao">
+                  <th mat-header-cell *matHeaderCellDef class="!w-12">#</th>
+                  <td mat-cell *matCellDef="let l; let i = index" class="tabular-nums text-tinta-3">{{ i + 1 }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="professor">
+                  <th mat-header-cell *matHeaderCellDef>Professor</th>
+                  <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.professorNome }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="quantidade">
+                  <th mat-header-cell *matHeaderCellDef class="!text-right">Sessões realizadas</th>
+                  <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold text-tinta">
+                    {{ l.quantidadeSessoes }}
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="colunasSessoesRealizadas"></tr>
+                <tr mat-row *matRowDef="let row; columns: colunasSessoesRealizadas"></tr>
+              </table>
+            </div>
+
+            @if (carregandoSessoesRealizadas()) {
+              <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+                <mat-spinner diameter="20"></mat-spinner><span>Carregando sessões realizadas…</span>
+              </div>
+            } @else if (sessoesRealizadasPorProfessor().length === 0 && !erroSessoesRealizadas()) {
+              <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+                <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="fitness_center"></mat-icon>
+                <p class="text-[14px] font-semibold text-tinta">Nenhuma sessão realizada no período</p>
+              </div>
+            }
+          </div>
+
+          <h2 class="h-rotulo mb-2 mt-6">Cobertura de horário</h2>
+          <p class="mb-4 text-[12.5px] text-tinta-3">
+            Blocos de 30 minutos, por unidade, sem nenhum professor cobrindo — dentro do horário comercial
+            (06h às 22h). Diferente da ocupação acima, que só olha quem já tem horário cadastrado.
+          </p>
+
+          @if (erroCobertura(); as mensagem) {
+            <div role="alert"
+                 class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+              <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+              </span>
+              <button type="button" (click)="carregarCoberturaHorario()"
+                      class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+            </div>
+          }
+
+          <div class="h-painel overflow-hidden">
+            <div class="overflow-x-auto">
+              <table mat-table [dataSource]="coberturaHorario()" class="h-tabela">
+                <ng-container matColumnDef="unidade">
+                  <th mat-header-cell *matHeaderCellDef>Unidade</th>
+                  <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.unidadeNome }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="diaHorario">
+                  <th mat-header-cell *matHeaderCellDef>Sem cobertura</th>
+                  <td mat-cell *matCellDef="let l" class="whitespace-nowrap tabular-nums text-tinta-2">
+                    {{ diaEHorarioCobertura(l) }}
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="colunasCobertura"></tr>
+                <tr mat-row *matRowDef="let row; columns: colunasCobertura"></tr>
+              </table>
+            </div>
+
+            @if (carregandoCobertura()) {
+              <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+                <mat-spinner diameter="20"></mat-spinner><span>Carregando cobertura…</span>
+              </div>
+            } @else if (coberturaHorario().length === 0 && !erroCobertura()) {
+              <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+                <mat-icon class="!h-7 !w-7 !text-[28px] text-ok-700" svgIcon="check_circle"></mat-icon>
+                <p class="text-[14px] font-semibold text-tinta">Horário comercial totalmente coberto</p>
+                <p class="max-w-sm text-[13px] text-tinta-3">
+                  Toda unidade tem pelo menos um professor disponível em qualquer bloco de 06h às 22h.
+                </p>
+              </div>
+            }
+          </div>
+        </div>
+      </mat-tab>
     }
-  </div>
 
-  <mat-tab-group backgroundColor="primary" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-    
-    <mat-tab [label]="'Próximas Aulas (' + proximasAulas().length + ')'">
-      <div class="p-6 bg-gray-50/50 min-h-[400px]">
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          @for (aula of proximasAulas(); track aula.id) {
-            <mat-card class="shadow-lg border border-gray-100 rounded-xl overflow-hidden bg-white">
-              <mat-card-header class="bg-blue-50 p-4 border-b border-blue-100 flex justify-between items-start">
-                <div>
-                  <mat-card-title class="text-xl font-bold text-blue-800">{{ aula.titulo }}</mat-card-title>
-                  <mat-card-subtitle class="mt-2 text-gray-600 flex items-center gap-1">
-                    <mat-icon class="scale-75">calendar_today</mat-icon>
-                    {{ aula.dataHora | date:'dd/MM/yyyy HH:mm' }}
-                  </mat-card-subtitle>
-                </div>
-                
-                @if (perfilUsuario === 'PROFESSOR' || perfilUsuario === 'ADMIN') {
-                  <button mat-icon-button color="primary" (click)="abrirListaAlunos(aula)" title="Lista de Presença">
-                    <mat-icon>group</mat-icon>
-                  </button>
-                } @else {
-                  <button mat-icon-button color="primary" (click)="abrirDetalhes(aula)" title="Ver exercícios">
-                    <mat-icon>visibility</mat-icon>
-                  </button>
-                }
-              </mat-card-header>
-
-              <mat-card-content class="p-4 pt-6">
-                <p class="text-gray-700 flex items-center gap-2 font-medium mb-4">
-                  <mat-icon class="text-gray-500">fitness_center</mat-icon>
-                  Prof: {{ aula.professor?.nome || 'A definir' }}
-                </p>
-
-                <div class="mt-2">
-                  <div class="flex justify-between text-sm mb-1 text-gray-600">
-                    <span>Ocupação da turma</span>
-                    <span class="font-bold">{{ aula.vagasOcupadas }} / {{ aula.limiteVagas }} vagas</span>
-                  </div>
-                  <div class="w-full bg-gray-200 rounded-full h-3">
-                    <div class="bg-blue-600 h-3 rounded-full transition-all duration-500" [style.width.%]="(aula.vagasOcupadas / aula.limiteVagas) * 100"></div>
-                  </div>
-                </div>
-              </mat-card-content>
-
-              <mat-card-actions class="p-4 bg-gray-50 flex justify-end gap-2">
-                @if (aula.reservadaPeloAluno) {
-                  <button mat-flat-button disabled class="w-full py-2 !bg-green-100 !text-green-700">
-                    <mat-icon>check_circle</mat-icon> VOCÊ ESTÁ INSCRITO
-                  </button>
-                } @else if (aula.vagasOcupadas >= aula.limiteVagas) {
-                  <button mat-flat-button disabled color="warn" class="w-full py-2">TURMA LOTADA</button>
-                } @else {
-                  <button mat-flat-button color="primary" (click)="reservarVaga(aula)" class="w-full py-2">RESERVAR MINHA VAGA</button>
-                }
-                <button mat-icon-button color="primary" (click)="abrirDetalhes(aula)">
-                  <mat-icon>visibility</mat-icon>
-                </button>
-              </mat-card-actions>
-            </mat-card>
-          } @empty {
-            <div class="col-span-full text-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
-              <mat-icon class="text-gray-400 text-6xl mb-4 h-16 w-16">event_busy</mat-icon>
-              <h3 class="text-xl text-gray-600 font-medium">Nenhuma aula disponível</h3>
-              <p class="text-gray-500 mt-2">Fique de olho, novas turmas serão abertas em breve!</p>
+    <!-- ============ Presença em aula em grupo ============ -->
+    @if (podeVerRelatorioPresenca()) {
+      <mat-tab label="Presenças">
+        <div class="pt-5">
+          @if (erroRelatorioPresenca(); as mensagem) {
+            <div role="alert"
+                 class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+              <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+              </span>
+              <button type="button" (click)="carregarRelatorioPresenca()"
+                      class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
             </div>
+          } @else if (carregandoRelatorioPresenca()) {
+            <div class="flex items-center gap-3 rounded-marca border border-linha bg-papel px-5 py-14 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando relatório…</span>
+            </div>
+          } @else if (relatorioPresenca(); as r) {
+            <p class="mb-4 text-[12.5px] text-tinta-3">
+              Últimos {{ r.dias }} dias — presenças confirmadas pelo professor depois de cada aula.
+            </p>
+
+            <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div class="h-painel px-5 py-4">
+                <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Taxa de comparecimento</p>
+                <p class="mt-1 text-[22px] font-bold tabular-nums text-tinta">
+                  {{ r.taxaComparecimento.toFixed(1).replace('.', ',') }}%
+                </p>
+              </div>
+              <div class="h-painel px-5 py-4">
+                <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Presenças confirmadas</p>
+                <p class="mt-1 text-[22px] font-bold tabular-nums text-tinta">{{ r.totalConfirmadas }}</p>
+              </div>
+              <div class="h-painel px-5 py-4">
+                <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Faltas</p>
+                <p class="mt-1 text-[22px] font-bold tabular-nums text-tinta">{{ r.totalFaltas }}</p>
+              </div>
+            </div>
+
+            <section class="h-painel overflow-hidden" aria-labelledby="titulo-mais-faltosos">
+              <header class="border-b border-linha px-5 py-4">
+                <h2 id="titulo-mais-faltosos" class="h-rotulo">Quem mais falta</h2>
+              </header>
+
+              <div class="overflow-x-auto">
+                <table mat-table [dataSource]="r.maisFaltosos" class="h-tabela">
+                  <ng-container matColumnDef="posicao">
+                    <th mat-header-cell *matHeaderCellDef class="!w-12">#</th>
+                    <td mat-cell *matCellDef="let l; let i = index" class="tabular-nums text-tinta-3">{{ i + 1 }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="aluno">
+                    <th mat-header-cell *matHeaderCellDef>Aluno</th>
+                    <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.alunoNome }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="faltas">
+                    <th mat-header-cell *matHeaderCellDef class="!text-right">Faltas</th>
+                    <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold text-perigo-700">
+                      {{ l.faltas }}
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="presencas">
+                    <th mat-header-cell *matHeaderCellDef class="!text-right">Presenças</th>
+                    <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                      {{ l.presencas }}
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="colunasFaltosos"></tr>
+                  <tr mat-row *matRowDef="let row; columns: colunasFaltosos"></tr>
+                </table>
+              </div>
+
+              @if (r.maisFaltosos.length === 0) {
+                <div class="flex flex-col items-center gap-2 px-5 py-10 text-center">
+                  <mat-icon class="!h-6 !w-6 !text-[24px] text-tinta-3" svgIcon="assignment_turned_in"></mat-icon>
+                  <p class="text-[13px] text-tinta-3">Nenhuma falta no período.</p>
+                </div>
+              }
+            </section>
+
+            <!-- ============ Taxa de no-show por horário recorrente ============ -->
+            <section class="mt-6 h-painel overflow-hidden" aria-labelledby="titulo-no-show">
+              <header class="border-b border-linha px-5 py-4">
+                <h2 id="titulo-no-show" class="h-rotulo">Faltas por horário</h2>
+                <p class="mt-1 text-[12px] text-tinta-3">
+                  Mesma aula, unidade, dia da semana e hora, somando todas as ocorrências do período — do pior
+                  horário pro melhor. Só entra quem já teve pelo menos 4 ocorrências.
+                </p>
+              </header>
+
+              @if (erroNoShow(); as mensagem) {
+                <div role="alert" class="flex flex-wrap items-center justify-between gap-3 px-5 py-6">
+                  <span class="flex items-center gap-2.5 text-[13px] text-perigo-700">
+                    <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="error"></mat-icon>{{ mensagem }}
+                  </span>
+                  <button type="button" (click)="carregarNoShowPorHorario()"
+                          class="text-[12.5px] font-semibold text-perigo-700 underline underline-offset-2">
+                    Tentar novamente
+                  </button>
+                </div>
+              } @else if (carregandoNoShow()) {
+                <div class="flex items-center gap-3 px-5 py-8 text-[13px] text-tinta-3">
+                  <mat-spinner diameter="20"></mat-spinner><span>Carregando…</span>
+                </div>
+              } @else {
+                <div class="overflow-x-auto">
+                  <table mat-table [dataSource]="noShowPorHorario()" class="h-tabela">
+                    <ng-container matColumnDef="aula">
+                      <th mat-header-cell *matHeaderCellDef>Aula</th>
+                      <td mat-cell *matCellDef="let l">
+                        <p class="font-semibold text-tinta">{{ l.nomeAula }}</p>
+                        <p class="text-[12px] text-tinta-3">{{ l.unidadeNome }} · {{ l.professorNome }}</p>
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="diaHorario">
+                      <th mat-header-cell *matHeaderCellDef>Dia e horário</th>
+                      <td mat-cell *matCellDef="let l" class="whitespace-nowrap tabular-nums text-tinta-2">
+                        {{ diaEHorario(l) }}
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="ocorrencias">
+                      <th mat-header-cell *matHeaderCellDef class="!text-right">Ocorrências</th>
+                      <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                        {{ l.ocorrencias }}
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="taxaNoShow">
+                      <th mat-header-cell *matHeaderCellDef class="!text-right">No-show</th>
+                      <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold text-perigo-700">
+                        {{ l.taxaNoShow.toFixed(1).replace('.', ',') }}%
+                      </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="colunasNoShow"></tr>
+                    <tr mat-row *matRowDef="let row; columns: colunasNoShow"></tr>
+                  </table>
+                </div>
+
+                @if (noShowPorHorario().length === 0) {
+                  <div class="flex flex-col items-center gap-2 px-5 py-10 text-center">
+                    <mat-icon class="!h-6 !w-6 !text-[24px] text-tinta-3" svgIcon="schedule"></mat-icon>
+                    <p class="text-[13px] text-tinta-3">Nenhum horário com ocorrências suficientes ainda.</p>
+                  </div>
+                }
+              }
+            </section>
+
+            <!-- ============ Taxa de presença em aula em grupo por professor ============ -->
+            <section class="mt-6 h-painel overflow-hidden" aria-labelledby="titulo-presenca-professor">
+              <header class="border-b border-linha px-5 py-4">
+                <h2 id="titulo-presenca-professor" class="h-rotulo">Presença por professor</h2>
+                <p class="mt-1 text-[12px] text-tinta-3">
+                  Últimos 90 dias, misturando todas as aulas que o professor dá — do pior pro melhor. Só
+                  entra quem já tem pelo menos 8 presenças confirmadas.
+                </p>
+              </header>
+
+              @if (erroPresencaProfessor(); as mensagem) {
+                <div role="alert" class="flex flex-wrap items-center justify-between gap-3 px-5 py-6">
+                  <span class="flex items-center gap-2.5 text-[13px] text-perigo-700">
+                    <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="error"></mat-icon>{{ mensagem }}
+                  </span>
+                  <button type="button" (click)="carregarPresencaPorProfessor()"
+                          class="text-[12.5px] font-semibold text-perigo-700 underline underline-offset-2">
+                    Tentar novamente
+                  </button>
+                </div>
+              } @else if (carregandoPresencaProfessor()) {
+                <div class="flex items-center gap-3 px-5 py-8 text-[13px] text-tinta-3">
+                  <mat-spinner diameter="20"></mat-spinner><span>Carregando…</span>
+                </div>
+              } @else {
+                <div class="overflow-x-auto">
+                  <table mat-table [dataSource]="presencaPorProfessor()" class="h-tabela">
+                    <ng-container matColumnDef="posicao">
+                      <th mat-header-cell *matHeaderCellDef class="!w-12">#</th>
+                      <td mat-cell *matCellDef="let l; let i = index" class="tabular-nums text-tinta-3">{{ i + 1 }}</td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="professor">
+                      <th mat-header-cell *matHeaderCellDef>Professor</th>
+                      <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.professorNome }}</td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="confirmadas">
+                      <th mat-header-cell *matHeaderCellDef class="!text-right">Confirmadas</th>
+                      <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                        {{ l.totalConfirmadas }}
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="faltas">
+                      <th mat-header-cell *matHeaderCellDef class="!text-right">Faltas</th>
+                      <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                        {{ l.faltas }}
+                      </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="taxa">
+                      <th mat-header-cell *matHeaderCellDef class="!text-right">Presença</th>
+                      <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold"
+                          [class.text-perigo-700]="l.taxaPresenca < 80"
+                          [class.text-tinta]="l.taxaPresenca >= 80">
+                        {{ l.taxaPresenca.toFixed(1).replace('.', ',') }}%
+                      </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="colunasPresencaProfessor"></tr>
+                    <tr mat-row *matRowDef="let row; columns: colunasPresencaProfessor"></tr>
+                  </table>
+                </div>
+
+                @if (presencaPorProfessor().length === 0) {
+                  <div class="flex flex-col items-center gap-2 px-5 py-10 text-center">
+                    <mat-icon class="!h-6 !w-6 !text-[24px] text-tinta-3" svgIcon="fitness_center"></mat-icon>
+                    <p class="text-[13px] text-tinta-3">Nenhum professor com presenças suficientes ainda.</p>
+                  </div>
+                }
+              }
+            </section>
           }
         </div>
-
-      </div>
-    </mat-tab>
-
-    <mat-tab [label]="'Histórico de Aulas (' + historicoAulas().length + ')'">
-      <div class="p-4 bg-gray-50/50 min-h-[400px]">
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          @for (aula of historicoAulas(); track aula.id) {
-            <mat-card class="shadow-lg border border-gray-100 rounded-xl overflow-hidden bg-white opacity-85">
-              <mat-card-header class="bg-gray-100 p-4 border-b border-gray-200 flex justify-between items-start">
-                <div>
-                  <mat-card-title class="text-xl font-bold text-gray-700 line-through decoration-gray-400">{{ aula.titulo }}</mat-card-title>
-                  <mat-card-subtitle class="mt-2 text-gray-500 flex items-center gap-1">
-                    <mat-icon class="scale-75">history</mat-icon>
-                    {{ aula.dataHora | date:'dd/MM/yyyy HH:mm' }}
-                  </mat-card-subtitle>
-                </div>
-                
-                @if (perfilUsuario === 'PROFESSOR' || perfilUsuario === 'ADMIN') {
-                  <button mat-icon-button color="primary" (click)="abrirListaAlunos(aula)" title="Ver quem participou">
-                    <mat-icon>group</mat-icon>
-                  </button>
-                }
-              </mat-card-header>
-
-              <mat-card-content class="p-4 pt-6">
-                <p class="text-gray-600 flex items-center gap-2 font-medium mb-4">
-                  <mat-icon class="text-gray-400">fitness_center</mat-icon>
-                  Prof: {{ aula.professor?.nome || 'Definido' }}
-                </p>
-
-                <div class="mt-2">
-                  <div class="flex justify-between text-sm mb-1 text-gray-500">
-                    <span>Participação total</span>
-                    <span class="font-bold text-gray-700">{{ aula.vagasOcupadas }} alunos presentes</span>
-                  </div>
-                </div>
-              </mat-card-content>
-
-              <mat-card-actions class="p-4 bg-gray-100 flex justify-end gap-2">
-                <button mat-flat-button disabled class="w-full py-2 !bg-gray-200 !text-gray-500">
-                  AULA CONCLUÍDA
-                </button>
-                <button mat-icon-button color="primary" (click)="abrirDetalhes(aula)" title="Ver o que foi passado">
-                  <mat-icon>visibility</mat-icon>
-                </button>
-              </mat-card-actions>
-            </mat-card>
-          } @empty {
-            <div class="col-span-full text-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
-              <mat-icon class="text-gray-300 text-6xl mb-4 h-16 w-16">history_toggle_off</mat-icon>
-              <h3 class="text-xl text-gray-500 font-medium">Histórico vazio</h3>
-              <p class="text-gray-400 mt-2">Nenhuma aula antiga foi encontrada no registro.</p>
-            </div>
-          }
-        </div>
-
-      </div>
-    </mat-tab>
-
+      </mat-tab>
+    }
   </mat-tab-group>
 </div>

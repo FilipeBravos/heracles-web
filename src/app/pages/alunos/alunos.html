@@ -1,439 +1,407 @@
-<div class="p-8 max-w-7xl mx-auto">
-  <div class="flex justify-between items-center mb-8">
+<div class="mx-auto max-w-[1180px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+  <header class="h-cabecalho">
     <div>
-      <h1 class="text-3xl font-bold text-gray-800">Alunos</h1>
-      <p class="text-gray-500">Gerencie os membros da sua unidade Heracles.</p>
+      <h1>Alunos</h1>
+      <p>Cadastro, fichas vinculadas e liberação de acesso dos membros da unidade.</p>
     </div>
-    <button
-      mat-flat-button
-      color="primary"
-      class="!rounded-none !py-6"
-      (click)="abrirModalNovoAluno()"
-    >
-      <mat-icon>add</mat-icon> Novo Aluno
-    </button>
-  </div>
+    @if (podeCadastrar()) {
+      <button mat-flat-button color="primary" class="!h-11 !px-5" (click)="abrirModalNovoAluno()">
+        <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+        Novo aluno
+      </button>
+    }
+  </header>
 
-  @if (listasAlunos(); as dados) {
+  <mat-tab-group (selectedIndexChange)="aoTrocarAba($event)" animationDuration="0ms">
+    <!-- ============ Alunos ============ -->
+    <mat-tab label="Alunos">
+      <div class="pt-5">
+  @if (erro(); as mensagem) {
+    <div role="alert"
+         class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+      <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+      </span>
+      <button type="button" (click)="listar()"
+              class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">
+        Tentar novamente
+      </button>
+    </div>
+  }
 
-  <mat-tab-group
-    backgroundColor="primary"
-    class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
-  >
-    <mat-tab
-      [label]="'Meus Alunos Particular (' + dados.meusAlunos.length + ')'"
-    >
-      <div class="p-4 bg-gray-50/50 min-h-[400px]">
-        @if (dados.meusAlunos.length === 0) {
-        <p
-          class="text-gray-400 italic py-12 text-center border border-dashed border-gray-200 rounded-xl bg-white m-4"
-        >
-          Você não possui nenhum aluno vinculado ao seu perfil de Personal.
-        </p>
-        } @else {
-        <div
-          class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
-        >
-          <table mat-table [dataSource]="dados.meusAlunos" class="w-full">
-            <ng-container matColumnDef="id"
-              ><th
-                mat-header-cell
-                *matHeaderCellDef
-                class="!font-bold text-gray-700"
-              >
-                ID
-              </th>
-              <td mat-cell *matCellDef="let aluno">
-                #{{aluno.id}}
-              </td></ng-container
-            >
-            <ng-container matColumnDef="nome"
-              ><th
-                mat-header-cell
-                *matHeaderCellDef
-                class="!font-bold text-gray-700"
-              >
-                Nome
-              </th>
-              <td mat-cell *matCellDef="let aluno" class="font-medium">
-                {{aluno.nome}}
-              </td></ng-container
-            >
-            <ng-container matColumnDef="cpf"
-              ><th
-                mat-header-cell
-                *matHeaderCellDef
-                class="!font-bold text-gray-700"
-              >
-                CPF
-              </th>
-              <td mat-cell *matCellDef="let aluno">
-                {{aluno.cpf}}
-              </td></ng-container
-            >
-            <ng-container matColumnDef="email"
-              ><th
-                mat-header-cell
-                *matHeaderCellDef
-                class="!font-bold text-gray-700"
-              >
-                E-mail
-              </th>
-              <td mat-cell *matCellDef="let aluno">
-                {{aluno.email}}
-              </td></ng-container
-            >
-
-            <ng-container matColumnDef="treino">
-              <th
-                mat-header-cell
-                *matHeaderCellDef
-                class="!font-bold text-gray-700"
-              >
-                Fichas Atuais
-              </th>
-              <td
-                mat-cell
-                *matCellDef="let aluno"
-                class="text-blue-600 font-semibold text-sm"
-              >
-                @if (aluno.treinos && aluno.treinos.length > 0) { @for (t of
-                aluno.treinos; track t.id; let isLast = $last) { {{ t.nome }}{{
-                !isLast ? ', ' : '' }} } } @else {
-                <span class="text-gray-400 font-normal italic"
-                  >Nenhuma ficha</span
-                >
+  <div class="h-painel overflow-hidden">
+    <div class="overflow-x-auto">
+      <table mat-table [dataSource]="alunos()" class="h-tabela">
+        <ng-container matColumnDef="nome">
+          <th mat-header-cell *matHeaderCellDef>Aluno</th>
+          <td mat-cell *matCellDef="let aluno">
+            <div class="flex items-center gap-3 py-1">
+              <div class="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-marca-sm
+                          bg-fundo-2 text-[11px] font-bold text-tinta-2">
+                @if (fotoPorAluno()[aluno.id]; as url) {
+                  <img [src]="url" alt="" class="h-full w-full object-cover">
+                } @else {
+                  {{ iniciais(aluno) }}
                 }
-              </td>
-            </ng-container>
+              </div>
+              <div class="min-w-0">
+                <p class="truncate font-semibold text-tinta">{{ aluno.nome }}</p>
+                <p class="truncate text-[12px] text-tinta-3">{{ aluno.email }}</p>
+              </div>
+            </div>
+          </td>
+        </ng-container>
 
-            <ng-container matColumnDef="status">
-              <th
-                mat-header-cell
-                *matHeaderCellDef
-                class="!font-bold text-gray-700"
-              >
-                Status
-              </th>
-              <td mat-cell *matCellDef="let aluno">
-                <span
-                  class="px-3 py-1 text-xs font-bold border !rounded-none"
-                  [ngClass]="aluno.status === 'ATIVO' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'"
-                  >{{ aluno.status }}</span
-                >
-              </td>
-            </ng-container>
+        <ng-container matColumnDef="cpf">
+          <th mat-header-cell *matHeaderCellDef>CPF</th>
+          <td mat-cell *matCellDef="let aluno" class="tabular-nums whitespace-nowrap text-tinta-2">
+            {{ cpfFormatado(aluno) }}
+          </td>
+        </ng-container>
 
-            <ng-container matColumnDef="acoes">
-              <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let aluno">
-                <div
-                  class="flex items-center justify-end gap-1 flex-nowrap w-max ml-auto"
-                >
-                  <button
-                    mat-icon-button
-                    (click)="abrirModalAnamnese(aluno)"
-                    title="Ficha de Anamnese / Avaliação"
-                  >
-                    <mat-icon
-                      class="text-purple-600 hover:scale-110 transition-transform"
-                      >assignment</mat-icon
-                    >
-                  </button>
+        <ng-container matColumnDef="treino">
+          <th mat-header-cell *matHeaderCellDef>Fichas</th>
+          <td mat-cell *matCellDef="let aluno">
+            <div class="flex flex-wrap items-center gap-1.5 py-1.5">
+              @for (t of aluno.treinos; track t.id) {
+                <span class="h-etiqueta h-etiqueta--suave">{{ t.nome }}</span>
+              } @empty {
+                <span class="text-[12.5px] italic text-tinta-3">Nenhuma ficha</span>
+              }
+              @if (aluno.tipoPerfil === 'ALUNO' && !aluno.anamnesePreenchida) {
+                <span class="h-etiqueta h-etiqueta--alerta" matTooltip="Ficha nova exige anamnese preenchida">
+                  Anamnese pendente
+                </span>
+              }
+            </div>
+          </td>
+        </ng-container>
 
-                  <button
-                    mat-icon-button
-                    (click)="abrirModalAvaliacaoFisica(aluno)"
-                    title="Avaliação Antropométrica e Física"
-                  >
-                    <mat-icon
-                      class="text-teal-600 hover:scale-110 transition-transform"
-                      >analytics</mat-icon
-                    >
-                  </button>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Situação</th>
+          <td mat-cell *matCellDef="let aluno">
+            <span class="h-etiqueta"
+                  [class]="aluno.status === 'ATIVO' ? 'h-etiqueta--ok' : 'h-etiqueta--perigo'">
+              {{ aluno.status === 'ATIVO' ? 'Ativo' : 'Inativo' }}
+            </span>
+          </td>
+        </ng-container>
 
-                  <button
-                    mat-icon-button
-                    color="primary"
-                    (click)="abrirModalMatriculaPeloAluno(aluno)"
-                    title="Vender Plano / Renovar"
-                  >
-                    <mat-icon class="text-blue-600">shopping_cart</mat-icon>
-                  </button>
-
-                  @if (dados.meusAlunos.includes(aluno)) {
-                  <button
-                    mat-icon-button
-                    (click)="desvincularAluno(aluno)"
-                    title="Desvincular Aluno (Remover da sua lista)"
-                  >
-                    <mat-icon class="text-red-500">person_remove</mat-icon>
-                  </button>
-                  } @if (dados.alunosSemPersonal.includes(aluno)) {
-                  <button
-                    mat-icon-button
-                    (click)="abrirModalAtribuir(aluno)"
-                    title="Assumir Aluno (Tornar-se Personal)"
-                  >
-                    <mat-icon class="text-green-600">person_add</mat-icon>
-                  </button>
-                  }
-
-                  <button
-                    mat-icon-button
-                    color="primary"
+        <ng-container matColumnDef="acoes">
+          <th mat-header-cell *matHeaderCellDef class="!text-right">Ações</th>
+          <td mat-cell *matCellDef="let aluno" class="!text-right whitespace-nowrap">
+            @if (podeVerAnamnese() && aluno.tipoPerfil === 'ALUNO') {
+              <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
+                      (click)="abrirModalAnamnese(aluno)"
+                      matTooltip="Anamnese" aria-label="Anamnese">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="assignment_turned_in"></mat-icon>
+              </button>
+              <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
+                      (click)="abrirModalFrequencia(aluno)"
+                      matTooltip="Frequência" aria-label="Frequência">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="how_to_reg"></mat-icon>
+              </button>
+              <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
+                      (click)="abrirModalAvaliacaoFisica(aluno)"
+                      matTooltip="Avaliação física" aria-label="Avaliação física">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="show_chart"></mat-icon>
+              </button>
+            }
+            @if (podeVerContrato() && aluno.tipoPerfil === 'ALUNO') {
+              <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
+                      (click)="abrirModalContrato(aluno)"
+                      matTooltip="Contrato" aria-label="Contrato">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="description"></mat-icon>
+              </button>
+            }
+            <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
                     (click)="abrirModalVinculo(aluno)"
-                    title="Vincular Ficha"
-                  >
-                    <mat-icon>fitness_center</mat-icon>
-                  </button>
+                    matTooltip="Vincular ficha" aria-label="Vincular ficha">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="fitness_center"></mat-icon>
+            </button>
+            @if (podeGerenciar()) {
+              <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
+                      (click)="abrirModalEditarAluno(aluno)"
+                      matTooltip="Editar dados" aria-label="Editar dados">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="edit"></mat-icon>
+              </button>
+              <button mat-icon-button class="!h-9 !w-9"
+                      [class]="aluno.status === 'ATIVO'
+                        ? '!text-tinta-2 hover:!text-perigo-700' : '!text-tinta-2 hover:!text-ok-700'"
+                      (click)="alternarStatus(aluno)"
+                      [matTooltip]="aluno.status === 'ATIVO' ? 'Inativar aluno' : 'Reativar aluno'"
+                      [attr.aria-label]="aluno.status === 'ATIVO' ? 'Inativar aluno' : 'Reativar aluno'">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" [svgIcon]="aluno.status === 'ATIVO' ? 'block' : 'check_circle'"></mat-icon>
+              </button>
+            }
+          </td>
+        </ng-container>
 
-                  <button
-                    mat-icon-button
-                    color="accent"
-                    title="Editar Dados"
-                    (click)="abrirModalEditarAluno(aluno)"
-                  >
-                    <mat-icon>edit</mat-icon>
-                  </button>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
 
-                  <button
-                    mat-icon-button
-                    [color]="aluno.status === 'ATIVO' ? 'warn' : 'primary'"
-                    (click)="alternarStatus(aluno)"
-                    [title]="aluno.status === 'ATIVO' ? 'Inativar Aluno' : 'Reativar Aluno'"
-                  >
-                    <mat-icon>
-                      {{ aluno.status === 'ATIVO' ? 'block' : 'check_circle' }}
-                    </mat-icon>
-                  </button>
-                </div>
-              </td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr
-              mat-row
-              *matRowDef="let row; columns: displayedColumns;"
-              class="hover:bg-gray-50 transition-colors"
-            ></tr>
-          </table>
-        </div>
+    @if (carregando()) {
+      <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+        <mat-spinner diameter="20"></mat-spinner>
+        <span>Carregando alunos…</span>
+      </div>
+    } @else if (alunos().length === 0 && !erro()) {
+      <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+        <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="group_add"></mat-icon>
+        <p class="text-[14px] font-semibold text-tinta">Nenhum aluno cadastrado</p>
+        <p class="max-w-sm text-[13px] text-tinta-3">
+          @if (podeCadastrar()) {
+            Comece cadastrando o primeiro membro da unidade — depois você vincula as fichas de treino.
+          } @else {
+            Nenhum aluno foi cadastrado nesta unidade ainda. O cadastro é da secretaria.
+          }
+        </p>
+        @if (podeCadastrar()) {
+          <button mat-flat-button color="primary" class="!mt-1" (click)="abrirModalNovoAluno()">
+            <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+            Novo aluno
+          </button>
         }
+      </div>
+    }
+
+    @if (total() > 0) {
+      <mat-paginator [length]="total()" [pageIndex]="pagina()" [pageSize]="tamanhoPagina()"
+                     [pageSizeOptions]="[10, 20, 50]" (page)="mudarPagina($event)">
+      </mat-paginator>
+    }
+  </div>
       </div>
     </mat-tab>
 
-    <mat-tab
-      [label]="'Alunos Sem Personal (' + dados.alunosSemPersonal.length + ')'"
-    >
-      <div class="p-4 bg-gray-50/50 min-h-[400px]">
-        @if (dados.alunosSemPersonal.length === 0) {
-        <p
-          class="text-gray-400 italic py-12 text-center border border-dashed border-gray-200 rounded-xl bg-white m-4"
-        >
-          Todos os alunos da academia já possuem um personal trainer vinculado.
+    <!-- ============ Alerta de reavaliação física vencida ============ -->
+    <mat-tab label="Reavaliação vencida">
+      <div class="pt-5">
+        <p class="mb-4 text-[12.5px] text-tinta-3">
+          Matrícula ativa, mas a última avaliação física passou de 90 dias — ou nunca aconteceu.
         </p>
-        } @else {
-        <div
-          class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
-        >
-          <table
-            mat-table
-            [dataSource]="dados.alunosSemPersonal"
-            class="w-full"
-          >
-            <ng-container matColumnDef="id"
-              ><th
-                mat-header-cell
-                *matHeaderCellDef
-                class="!font-bold text-gray-700"
-              >
-                ID
-              </th>
-              <td mat-cell *matCellDef="let aluno">
-                #{{aluno.id}}
-              </td></ng-container
-            >
-            <ng-container matColumnDef="nome"
-              ><th
-                mat-header-cell
-                *matHeaderCellDef
-                class="!font-bold text-gray-700"
-              >
-                Nome
-              </th>
-              <td mat-cell *matCellDef="let aluno" class="font-medium">
-                {{aluno.nome}}
-              </td></ng-container
-            >
-            <ng-container matColumnDef="cpf"
-              ><th
-                mat-header-cell
-                *matHeaderCellDef
-                class="!font-bold text-gray-700"
-              >
-                CPF
-              </th>
-              <td mat-cell *matCellDef="let aluno">
-                {{aluno.cpf}}
-              </td></ng-container
-            >
-            <ng-container matColumnDef="email"
-              ><th
-                mat-header-cell
-                *matHeaderCellDef
-                class="!font-bold text-gray-700"
-              >
-                E-mail
-              </th>
-              <td mat-cell *matCellDef="let aluno">
-                {{aluno.email}}
-              </td></ng-container
-            >
 
-            <ng-container matColumnDef="treino">
-              <th
-                mat-header-cell
-                *matHeaderCellDef
-                class="!font-bold text-gray-700"
-              >
-                Fichas Atuais
-              </th>
-              <td
-                mat-cell
-                *matCellDef="let aluno"
-                class="text-blue-600 font-semibold text-sm"
-              >
-                @if (aluno.treinos && aluno.treinos.length > 0) { @for (t of
-                aluno.treinos; track t.id; let isLast = $last) { {{ t.nome }}{{
-                !isLast ? ', ' : '' }} } } @else {
-                <span class="text-gray-400 font-normal italic"
-                  >Nenhuma ficha</span
-                >
-                }
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="status">
-              <th
-                mat-header-cell
-                *matHeaderCellDef
-                class="!font-bold text-gray-700"
-              >
-                Status
-              </th>
-              <td mat-cell *matCellDef="let aluno">
-                <span
-                  class="px-3 py-1 text-xs font-bold border !rounded-none"
-                  [ngClass]="aluno.status === 'ATIVO' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'"
-                  >{{ aluno.status }}</span
-                >
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="acoes">
-              <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let aluno">
-                <div
-                  class="flex items-center justify-end gap-1 flex-nowrap w-max ml-auto"
-                >
-                  <button
-                    mat-icon-button
-                    (click)="abrirModalAnamnese(aluno)"
-                    title="Ficha de Anamnese / Avaliação"
-                  >
-                    <mat-icon
-                      class="text-purple-600 hover:scale-110 transition-transform"
-                      >assignment</mat-icon
-                    >
-                  </button>
-
-                  <button
-                    mat-icon-button
-                    (click)="abrirModalAvaliacaoFisica(aluno)"
-                    title="Avaliação Antropométrica e Física"
-                  >
-                    <mat-icon
-                      class="text-teal-600 hover:scale-110 transition-transform"
-                      >analytics</mat-icon
-                    >
-                  </button>
-
-                  <button
-                    mat-icon-button
-                    color="primary"
-                    (click)="abrirModalMatriculaPeloAluno(aluno)"
-                    title="Vender Plano / Renovar"
-                  >
-                    <mat-icon class="text-blue-600">shopping_cart</mat-icon>
-                  </button>
-
-                  @if (dados.meusAlunos.includes(aluno)) {
-                  <button
-                    mat-icon-button
-                    (click)="desvincularAluno(aluno)"
-                    title="Desvincular Aluno (Remover da sua lista)"
-                  >
-                    <mat-icon class="text-red-500">person_remove</mat-icon>
-                  </button>
-                  } @if (dados.alunosSemPersonal.includes(aluno)) {
-                  <button
-                    mat-icon-button
-                    (click)="abrirModalAtribuir(aluno)"
-                    title="Assumir Aluno (Tornar-se Personal)"
-                  >
-                    <mat-icon class="text-green-600">person_add</mat-icon>
-                  </button>
-                  }
-
-                  <button
-                    mat-icon-button
-                    color="primary"
-                    (click)="abrirModalVinculo(aluno)"
-                    title="Vincular Ficha"
-                  >
-                    <mat-icon>fitness_center</mat-icon>
-                  </button>
-
-                  <button
-                    mat-icon-button
-                    color="accent"
-                    title="Editar Dados"
-                    (click)="abrirModalEditarAluno(aluno)"
-                  >
-                    <mat-icon>edit</mat-icon>
-                  </button>
-
-                  <button
-                    mat-icon-button
-                    [color]="aluno.status === 'ATIVO' ? 'warn' : 'primary'"
-                    (click)="alternarStatus(aluno)"
-                    [title]="aluno.status === 'ATIVO' ? 'Inativar Aluno' : 'Reativar Aluno'"
-                  >
-                    <mat-icon>
-                      {{ aluno.status === 'ATIVO' ? 'block' : 'check_circle' }}
-                    </mat-icon>
-                  </button>
-                </div>
-              </td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr
-              mat-row
-              *matRowDef="let row; columns: displayedColumns;"
-              class="hover:bg-gray-50 transition-colors"
-            ></tr>
-          </table>
-        </div>
+        @if (erroReavaliacaoVencida(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="listarReavaliacaoVencida()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
         }
+
+        @if (resumoReavaliacaoVencida(); as resumo) {
+          <div class="mb-5 h-painel px-5 py-4 sm:max-w-xs">
+            <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Reavaliação vencida</p>
+            <p class="mt-1 text-[22px] font-bold tabular-nums text-alerta-700">{{ resumo.total }}</p>
+          </div>
+        }
+
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="reavaliacaoVencida()" class="h-tabela">
+              <ng-container matColumnDef="aluno">
+                <th mat-header-cell *matHeaderCellDef>Aluno</th>
+                <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.alunoNome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="contato">
+                <th mat-header-cell *matHeaderCellDef>Contato</th>
+                <td mat-cell *matCellDef="let l">
+                  <p class="text-tinta-2">{{ l.email }}</p>
+                  @if (l.telefone) {
+                    <p class="text-[12px] text-tinta-3">{{ l.telefone }}</p>
+                  }
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="ultimaAvaliacao">
+                <th mat-header-cell *matHeaderCellDef>Última avaliação</th>
+                <td mat-cell *matCellDef="let l" class="whitespace-nowrap tabular-nums text-tinta-2">
+                  @if (l.ultimaAvaliacao) {
+                    {{ l.ultimaAvaliacao | date: 'dd/MM/yyyy' }}
+                  } @else {
+                    <span class="italic text-tinta-3">Nunca avaliado</span>
+                  }
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasReavaliacaoVencida"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasReavaliacaoVencida"></tr>
+            </table>
+          </div>
+
+          @if (carregandoReavaliacaoVencida()) {
+            <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando alerta…</span>
+            </div>
+          } @else if (reavaliacaoVencida().length === 0 && !erroReavaliacaoVencida()) {
+            <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <mat-icon class="!h-7 !w-7 !text-[28px] text-ok-700" svgIcon="check_circle"></mat-icon>
+              <p class="text-[14px] font-semibold text-tinta">Ninguém com reavaliação vencida</p>
+              <p class="max-w-sm text-[13px] text-tinta-3">
+                Todo aluno com matrícula ativa fez uma avaliação física nos últimos 90 dias.
+              </p>
+            </div>
+          }
+
+          @if (totalReavaliacaoVencida() > 0) {
+            <mat-paginator [length]="totalReavaliacaoVencida()" [pageIndex]="paginaReavaliacaoVencida()" [pageSize]="20"
+                           [hidePageSize]="true" (page)="mudarPaginaReavaliacaoVencida($event)"></mat-paginator>
+          }
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- ============ Evolução física média por unidade ============ -->
+    <mat-tab label="Evolução física">
+      <div class="pt-5">
+        <p class="mb-4 text-[12.5px] text-tinta-3">
+          Últimos 365 dias — média do delta entre a primeira e a última avaliação física de cada aluno com
+          pelo menos duas avaliações no período, agregada pela unidade da matrícula vigente. Um traço (—)
+          significa que nenhum aluno tinha aquela medida nas duas pontas, não zero.
+        </p>
+
+        @if (erroEvolucaoFisica(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="carregarEvolucaoFisica()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        }
+
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="evolucaoFisica()" class="h-tabela">
+              <ng-container matColumnDef="unidade">
+                <th mat-header-cell *matHeaderCellDef>Unidade</th>
+                <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.unidadeNome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="quantidade">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Alunos</th>
+                <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                  {{ l.quantidadeAlunos }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="deltaPeso">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Peso</th>
+                <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold text-tinta">
+                  {{ formatarDelta(l.deltaPesoMedio, ' kg') }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="deltaGordura">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">% Gordura</th>
+                <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold text-tinta">
+                  {{ formatarDelta(l.deltaPercentualGorduraMedio, ' %') }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="deltaImc">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">IMC</th>
+                <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold text-tinta">
+                  {{ formatarDelta(l.deltaImcMedio) }}
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasEvolucaoFisica"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasEvolucaoFisica"></tr>
+            </table>
+          </div>
+
+          @if (carregandoEvolucaoFisica()) {
+            <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando evolução física…</span>
+            </div>
+          } @else if (evolucaoFisica().length === 0 && !erroEvolucaoFisica()) {
+            <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="show_chart"></mat-icon>
+              <p class="text-[14px] font-semibold text-tinta">Sem dados suficientes ainda</p>
+              <p class="max-w-sm text-[13px] text-tinta-3">
+                Nenhum aluno com matrícula vigente tem duas avaliações físicas no período.
+              </p>
+            </div>
+          }
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- ============ Cobertura de anamnese por unidade ============ -->
+    <mat-tab label="Cobertura de anamnese">
+      <div class="pt-5">
+        <p class="mb-4 text-[12.5px] text-tinta-3">
+          Entre alunos com matrícula vigente, o percentual de quem já preencheu a anamnese, por unidade — do
+          pior pro melhor. Um aluno de plano de rede conta uma vez em cada unidade que o plano cobre.
+        </p>
+
+        @if (erroCoberturaAnamnese(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="carregarCoberturaAnamnese()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        }
+
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="coberturaAnamnese()" class="h-tabela">
+              <ng-container matColumnDef="unidade">
+                <th mat-header-cell *matHeaderCellDef>Unidade</th>
+                <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.unidadeNome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="alunos">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Alunos</th>
+                <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                  {{ l.quantidadeAlunos }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="comAnamnese">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Com anamnese</th>
+                <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                  {{ l.quantidadeComAnamnese }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="percentual">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Cobertura</th>
+                <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold"
+                    [class.text-perigo-700]="l.percentualCobertura < 50"
+                    [class.text-tinta]="l.percentualCobertura >= 50">
+                  {{ l.percentualCobertura.toFixed(1).replace('.', ',') }}%
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasCoberturaAnamnese"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasCoberturaAnamnese"></tr>
+            </table>
+          </div>
+
+          @if (carregandoCoberturaAnamnese()) {
+            <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando cobertura de anamnese…</span>
+            </div>
+          } @else if (coberturaAnamnese().length === 0 && !erroCoberturaAnamnese()) {
+            <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="assignment_turned_in"></mat-icon>
+              <p class="text-[14px] font-semibold text-tinta">Sem alunos com matrícula vigente ainda</p>
+            </div>
+          }
+        </div>
       </div>
     </mat-tab>
   </mat-tab-group>
-
-  } @else {
-  <div class="text-center py-12 text-gray-400">
-    Carregando painel de gerenciamento...
-  </div>
-  }
 </div>

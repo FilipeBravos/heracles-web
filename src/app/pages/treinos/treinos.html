@@ -1,99 +1,322 @@
-<div class="p-8">
-  <div class="flex justify-between items-center mb-8">
+<div class="mx-auto max-w-[1180px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+  <header class="h-cabecalho">
     <div>
-      <h1 class="text-3xl font-bold text-gray-800">Treinos</h1>
-      <p class="text-gray-500">
-        Gerencie as fichas e programas de exercícios da unidade Heracles.
-      </p>
+      <h1>Treinos</h1>
+      <p>Fichas modelo da unidade. Uma mesma ficha pode ser vinculada a vários alunos.</p>
     </div>
-    <!-- Botão com cantos retos -->
-    <button
-      mat-flat-button
-      color="primary"
-      class="rounded-none !py-6"
-      (click)="abrirModalNovoTreino()"
-    >
-      <mat-icon>add</mat-icon> Novo Treino
+    <button mat-flat-button color="primary" class="!h-11 !px-5" (click)="abrirModalNovoTreino()">
+      <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+      Nova ficha
     </button>
-  </div>
+  </header>
 
-  <!-- Container da tabela com ângulos retos -->
-  <div
-    class="bg-white shadow-sm border border-gray-100 overflow-hidden rounded-none"
-  >
-    <table mat-table [dataSource]="dataSource()" class="w-full">
-      <!-- Coluna ID -->
-      <ng-container matColumnDef="id">
-        <th mat-header-cell *matHeaderCellDef class="!font-bold text-gray-700">
-          ID
-        </th>
-        <td mat-cell *matCellDef="let treino">#{{treino.id}}</td>
-      </ng-container>
+  <mat-tab-group (selectedIndexChange)="aoTrocarAba($event)" animationDuration="0ms">
+    <!-- ============ Fichas ============ -->
+    <mat-tab label="Fichas">
+      <div class="pt-5">
+        @if (erro(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="listar()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">
+              Tentar novamente
+            </button>
+          </div>
+        }
 
-      <!-- Coluna Nome do Treino -->
-      <ng-container matColumnDef="nome">
-        <th mat-header-cell *matHeaderCellDef class="!font-bold text-gray-700">
-          Nome do Treino
-        </th>
-        <td mat-cell *matCellDef="let treino" class="font-medium">
-          {{treino.nome}}
-        </td>
-      </ng-container>
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+      <table mat-table [dataSource]="treinos()" class="h-tabela">
+        <ng-container matColumnDef="nome">
+          <th mat-header-cell *matHeaderCellDef>Ficha</th>
+          <td mat-cell *matCellDef="let treino">
+            <p class="font-semibold text-tinta">{{ treino.nome }}</p>
+            <p class="text-[12px] text-tinta-3">{{ treino.foco }}</p>
+          </td>
+        </ng-container>
 
-      <!-- Coluna Foco -->
-      <ng-container matColumnDef="foco">
-        <th mat-header-cell *matHeaderCellDef class="!font-bold text-gray-700">
-          Foco
-        </th>
-        <td mat-cell *matCellDef="let treino">{{treino.foco}}</td>
-      </ng-container>
+        <ng-container matColumnDef="nivel">
+          <th mat-header-cell *matHeaderCellDef>Nível</th>
+          <td mat-cell *matCellDef="let treino">
+            <span class="h-etiqueta h-etiqueta--neutra">{{ treino.nivel }}</span>
+          </td>
+        </ng-container>
 
-      <!-- Coluna Nível -->
-      <ng-container matColumnDef="nivel">
-        <th mat-header-cell *matHeaderCellDef class="!font-bold text-gray-700">
-          Nível
-        </th>
-        <td mat-cell *matCellDef="let treino">
-          <!-- Tag de nível visualmente alinhada -->
-          <span
-            class="px-3 py-1 text-xs font-bold bg-blue-50 text-blue-700 rounded-none border border-blue-200"
-          >
-            {{treino.nivel}}
-          </span>
-        </td>
-      </ng-container>
+        <ng-container matColumnDef="exercicios">
+          <th mat-header-cell *matHeaderCellDef>Exercícios</th>
+          <td mat-cell *matCellDef="let treino" class="tabular-nums text-tinta-2">
+            {{ treino.exercicios.length }}
+          </td>
+        </ng-container>
 
-      <!-- Coluna Ações -->
-      <ng-container matColumnDef="acoes">
-        <th mat-header-cell *matHeaderCellDef></th>
-        <td mat-cell *matCellDef="let treino" class="text-right">
-          <button
-            mat-icon-button
-            color="accent"
-            (click)="abrirModalEditar(treino, $event)"
-            title="Editar Ficha"
-          >
-            <mat-icon>edit</mat-icon>
-          </button>
+        <!-- Volume prescrito: o número que a mudança de modelo destravou.
+             Vale a coluna porque é o que diferencia duas fichas do mesmo nível. -->
+        <ng-container matColumnDef="volume">
+          <th mat-header-cell *matHeaderCellDef>Volume mín.</th>
+          <td mat-cell *matCellDef="let treino">
+            @if (treino.exercicios.length > 0) {
+              <span class="tabular-nums font-semibold text-tinta">{{ treino.volumePrescritoMinimo }}</span>
+              <span class="ml-1 text-[11.5px] text-tinta-3">reps</span>
+            } @else {
+              <span class="text-tinta-3">—</span>
+            }
+          </td>
+        </ng-container>
 
-          <button
-            mat-icon-button
-            color="warn"
-            (click)="deletarTreino(treino, $event)"
-            title="Excluir Ficha"
-          >
-            <mat-icon>delete</mat-icon>
-          </button>
-        </td>
-      </ng-container>
+        <ng-container matColumnDef="acoes">
+          <th mat-header-cell *matHeaderCellDef class="!text-right">Ações</th>
+          <td mat-cell *matCellDef="let treino" class="!text-right whitespace-nowrap">
+            <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
+                    (click)="abrirModalEditar(treino, $event)"
+                    matTooltip="Editar ficha" aria-label="Editar ficha">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="edit"></mat-icon>
+            </button>
+            <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-perigo-700"
+                    (click)="deletarTreino(treino, $event)"
+                    matTooltip="Excluir ficha" aria-label="Excluir ficha">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="delete"></mat-icon>
+            </button>
+          </td>
+        </ng-container>
 
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr
-        mat-row
-        *matRowDef="let row; columns: displayedColumns;"
-        class="hover:bg-blue-50 cursor-pointer transition-colors"
-        (click)="abrirDetalhes(row)"
-      ></tr>
-    </table>
-  </div>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"
+            class="cursor-pointer" (click)="abrirDetalhes(row)"></tr>
+      </table>
+    </div>
+
+    @if (carregando()) {
+      <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+        <mat-spinner diameter="20"></mat-spinner>
+        <span>Carregando fichas…</span>
+      </div>
+    } @else if (treinos().length === 0 && !erro()) {
+      <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+        <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="fitness_center"></mat-icon>
+        <p class="text-[14px] font-semibold text-tinta">Nenhuma ficha cadastrada</p>
+        <p class="max-w-sm text-[13px] text-tinta-3">
+          Crie a primeira ficha modelo — depois ela pode ser vinculada a quantos alunos precisar.
+        </p>
+        <button mat-flat-button color="primary" class="!mt-1" (click)="abrirModalNovoTreino()">
+          <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+          Nova ficha
+        </button>
+      </div>
+    }
+
+    @if (total() > 0) {
+      <mat-paginator [length]="total()" [pageIndex]="pagina()" [pageSize]="tamanhoPagina()"
+                     [pageSizeOptions]="[10, 20, 50]" (page)="mudarPagina($event)">
+      </mat-paginator>
+    }
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- ============ Alerta de alunos sem ficha ============ -->
+    <mat-tab label="Alunos sem ficha">
+      <div class="pt-5">
+        <p class="mb-4 text-[12.5px] text-tinta-3">
+          Matrícula ativa, mas o aluno nunca recebeu uma ficha de treino — pagou e nunca foi "recebido" de
+          verdade pelo treino.
+        </p>
+
+        @if (erroSemFicha(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="listarAlunosSemFicha()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        }
+
+        @if (resumoSemFicha(); as resumo) {
+          <div class="mb-5 h-painel px-5 py-4 sm:max-w-xs">
+            <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Alunos sem ficha</p>
+            <p class="mt-1 text-[22px] font-bold tabular-nums text-alerta-700">{{ resumo.total }}</p>
+          </div>
+        }
+
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="alunosSemFicha()" class="h-tabela">
+              <ng-container matColumnDef="aluno">
+                <th mat-header-cell *matHeaderCellDef>Aluno</th>
+                <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.alunoNome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="contato">
+                <th mat-header-cell *matHeaderCellDef>Contato</th>
+                <td mat-cell *matCellDef="let l">
+                  <p class="text-tinta-2">{{ l.email }}</p>
+                  @if (l.telefone) {
+                    <p class="text-[12px] text-tinta-3">{{ l.telefone }}</p>
+                  }
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="dataCadastro">
+                <th mat-header-cell *matHeaderCellDef>Matriculado em</th>
+                <td mat-cell *matCellDef="let l" class="whitespace-nowrap tabular-nums text-tinta-2">
+                  {{ l.dataCadastro | date: 'dd/MM/yyyy' }}
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasSemFicha"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasSemFicha"></tr>
+            </table>
+          </div>
+
+          @if (carregandoSemFicha()) {
+            <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando alerta…</span>
+            </div>
+          } @else if (alunosSemFicha().length === 0 && !erroSemFicha()) {
+            <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <mat-icon class="!h-7 !w-7 !text-[28px] text-ok-700" svgIcon="check_circle"></mat-icon>
+              <p class="text-[14px] font-semibold text-tinta">Todo mundo tem ficha</p>
+              <p class="max-w-sm text-[13px] text-tinta-3">
+                Todo aluno com matrícula ativa já recebeu uma ficha de treino.
+              </p>
+            </div>
+          }
+
+          @if (totalSemFicha() > 0) {
+            <mat-paginator [length]="totalSemFicha()" [pageIndex]="paginaSemFicha()" [pageSize]="20"
+                           [hidePageSize]="true" (page)="mudarPaginaSemFicha($event)"></mat-paginator>
+          }
+        </div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Adesão ao treino">
+      <div class="pt-5">
+        <p class="mb-4 text-[12.5px] text-tinta-3">
+          Últimos 90 dias — volume prescrito (séries vezes repetições mínimas) contra volume realizado, por
+          aluno, do pior pro melhor. Só entra quem já tem pelo menos 4 execuções registradas.
+        </p>
+
+        @if (erroAdesao(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="listarAdesaoTreino()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        }
+
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="adesaoTreino()" class="h-tabela">
+              <ng-container matColumnDef="posicao">
+                <th mat-header-cell *matHeaderCellDef class="!w-12">#</th>
+                <td mat-cell *matCellDef="let l; let i = index" class="tabular-nums text-tinta-3">{{ i + 1 }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="aluno">
+                <th mat-header-cell *matHeaderCellDef>Aluno</th>
+                <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.alunoNome }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="execucoes">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Execuções</th>
+                <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                  {{ l.quantidadeExecucoes }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="taxa">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Adesão</th>
+                <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold"
+                    [class.text-perigo-700]="l.taxaAdesao < 80"
+                    [class.text-tinta]="l.taxaAdesao >= 80">
+                  {{ l.taxaAdesao.toFixed(1).replace('.', ',') }}%
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasAdesao"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasAdesao"></tr>
+            </table>
+          </div>
+
+          @if (carregandoAdesao()) {
+            <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando adesão…</span>
+            </div>
+          } @else if (adesaoTreino().length === 0 && !erroAdesao()) {
+            <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="fitness_center"></mat-icon>
+              <p class="text-[14px] font-semibold text-tinta">Nenhum aluno com execuções suficientes ainda</p>
+            </div>
+          }
+        </div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Permanência na ficha">
+      <div class="pt-5">
+        <p class="mb-4 text-[12.5px] text-tinta-3">
+          Último ano — tempo médio entre vincular e trocar de ficha, por nível, entre trocas já
+          encerradas no período. Do maior tempo pro menor.
+        </p>
+
+        @if (erroPermanencia(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="listarPermanenciaTreino()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        }
+
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+            <table mat-table [dataSource]="permanenciaTreino()" class="h-tabela">
+              <ng-container matColumnDef="nivel">
+                <th mat-header-cell *matHeaderCellDef>Nível</th>
+                <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.nivel }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="quantidade">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Trocas</th>
+                <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                  {{ l.quantidade }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="diasMedios">
+                <th mat-header-cell *matHeaderCellDef class="!text-right">Permanência média</th>
+                <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold text-tinta">
+                  {{ l.diasMedios.toFixed(1).replace('.', ',') }} dia(s)
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colunasPermanencia"></tr>
+              <tr mat-row *matRowDef="let row; columns: colunasPermanencia"></tr>
+            </table>
+          </div>
+
+          @if (carregandoPermanencia()) {
+            <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando permanência…</span>
+            </div>
+          } @else if (permanenciaTreino().length === 0 && !erroPermanencia()) {
+            <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="fitness_center"></mat-icon>
+              <p class="text-[14px] font-semibold text-tinta">Nenhuma troca de ficha encerrada no período</p>
+            </div>
+          }
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
 </div>

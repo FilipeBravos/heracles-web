@@ -1,0 +1,386 @@
+<div class="mx-auto max-w-[1180px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+  <header class="h-cabecalho">
+    <div>
+      <h1>Equipamentos</h1>
+      <p>Inventário do salão e histórico de manutenção. Abrir um chamado tira o aparelho de operação.</p>
+    </div>
+    @if (podeGerenciar()) {
+      <button mat-flat-button color="primary" class="!h-11 !px-5" (click)="abrirFormulario(null)">
+        <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+        Novo equipamento
+      </button>
+    }
+  </header>
+
+  <mat-tab-group (selectedIndexChange)="aoTrocarAba($event)" animationDuration="0ms">
+    <!-- ============ Equipamentos ============ -->
+    <mat-tab label="Equipamentos">
+      <div class="pt-5">
+        @if (erro(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="listar()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        }
+
+        <div class="h-painel overflow-hidden">
+          <div class="overflow-x-auto">
+      <table mat-table [dataSource]="equipamentos()" class="h-tabela">
+        <ng-container matColumnDef="nome">
+          <th mat-header-cell *matHeaderCellDef>Equipamento</th>
+          <td mat-cell *matCellDef="let e" class="font-semibold text-tinta">{{ e.nome }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="unidade">
+          <th mat-header-cell *matHeaderCellDef>Unidade</th>
+          <td mat-cell *matCellDef="let e" class="text-tinta-2">{{ e.unidadeNome }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Situação</th>
+          <td mat-cell *matCellDef="let e">
+            <span class="h-etiqueta"
+                  [class]="e.statusAtual === 'OK' ? 'h-etiqueta--ok' : 'h-etiqueta--perigo'">
+              {{ e.statusAtual === 'OK' ? 'Em operação' : 'Em manutenção' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="acoes">
+          <th mat-header-cell *matHeaderCellDef class="!text-right">Ações</th>
+          <td mat-cell *matCellDef="let e" class="!text-right whitespace-nowrap">
+            @if (e.statusAtual === 'OK') {
+              <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-alerta-700"
+                      (click)="abrirChamado(e, $event)"
+                      matTooltip="Abrir chamado de manutenção" aria-label="Abrir chamado de manutenção">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="build"></mat-icon>
+              </button>
+            }
+            @if (podeGerenciar()) {
+              <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
+                      (click)="abrirFormulario(e); $event.stopPropagation()"
+                      matTooltip="Editar equipamento" aria-label="Editar equipamento">
+                <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="edit"></mat-icon>
+              </button>
+            }
+            <button mat-icon-button class="!h-9 !w-9 !text-tinta-2 hover:!text-bronze-600"
+                    [matTooltip]="expandido() === e.id ? 'Ocultar histórico' : 'Ver histórico'"
+                    [attr.aria-label]="expandido() === e.id ? 'Ocultar histórico' : 'Ver histórico'"
+                    [attr.aria-expanded]="expandido() === e.id">
+              <mat-icon class="!h-5 !w-5 !text-[20px]"
+                        [svgIcon]="expandido() === e.id ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"></mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"
+            class="cursor-pointer" (click)="alternarHistorico(row)"></tr>
+      </table>
+    </div>
+
+    <!-- Histórico do equipamento selecionado, abaixo da tabela: evita
+         linha expansível, que quebra o alinhamento das colunas. -->
+    @if (expandido() !== null) {
+      <div class="border-t border-linha bg-fundo px-5 py-5">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <h2 class="h-rotulo !text-[11px]">Histórico de manutenção</h2>
+          @if (custoAcumulado() > 0) {
+            <p class="text-[12.5px] text-tinta-3">
+              Custo acumulado em reparos:
+              <strong class="tabular-nums text-tinta">{{ custoAcumulado() | currency: 'BRL' }}</strong>
+            </p>
+          }
+        </div>
+
+        @if (carregandoHistorico()) {
+          <div class="flex items-center gap-3 py-3 text-[13px] text-tinta-3">
+            <mat-spinner diameter="18"></mat-spinner><span>Carregando histórico…</span>
+          </div>
+        } @else if (historico().length === 0) {
+          <p class="py-3 text-[13px] text-tinta-3">Nenhum chamado registrado para este equipamento.</p>
+        } @else {
+          <ol class="m-0 list-none space-y-2 p-0">
+            @for (chamado of historico(); track chamado.id) {
+              <li class="rounded-marca border border-linha bg-papel px-4 py-3">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="h-etiqueta"
+                            [class]="chamado.status === 'ABERTO' ? 'h-etiqueta--perigo' : 'h-etiqueta--ok'">
+                        {{ chamado.status === 'ABERTO' ? 'Aberto' : 'Resolvido' }}
+                      </span>
+                      <span class="text-[12px] text-tinta-3">
+                        {{ chamado.dataChamado | date: 'dd/MM/yyyy HH:mm' }}
+                      </span>
+                    </div>
+                    <p class="mt-1.5 text-[13.5px] leading-snug text-tinta">{{ chamado.descricaoProblema }}</p>
+                    @if (chamado.status === 'RESOLVIDO') {
+                      <p class="mt-1 text-[12px] text-tinta-3">
+                        Resolvido em {{ chamado.dataResolucao | date: 'dd/MM/yyyy HH:mm' }}
+                        @if (chamado.custoReparo !== null) {
+                          · custo {{ chamado.custoReparo | currency: 'BRL' }}
+                        }
+                      </p>
+                    }
+                  </div>
+
+                  @if (podeResolver() && chamado.status === 'ABERTO' && equipamentoExpandido(); as equipamento) {
+                    <button mat-stroked-button type="button" class="shrink-0"
+                            (click)="resolverChamado(equipamento, chamado)">
+                      <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="check_circle"></mat-icon>
+                      Resolver
+                    </button>
+                  }
+                </div>
+              </li>
+            }
+          </ol>
+        }
+      </div>
+    }
+
+    @if (carregando()) {
+      <div class="flex items-center gap-3 px-6 py-7 text-[13px] text-tinta-3">
+        <mat-spinner diameter="20"></mat-spinner><span>Carregando equipamentos…</span>
+      </div>
+    } @else if (equipamentos().length === 0 && !erro()) {
+      <div class="flex flex-col items-center gap-3 px-6 py-14 text-center">
+        <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="build"></mat-icon>
+        <p class="text-[14px] font-semibold text-tinta">Nenhum equipamento cadastrado</p>
+        <p class="max-w-sm text-[13px] text-tinta-3">
+          @if (podeGerenciar()) {
+            Cadastre os aparelhos do salão para acompanhar manutenção e custo de reparo.
+          } @else {
+            Nenhum aparelho foi cadastrado nesta unidade ainda.
+          }
+        </p>
+        @if (podeGerenciar()) {
+          <button mat-flat-button color="primary" class="!mt-1" (click)="abrirFormulario(null)">
+            <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="add"></mat-icon>
+            Novo equipamento
+          </button>
+        }
+      </div>
+    }
+
+    @if (total() > 0) {
+      <mat-paginator [length]="total()" [pageIndex]="pagina()" [pageSize]="tamanhoPagina()"
+                     [pageSizeOptions]="[10, 20, 50]" (page)="mudarPagina($event)"></mat-paginator>
+    }
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- ============ Relatório ============ -->
+    <mat-tab label="Relatório">
+      <div class="pt-5">
+        @if (erroRelatorio(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="carregarRelatorio()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        } @else if (carregandoRelatorio()) {
+          <div class="flex items-center gap-3 rounded-marca border border-linha bg-papel px-5 py-14 text-[13px] text-tinta-3">
+            <mat-spinner diameter="20"></mat-spinner><span>Carregando relatório…</span>
+          </div>
+        } @else if (relatorio(); as r) {
+          <p class="mb-4 text-[12.5px] text-tinta-3">
+            Últimos {{ r.dias }} dias.
+          </p>
+
+          <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div class="h-painel px-5 py-4">
+              <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Custo de manutenção</p>
+              <p class="mt-1 text-[22px] font-bold tabular-nums text-tinta">{{ r.custoTotal | currency: 'BRL' }}</p>
+            </div>
+            <div class="h-painel px-5 py-4">
+              <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Chamados no período</p>
+              <p class="mt-1 text-[22px] font-bold tabular-nums text-tinta">{{ r.quantidadeChamados }}</p>
+              @if (r.quantidadeAbertos > 0) {
+                <p class="mt-0.5 text-[12px] text-alerta-700">{{ r.quantidadeAbertos }} ainda em aberto</p>
+              }
+            </div>
+            <div class="h-painel px-5 py-4">
+              <p class="text-[12px] font-semibold uppercase tracking-wide text-tinta-3">Tempo médio de resolução</p>
+              <p class="mt-1 text-[22px] font-bold tabular-nums text-tinta">{{ r.tempoMedioResolucaoHoras }}h</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+            <section class="h-painel overflow-hidden" aria-labelledby="titulo-mais-problematicos">
+              <header class="border-b border-linha px-5 py-4">
+                <h2 id="titulo-mais-problematicos" class="h-rotulo">Equipamentos mais problemáticos</h2>
+              </header>
+
+              <div class="overflow-x-auto">
+                <table mat-table [dataSource]="r.maisProblematicos" class="h-tabela">
+                  <ng-container matColumnDef="posicao">
+                    <th mat-header-cell *matHeaderCellDef class="!w-12">#</th>
+                    <td mat-cell *matCellDef="let l; let i = index" class="tabular-nums text-tinta-3">{{ i + 1 }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="equipamento">
+                    <th mat-header-cell *matHeaderCellDef>Equipamento</th>
+                    <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.equipamentoNome }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="unidade">
+                    <th mat-header-cell *matHeaderCellDef>Unidade</th>
+                    <td mat-cell *matCellDef="let l" class="text-tinta-2">{{ l.unidadeNome }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="chamados">
+                    <th mat-header-cell *matHeaderCellDef class="!text-right">Chamados</th>
+                    <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                      {{ l.quantidadeChamados }}
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="custo">
+                    <th mat-header-cell *matHeaderCellDef class="!text-right">Custo</th>
+                    <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold text-tinta">
+                      {{ l.custoTotal | currency: 'BRL' }}
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="colunasMaisProblematicos"></tr>
+                  <tr mat-row *matRowDef="let row; columns: colunasMaisProblematicos"></tr>
+                </table>
+              </div>
+
+              @if (r.maisProblematicos.length === 0) {
+                <div class="flex flex-col items-center gap-2 px-5 py-10 text-center">
+                  <mat-icon class="!h-6 !w-6 !text-[24px] text-tinta-3" svgIcon="build"></mat-icon>
+                  <p class="text-[13px] text-tinta-3">Nenhum chamado no período.</p>
+                </div>
+              }
+            </section>
+
+            <section class="h-painel overflow-hidden" aria-labelledby="titulo-manutencao-por-unidade">
+              <header class="border-b border-linha px-5 py-4">
+                <h2 id="titulo-manutencao-por-unidade" class="h-rotulo">Por unidade</h2>
+              </header>
+
+              <div class="overflow-x-auto">
+                <table mat-table [dataSource]="r.porUnidade" class="h-tabela">
+                  <ng-container matColumnDef="unidade">
+                    <th mat-header-cell *matHeaderCellDef>Unidade</th>
+                    <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.unidadeNome }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="chamados">
+                    <th mat-header-cell *matHeaderCellDef class="!text-right">Chamados</th>
+                    <td mat-cell *matCellDef="let l" class="!text-right tabular-nums text-tinta-2">
+                      {{ l.quantidadeChamados }}
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="custo">
+                    <th mat-header-cell *matHeaderCellDef class="!text-right">Custo</th>
+                    <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold text-tinta">
+                      {{ l.custoTotal | currency: 'BRL' }}
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="colunasPorUnidade"></tr>
+                  <tr mat-row *matRowDef="let row; columns: colunasPorUnidade"></tr>
+                </table>
+              </div>
+
+              @if (r.porUnidade.length === 0) {
+                <div class="flex flex-col items-center gap-2 px-5 py-10 text-center">
+                  <mat-icon class="!h-6 !w-6 !text-[24px] text-tinta-3" svgIcon="store"></mat-icon>
+                  <p class="text-[13px] text-tinta-3">Nenhum chamado no período.</p>
+                </div>
+              }
+            </section>
+          </div>
+        }
+      </div>
+    </mat-tab>
+
+    <!-- ============ Manutenção preventiva ============ -->
+    <mat-tab label="Manutenção preventiva">
+      <div class="pt-5">
+        @if (erroManutencaoPreventiva(); as mensagem) {
+          <div role="alert"
+               class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+            <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+              <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="carregarManutencaoPreventiva()"
+                    class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+          </div>
+        } @else if (carregandoManutencaoPreventiva()) {
+          <div class="flex items-center gap-3 rounded-marca border border-linha bg-papel px-5 py-14 text-[13px] text-tinta-3">
+            <mat-spinner diameter="20"></mat-spinner><span>Carregando manutenção preventiva…</span>
+          </div>
+        } @else {
+          <p class="mb-4 text-[12.5px] text-tinta-3">
+            Equipamentos com intervalo de revisão configurado, cuja próxima manutenção já venceu ou vence hoje.
+          </p>
+
+          <section class="h-painel overflow-hidden" aria-labelledby="titulo-manutencao-preventiva">
+            <header class="border-b border-linha px-5 py-4">
+              <h2 id="titulo-manutencao-preventiva" class="h-rotulo">Manutenção vencida</h2>
+            </header>
+
+            <div class="overflow-x-auto">
+              <table mat-table [dataSource]="manutencaoPreventiva()" class="h-tabela">
+                <ng-container matColumnDef="equipamento">
+                  <th mat-header-cell *matHeaderCellDef>Equipamento</th>
+                  <td mat-cell *matCellDef="let l" class="font-semibold text-tinta">{{ l.equipamentoNome }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="unidade">
+                  <th mat-header-cell *matHeaderCellDef>Unidade</th>
+                  <td mat-cell *matCellDef="let l" class="text-tinta-2">{{ l.unidadeNome }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="ultimaManutencao">
+                  <th mat-header-cell *matHeaderCellDef>Última manutenção</th>
+                  <td mat-cell *matCellDef="let l" class="text-tinta-2">
+                    {{ l.ultimaManutencao | date: 'dd/MM/yyyy' }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="proximaManutencao">
+                  <th mat-header-cell *matHeaderCellDef>Prevista para</th>
+                  <td mat-cell *matCellDef="let l" class="text-tinta-2">
+                    {{ l.proximaManutencaoDevida | date: 'dd/MM/yyyy' }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="atraso">
+                  <th mat-header-cell *matHeaderCellDef class="!text-right">Atraso</th>
+                  <td mat-cell *matCellDef="let l" class="!text-right tabular-nums font-semibold text-perigo-700">
+                    {{ l.diasAtraso === 0 ? 'Vence hoje' : (l.diasAtraso + (l.diasAtraso === 1 ? ' dia' : ' dias')) }}
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="colunasManutencaoPreventiva"></tr>
+                <tr mat-row *matRowDef="let row; columns: colunasManutencaoPreventiva"></tr>
+              </table>
+            </div>
+
+            @if (manutencaoPreventiva().length === 0) {
+              <div class="flex flex-col items-center gap-2 px-5 py-10 text-center">
+                <mat-icon class="!h-6 !w-6 !text-[24px] text-tinta-3" svgIcon="check_circle"></mat-icon>
+                <p class="text-[13px] text-tinta-3">Nenhum equipamento com manutenção preventiva vencida.</p>
+              </div>
+            }
+          </section>
+        }
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

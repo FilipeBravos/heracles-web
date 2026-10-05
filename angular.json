@@ -7,7 +7,7 @@
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
-          "style": "scss"
+          "style": "none"
         }
       },
       "root": "",
@@ -27,7 +27,14 @@
               }
             ],
             "styles": [
-              "src/styles.scss"
+              "@fontsource/barlow/400.css",
+              "@fontsource/barlow/500.css",
+              "@fontsource/barlow/600.css",
+              "@fontsource/barlow/700.css",
+              "@fontsource/barlow-condensed/600.css",
+              "@fontsource/barlow-condensed/700.css",
+              "src/styles.scss",
+              "src/tailwind.css"
             ]
           },
           "configurations": {
@@ -44,7 +51,13 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,
@@ -81,8 +94,16 @@
               }
             ],
             "styles": [
-              "src/styles.scss"
-            ]
+              "@fontsource/barlow/400.css",
+              "@fontsource/barlow/500.css",
+              "@fontsource/barlow/600.css",
+              "@fontsource/barlow/700.css",
+              "@fontsource/barlow-condensed/600.css",
+              "@fontsource/barlow-condensed/700.css",
+              "src/styles.scss",
+              "src/tailwind.css"
+            ],
+            "karmaConfig": "karma.conf.js"
           }
         }
       }

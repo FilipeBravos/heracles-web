@@ -1,0 +1,59 @@
+<div>
+  <div class="border-b border-linha px-6 py-5">
+    <h2 mat-dialog-title class="!m-0 !p-0 font-display !text-[22px] !font-bold !leading-tight text-tinta">
+      Frequência
+    </h2>
+    <p class="mt-1 text-[12.5px] text-tinta-3">
+      Histórico de check-ins de <strong class="font-semibold text-tinta-2">{{ data.aluno.nome }}</strong> na catraca.
+    </p>
+  </div>
+
+  <mat-dialog-content class="!px-6 !pt-5 !pb-2">
+    @if (erro(); as mensagem) {
+      <div role="alert"
+           class="mb-4 flex items-start gap-2.5 rounded-marca border border-perigo-200 bg-perigo-50 px-4 py-3">
+        <mat-icon class="!mt-px !h-[18px] !w-[18px] !text-[18px] text-perigo-700" svgIcon="error"></mat-icon>
+        <span class="text-[12.5px] leading-snug text-perigo-700">{{ mensagem }}</span>
+      </div>
+    }
+
+    @if (carregando()) {
+      <div class="flex items-center gap-3 py-4 text-[13px] text-tinta-3">
+        <mat-spinner diameter="20"></mat-spinner>
+        <span>Carregando histórico…</span>
+      </div>
+    } @else if (checkins().length === 0 && !erro()) {
+      <div class="flex flex-col items-center gap-2.5 px-4 py-10 text-center">
+        <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="how_to_reg"></mat-icon>
+        <p class="text-[13px] text-tinta-3">Nenhum check-in registrado ainda.</p>
+      </div>
+    } @else {
+      <ul class="flex flex-col divide-y divide-linha">
+        @for (c of checkins(); track c.id) {
+          <li class="flex items-center gap-3 py-3">
+            <mat-icon class="!h-5 !w-5 shrink-0 !text-[20px]"
+                      [class]="c.liberado ? 'text-ok-700' : 'text-perigo-700'"
+                      [svgIcon]="c.liberado ? 'check_circle' : 'block'"></mat-icon>
+            <div class="min-w-0 flex-1">
+              <p class="text-[13px] font-medium text-tinta">{{ c.momento | date: 'dd/MM/yyyy HH:mm' }}</p>
+              <p class="text-[12px] text-tinta-3">{{ c.unidadeNome }}</p>
+            </div>
+            <span class="h-etiqueta shrink-0" [class]="c.liberado ? 'h-etiqueta--ok' : 'h-etiqueta--perigo'">
+              {{ rotuloMotivo[c.motivo] }}
+            </span>
+          </li>
+        }
+      </ul>
+    }
+  </mat-dialog-content>
+
+  @if (total() > 0) {
+    <mat-paginator [length]="total()" [pageIndex]="pagina()" [pageSize]="tamanhoPagina()"
+                   [pageSizeOptions]="[10, 20, 50]" (page)="mudarPagina($event)">
+    </mat-paginator>
+  }
+
+  <mat-dialog-actions align="end" class="!gap-2 border-t border-linha !px-6 !py-4">
+    <button mat-button mat-dialog-close type="button" class="!text-tinta-2">Fechar</button>
+  </mat-dialog-actions>
+</div>

@@ -1,28 +1,30 @@
-import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 
-export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const router = inject(Router); // Injetamos o router para o redirecionamento
-  const token = localStorage.getItem('heracles_token');
+import { AuthService } from '../services/auth.service';
 
-  let authReq = req;
-  if (token) {
-    authReq = req.clone({
-      setHeaders: { Authorization: `Bearer ${token}` }
-    });
-  }
+/**
+ * Anexa o bearer token e trata a expiracao da sessao num lugar so,
+ * em vez de repetir cabecalhos em cada chamada de componente.
+ */
+export const authInterceptor: HttpInterceptorFn = (requisicao, proximo) => {
+  const auth = inject(AuthService);
+  const token = auth.token;
 
-  return next(authReq).pipe(
-    catchError((error: HttpErrorResponse) => {
-      // Se o erro for 401, o token provavelmente expirou ou é inválido
-      if (error.status === 401) {
-        console.warn('Sessão expirada ou inválida. Deslogando...');
-        localStorage.removeItem('heracles_token');
-        router.navigate(['/login']);
+  const requisicaoAutenticada =
+    token && !requisicao.url.includes('/auth/login')
+      ? requisicao.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
+      : requisicao;
+
+  return proximo(requisicaoAutenticada).pipe(
+    catchError((erro: HttpErrorResponse) => {
+      // 401 em qualquer rota que nao seja o proprio login significa token
+      // ausente, expirado ou invalido: derruba a sessao e volta para o login.
+      if (erro.status === 401 && !requisicao.url.includes('/auth/login')) {
+        auth.encerrarPorTokenInvalido();
       }
-      return throwError(() => error);
+      return throwError(() => erro);
     })
   );
 };

@@ -1,0 +1,740 @@
+<div class="mx-auto max-w-[1180px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+  <header class="h-cabecalho">
+    <div>
+      <h1>Visão geral</h1>
+      <p>Como está a unidade agora. Os números vêm direto da base, atualizados a cada carregamento.</p>
+    </div>
+  </header>
+
+  @if (carregando()) {
+    <!-- Esqueleto com a forma dos cartões: a página não salta quando os
+         dados chegam, e a espera fica com uma duração aparente menor. -->
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="h-[132px] animate-pulse rounded-marca border border-linha bg-papel"></div>
+      }
+    </div>
+  } @else if (erro(); as mensagem) {
+    <div role="alert"
+         class="flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+      <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>
+        {{ mensagem }}
+      </span>
+      <button type="button" (click)="carregar()"
+              class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">
+        Tentar novamente
+      </button>
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      @for (item of cartoes(); track item.titulo) {
+        <article class="group relative overflow-hidden rounded-marca border border-linha bg-papel p-5">
+          <!-- Fio superior: só os indicadores que pedem leitura ativa
+               recebem cor. Os neutros ficam sem fio. -->
+          @if (item.tom === 'acento') {
+            <span class="absolute inset-x-0 top-0 h-[3px] bg-bronze-500"></span>
+          } @else if (item.tom === 'perigo') {
+            <span class="absolute inset-x-0 top-0 h-[3px] bg-perigo-700"></span>
+          }
+
+          <div class="flex items-start justify-between gap-3">
+            <p class="h-rotulo">{{ item.titulo }}</p>
+            <mat-icon
+              class="!h-[18px] !w-[18px] !text-[18px]"
+              [class]="item.tom === 'acento' ? 'text-bronze-600'
+                     : item.tom === 'perigo' ? 'text-perigo-700' : 'text-tinta-3'" [svgIcon]="item.icon"></mat-icon>
+          </div>
+
+          <p class="mt-3 font-display text-[40px] font-bold leading-none tracking-tight tabular-nums text-tinta">
+            {{ item.valor }}
+          </p>
+          <p class="mt-2 text-[12px] leading-snug text-tinta-3">{{ item.nota }}</p>
+        </article>
+      }
+    </div>
+
+    <!-- Matrículas: a carteira. Faixa própria porque responde a outra
+         pergunta — o topo é quem está cadastrado, esta é quem está pagando. -->
+    <h2 class="h-rotulo mt-8 mb-3">Matrículas</h2>
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      @for (item of cartoesMatriculas(); track item.titulo) {
+        <article class="relative overflow-hidden rounded-marca border border-linha bg-papel p-5">
+          @if (item.tom === 'acento') {
+            <span class="absolute inset-x-0 top-0 h-[3px] bg-bronze-500"></span>
+          } @else if (item.tom === 'perigo') {
+            <span class="absolute inset-x-0 top-0 h-[3px] bg-perigo-700"></span>
+          }
+
+          <div class="flex items-start justify-between gap-3">
+            <p class="h-rotulo">{{ item.titulo }}</p>
+            <mat-icon class="!h-[18px] !w-[18px] !text-[18px]"
+                      [class]="item.tom === 'acento' ? 'text-bronze-600'
+                             : item.tom === 'perigo' ? 'text-perigo-700' : 'text-tinta-3'"
+                      [svgIcon]="item.icon"></mat-icon>
+          </div>
+
+          <p class="mt-3 font-display text-[34px] font-bold leading-none tracking-tight tabular-nums text-tinta">
+            {{ item.valor }}
+          </p>
+          <p class="mt-2 text-[12px] leading-snug text-tinta-3">{{ item.nota }}</p>
+        </article>
+      }
+    </div>
+
+    <!-- Operação: balcão e salão. Terceira faixa porque responde a outra
+         pergunta — as de cima são sobre alunos, esta é sobre o dia da unidade. -->
+    <h2 class="h-rotulo mt-8 mb-3">Operação</h2>
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      @for (item of cartoesOperacao(); track item.titulo) {
+        <article class="relative overflow-hidden rounded-marca border border-linha bg-papel p-5">
+          @if (item.tom === 'acento') {
+            <span class="absolute inset-x-0 top-0 h-[3px] bg-bronze-500"></span>
+          } @else if (item.tom === 'perigo') {
+            <span class="absolute inset-x-0 top-0 h-[3px] bg-perigo-700"></span>
+          }
+
+          <div class="flex items-start justify-between gap-3">
+            <p class="h-rotulo">{{ item.titulo }}</p>
+            <mat-icon class="!h-[18px] !w-[18px] !text-[18px]"
+                      [class]="item.tom === 'acento' ? 'text-bronze-600'
+                             : item.tom === 'perigo' ? 'text-perigo-700' : 'text-tinta-3'"
+                      [svgIcon]="item.icon"></mat-icon>
+          </div>
+
+          <p class="mt-3 font-display text-[34px] font-bold leading-none tracking-tight tabular-nums text-tinta">
+            {{ item.valor }}
+          </p>
+          <p class="mt-2 text-[12px] leading-snug text-tinta-3">{{ item.nota }}</p>
+        </article>
+      }
+    </div>
+
+    @if (podeVerMatriculas()) {
+      <div class="mt-6 grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+      <!-- ============ Matrículas por mês ============ -->
+      <section class="rounded-marca border border-linha bg-papel" aria-labelledby="titulo-grafico">
+        <header class="flex flex-wrap items-baseline justify-between gap-3 border-b border-linha px-5 py-4">
+          <div>
+            <h2 id="titulo-grafico" class="h-rotulo">Matrículas por mês</h2>
+            <p class="mt-1 text-[12px] text-tinta-3">Últimos 12 meses, pela data de início.</p>
+          </div>
+          @if (historico(); as h) {
+            <!-- O total do período no cabeçalho: sem ele o leitor teria
+                 de somar doze barras de cabeça. -->
+            <p class="text-[12.5px] text-tinta-3">
+              <strong class="tabular-nums text-[15px] text-tinta">{{ h.total }}</strong> no período
+            </p>
+          }
+        </header>
+
+        @if (carregandoHistorico()) {
+          <div class="flex items-center gap-3 px-5 py-14 text-[13px] text-tinta-3">
+            <mat-spinner diameter="20"></mat-spinner><span>Carregando histórico…</span>
+          </div>
+        } @else if (erroHistorico(); as mensagem) {
+          <div role="alert" class="flex flex-wrap items-center justify-between gap-3 px-5 py-10">
+            <span class="flex items-center gap-2.5 text-[13px] text-perigo-700">
+              <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="error"></mat-icon>{{ mensagem }}
+            </span>
+            <button type="button" (click)="carregarHistorico()"
+                    class="text-[12.5px] font-semibold text-perigo-700 underline underline-offset-2">
+              Tentar novamente
+            </button>
+          </div>
+        } @else if (historico(); as h) {
+          <app-grafico-matriculas [historico]="h"></app-grafico-matriculas>
+        }
+      </section>
+
+      <!-- ============ Próximos vencimentos ============ -->
+      <section class="rounded-marca border border-linha bg-papel"
+                 aria-labelledby="titulo-vencimentos">
+          <header class="flex flex-wrap items-center justify-between gap-3 border-b border-linha px-5 py-4">
+            <div>
+              <h2 id="titulo-vencimentos" class="h-rotulo">Próximos vencimentos</h2>
+              <p class="mt-1 text-[12px] text-tinta-3">
+                Quem vence nos próximos 15 dias — e quem já venceu.
+              </p>
+            </div>
+            <a routerLink="/dashboard/matriculas"
+               class="text-[12.5px] font-semibold text-bronze-700 underline underline-offset-2">
+              Ver matrículas
+            </a>
+          </header>
+
+          @if (carregandoFila()) {
+            <div class="flex items-center gap-3 px-5 py-8 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando vencimentos…</span>
+            </div>
+          } @else if (erroFila(); as mensagem) {
+            <div role="alert" class="flex flex-wrap items-center justify-between gap-3 px-5 py-6">
+              <span class="flex items-center gap-2.5 text-[13px] text-perigo-700">
+                <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="error"></mat-icon>{{ mensagem }}
+              </span>
+              <button type="button" (click)="carregarFila()"
+                      class="text-[12.5px] font-semibold text-perigo-700 underline underline-offset-2">
+                Tentar novamente
+              </button>
+            </div>
+          } @else if (fila()?.itens?.length) {
+            <ul class="m-0 list-none divide-y divide-linha p-0">
+              @for (v of fila()!.itens; track v.assinaturaId) {
+                <li class="flex items-center gap-3 px-5 py-3">
+                  <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-marca
+                               bg-fundo-2 text-[11px] font-bold tracking-wide text-tinta-2">
+                    {{ iniciais(v) }}
+                  </span>
+
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate text-[13.5px] font-semibold text-tinta">{{ v.alunoNome }}</p>
+                    <p class="truncate text-[12px] text-tinta-3">{{ v.planoNome }}</p>
+                  </div>
+
+                  @if (v.status === 'INADIMPLENTE') {
+                    <span class="h-etiqueta h-etiqueta--perigo shrink-0">Inadimplente</span>
+                  }
+
+                  <div class="shrink-0 text-right">
+                    <!-- O prazo em palavras, e não só o sinal do número:
+                         "em 3 dias" e "há 3 dias" ocupam o mesmo espaço e
+                         dizem coisas opostas. -->
+                    <p class="text-[12.5px] font-semibold"
+                       [class]="urgencia(v.diasParaVencer) === 'vencido' ? 'text-perigo-700'
+                              : urgencia(v.diasParaVencer) === 'proximo' ? 'text-alerta-700'
+                              : 'text-tinta-2'">
+                      {{ prazo(v.diasParaVencer) }}
+                    </p>
+                    <p class="text-[11.5px] tabular-nums text-tinta-3">
+                      {{ v.dataVencimento | date: 'dd/MM/yyyy' }}
+                    </p>
+                  </div>
+                </li>
+              }
+            </ul>
+
+            @if (restantesNaFila() > 0) {
+              <!-- Sem esta linha, a lista truncada parece a fila inteira,
+                   e é aí que o trabalho some de vista. -->
+              <div class="border-t border-linha px-5 py-3 text-center">
+                <a routerLink="/dashboard/matriculas"
+                   class="text-[12.5px] font-semibold text-bronze-700 underline underline-offset-2">
+                  e mais {{ restantesNaFila() }} na fila
+                </a>
+              </div>
+            }
+          } @else {
+            <div class="flex flex-col items-center gap-2 px-5 py-12 text-center">
+              <mat-icon class="!h-6 !w-6 !text-[24px] text-tinta-3" svgIcon="check_circle"></mat-icon>
+              <p class="text-[13.5px] font-semibold text-tinta">Nada vencendo por ora</p>
+              <p class="max-w-xs text-[12.5px] text-tinta-3">
+                Nenhuma matrícula vence nos próximos 15 dias.
+              </p>
+            </div>
+          }
+        </section>
+      </div>
+
+      <!-- ============ Financeiro: o dinheiro, onde as faixas de cima medem alunos ============ -->
+      <h2 class="h-rotulo mt-8 mb-3">Financeiro</h2>
+      @if (erroFinanceiro(); as mensagem) {
+        <div role="alert"
+             class="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+          <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+            <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+          </span>
+          <button type="button" (click)="carregarFinanceiro()"
+                  class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">
+            Tentar novamente
+          </button>
+        </div>
+      } @else if (carregandoFinanceiro()) {
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          @for (i of [1, 2, 3, 4]; track i) {
+            <div class="h-[116px] animate-pulse rounded-marca border border-linha bg-papel"></div>
+          }
+        </div>
+      } @else {
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          @for (item of cartoesFinanceiro(); track item.titulo) {
+            <article class="relative overflow-hidden rounded-marca border border-linha bg-papel p-5">
+              @if (item.tom === 'acento') {
+                <span class="absolute inset-x-0 top-0 h-[3px] bg-bronze-500"></span>
+              } @else if (item.tom === 'perigo') {
+                <span class="absolute inset-x-0 top-0 h-[3px] bg-perigo-700"></span>
+              }
+
+              <div class="flex items-start justify-between gap-3">
+                <p class="h-rotulo">{{ item.titulo }}</p>
+                <mat-icon class="!h-[18px] !w-[18px] !text-[18px]"
+                          [class]="item.tom === 'acento' ? 'text-bronze-600'
+                                 : item.tom === 'perigo' ? 'text-perigo-700' : 'text-tinta-3'"
+                          [svgIcon]="item.icon"></mat-icon>
+              </div>
+
+              <p class="mt-3 font-display text-[28px] font-bold leading-none tracking-tight tabular-nums text-tinta">
+                {{ item.valor }}
+              </p>
+              <p class="mt-2 text-[12px] leading-snug text-tinta-3">{{ item.nota }}</p>
+            </article>
+          }
+        </div>
+
+        @if (financeiro(); as f) {
+          <!-- ============ Detalhamento por unidade ============ -->
+          <section class="mt-4 rounded-marca border border-linha bg-papel" aria-labelledby="titulo-financeiro-unidade">
+            <header class="border-b border-linha px-5 py-4">
+              <h2 id="titulo-financeiro-unidade" class="h-rotulo">Por unidade</h2>
+              <p class="mt-1 text-[12px] text-tinta-3">
+                Plano de rede conta o MRR inteiro em cada unidade que cobre — a soma das linhas pode superar o
+                total acima.
+              </p>
+            </header>
+
+            @if (f.porUnidade.length) {
+              <div class="overflow-x-auto">
+                <table class="w-full text-[12.5px]">
+                  <thead>
+                    <tr class="border-b border-linha">
+                      <th scope="col" class="px-5 py-2 text-left font-semibold text-tinta-3">Unidade</th>
+                      <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">MRR</th>
+                      <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Ativas</th>
+                      <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Ticket médio</th>
+                      <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Inadimplência</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (linha of f.porUnidade; track linha.unidadeId) {
+                      <tr class="border-b border-linha last:border-0">
+                        <td class="px-5 py-2 text-tinta">{{ linha.unidadeNome }}</td>
+                        <td class="px-5 py-2 text-right tabular-nums font-semibold text-tinta">
+                          {{ linha.mrr | currency: 'BRL' }}
+                        </td>
+                        <td class="px-5 py-2 text-right tabular-nums text-tinta-2">{{ linha.assinaturasAtivas }}</td>
+                        <td class="px-5 py-2 text-right tabular-nums text-tinta-2">
+                          {{ linha.ticketMedio | currency: 'BRL' }}
+                        </td>
+                        <td class="px-5 py-2 text-right tabular-nums"
+                            [class.font-semibold]="linha.inadimplenciaEmReais > 0"
+                            [class.text-perigo-700]="linha.inadimplenciaEmReais > 0"
+                            [class.text-tinta-2]="linha.inadimplenciaEmReais === 0">
+                          {{ linha.inadimplenciaEmReais | currency: 'BRL' }}
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <p class="px-5 py-10 text-center text-[12.5px] text-tinta-3">Nenhuma unidade com assinatura ativa.</p>
+            }
+          </section>
+
+          <!-- ============ Detalhamento por plano ============ -->
+          <section class="mt-4 rounded-marca border border-linha bg-papel" aria-labelledby="titulo-financeiro-plano">
+            <header class="border-b border-linha px-5 py-4">
+              <h2 id="titulo-financeiro-plano" class="h-rotulo">Por plano</h2>
+              <p class="mt-1 text-[12px] text-tinta-3">
+                Só plano em venda entra — um plano fora de linha é um capítulo fechado do catálogo, mesmo que
+                ainda tenha assinatura ativa rodando nele.
+              </p>
+            </header>
+
+            @if (f.porPlano.length) {
+              <div class="overflow-x-auto">
+                <table class="w-full text-[12.5px]">
+                  <thead>
+                    <tr class="border-b border-linha">
+                      <th scope="col" class="px-5 py-2 text-left font-semibold text-tinta-3">Plano</th>
+                      <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">MRR</th>
+                      <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Ativas</th>
+                      <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Ticket médio</th>
+                      <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Inadimplência</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (linha of f.porPlano; track linha.planoId) {
+                      <tr class="border-b border-linha last:border-0">
+                        <td class="px-5 py-2 text-tinta">{{ linha.planoNome }}</td>
+                        <td class="px-5 py-2 text-right tabular-nums font-semibold text-tinta">
+                          {{ linha.mrr | currency: 'BRL' }}
+                        </td>
+                        <td class="px-5 py-2 text-right tabular-nums text-tinta-2">{{ linha.assinaturasAtivas }}</td>
+                        <td class="px-5 py-2 text-right tabular-nums text-tinta-2">
+                          {{ linha.ticketMedio | currency: 'BRL' }}
+                        </td>
+                        <td class="px-5 py-2 text-right tabular-nums"
+                            [class.font-semibold]="linha.inadimplenciaEmReais > 0"
+                            [class.text-perigo-700]="linha.inadimplenciaEmReais > 0"
+                            [class.text-tinta-2]="linha.inadimplenciaEmReais === 0">
+                          {{ linha.inadimplenciaEmReais | currency: 'BRL' }}
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <p class="px-5 py-10 text-center text-[12.5px] text-tinta-3">Nenhum plano em venda com assinatura ativa.</p>
+            }
+          </section>
+        }
+      }
+
+      <!-- ============ Atraso médio de pagamento, por forma de pagamento ============ -->
+      @if (erroAtrasoPagamento(); as mensagem) {
+        <div role="alert"
+             class="mb-4 mt-4 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+          <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+            <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+          </span>
+          <button type="button" (click)="carregarAtrasoPagamento()"
+                  class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">
+            Tentar novamente
+          </button>
+        </div>
+      } @else if (carregandoAtrasoPagamento()) {
+        <div class="mt-4 flex items-center gap-3 rounded-marca border border-linha bg-papel px-5 py-10 text-[13px] text-tinta-3">
+          <mat-spinner diameter="20"></mat-spinner><span>Carregando atraso de pagamento…</span>
+        </div>
+      } @else {
+        <section class="mt-4 rounded-marca border border-linha bg-papel" aria-labelledby="titulo-atraso-pagamento">
+          <header class="border-b border-linha px-5 py-4">
+            <h2 id="titulo-atraso-pagamento" class="h-rotulo">Atraso médio de pagamento</h2>
+            <p class="mt-1 text-[12px] text-tinta-3">
+              Últimos 90 dias, por forma de pagamento — quem paga antes ou no vencimento entra com atraso zero.
+            </p>
+          </header>
+
+          @if (atrasoPagamento().length) {
+            <div class="overflow-x-auto">
+              <table class="w-full text-[12.5px]">
+                <thead>
+                  <tr class="border-b border-linha">
+                    <th scope="col" class="px-5 py-2 text-left font-semibold text-tinta-3">Forma de pagamento</th>
+                    <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Cobranças pagas</th>
+                    <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Atraso médio</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (linha of atrasoPagamento(); track linha.formaPagamento) {
+                    <tr class="border-b border-linha last:border-0">
+                      <td class="px-5 py-2 text-tinta">{{ rotuloFormaPagamento[linha.formaPagamento] }}</td>
+                      <td class="px-5 py-2 text-right tabular-nums text-tinta-2">{{ linha.quantidade }}</td>
+                      <td class="px-5 py-2 text-right tabular-nums font-semibold"
+                          [class.text-perigo-700]="linha.atrasoMedioDias > 0"
+                          [class.text-tinta]="linha.atrasoMedioDias === 0">
+                        {{ linha.atrasoMedioDias.toFixed(1).replace('.', ',') }} dia(s)
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="px-5 py-10 text-center text-[12.5px] text-tinta-3">Nenhuma cobrança paga no período.</p>
+          }
+        </section>
+      }
+
+      <!-- ============ Retenção: churn por mês, por plano e por unidade ============ -->
+      <h2 class="h-rotulo mt-8 mb-3">Retenção</h2>
+      <div class="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+        <section class="rounded-marca border border-linha bg-papel" aria-labelledby="titulo-churn">
+          <header class="flex flex-wrap items-baseline justify-between gap-3 border-b border-linha px-5 py-4">
+            <div>
+              <h2 id="titulo-churn" class="h-rotulo">Churn por mês</h2>
+              <p class="mt-1 text-[12px] text-tinta-3">
+                Cancelamentos no mês sobre assinaturas ativas no início dele.
+              </p>
+            </div>
+          </header>
+
+          @if (carregandoRetencao()) {
+            <div class="flex items-center gap-3 px-5 py-14 text-[13px] text-tinta-3">
+              <mat-spinner diameter="20"></mat-spinner><span>Carregando retenção…</span>
+            </div>
+          } @else if (erroRetencao(); as mensagem) {
+            <div role="alert" class="flex flex-wrap items-center justify-between gap-3 px-5 py-10">
+              <span class="flex items-center gap-2.5 text-[13px] text-perigo-700">
+                <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="error"></mat-icon>{{ mensagem }}
+              </span>
+              <button type="button" (click)="carregarRetencao()"
+                      class="text-[12.5px] font-semibold text-perigo-700 underline underline-offset-2">
+                Tentar novamente
+              </button>
+            </div>
+          } @else if (retencao(); as r) {
+            <app-grafico-churn [historico]="r.historico"></app-grafico-churn>
+          }
+        </section>
+
+        @if (retencao(); as r) {
+          <!-- ============ Detalhamento do último mês fechado ============ -->
+          <section class="rounded-marca border border-linha bg-papel" aria-labelledby="titulo-churn-detalhe">
+            <header class="border-b border-linha px-5 py-4">
+              <h2 id="titulo-churn-detalhe" class="h-rotulo">Por plano e por unidade</h2>
+              <p class="mt-1 text-[12px] text-tinta-3">
+                Dados de {{ mesPorExtenso(r.mesReferencia) }}, o último mês fechado.
+              </p>
+            </header>
+
+            <div class="grid grid-cols-1 gap-5 px-5 py-4 sm:grid-cols-2">
+              <div>
+                <h3 class="text-[12px] font-semibold text-tinta-2">Por plano</h3>
+                @if (r.porPlano.length) {
+                  <table class="mt-2 w-full text-[12.5px]">
+                    <thead>
+                      <tr class="border-b border-linha">
+                        <th scope="col" class="py-1.5 text-left font-semibold text-tinta-3">Plano</th>
+                        <th scope="col" class="py-1.5 text-right font-semibold text-tinta-3">Churn</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (linha of r.porPlano; track linha.id) {
+                        <tr class="border-b border-linha last:border-0">
+                          <td class="py-1.5 pr-2 text-tinta">{{ linha.nome }}</td>
+                          <td class="py-1.5 text-right tabular-nums font-semibold text-tinta">
+                            {{ (linha.taxaChurn * 100).toFixed(1).replace('.', ',') }}%
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                } @else {
+                  <p class="mt-2 text-[12.5px] text-tinta-3">Nenhum plano com assinatura ativa no período.</p>
+                }
+              </div>
+
+              <div>
+                <h3 class="text-[12px] font-semibold text-tinta-2">Por unidade</h3>
+                @if (r.porUnidade.length) {
+                  <table class="mt-2 w-full text-[12.5px]">
+                    <thead>
+                      <tr class="border-b border-linha">
+                        <th scope="col" class="py-1.5 text-left font-semibold text-tinta-3">Unidade</th>
+                        <th scope="col" class="py-1.5 text-right font-semibold text-tinta-3">Churn</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (linha of r.porUnidade; track linha.id) {
+                        <tr class="border-b border-linha last:border-0">
+                          <td class="py-1.5 pr-2 text-tinta">{{ linha.nome }}</td>
+                          <td class="py-1.5 text-right tabular-nums font-semibold text-tinta">
+                            {{ (linha.taxaChurn * 100).toFixed(1).replace('.', ',') }}%
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                } @else {
+                  <p class="mt-2 text-[12.5px] text-tinta-3">Nenhuma unidade com assinatura ativa no período.</p>
+                }
+              </div>
+            </div>
+          </section>
+        }
+      </div>
+
+      <!-- ============ Ocupação: check-ins liberados por hora do dia, por unidade ============ -->
+      <h2 class="h-rotulo mt-8 mb-3">Ocupação por horário</h2>
+
+      @if (erroOcupacao(); as mensagem) {
+        <div role="alert"
+             class="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+          <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+            <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+          </span>
+          <button type="button" (click)="carregarOcupacao()"
+                  class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">
+            Tentar novamente
+          </button>
+        </div>
+      } @else if (carregandoOcupacao()) {
+        <div class="flex items-center gap-3 rounded-marca border border-linha bg-papel px-5 py-14 text-[13px] text-tinta-3">
+          <mat-spinner diameter="20"></mat-spinner><span>Carregando ocupação…</span>
+        </div>
+      } @else if (ocupacao(); as o) {
+        <p class="mb-4 text-[12.5px] text-tinta-3">
+          Check-ins liberados nos últimos {{ o.dias }} dias, somados por hora do dia —
+          pra dimensionar equipamento e horário de aula em grupo.
+        </p>
+
+        <div class="grid grid-cols-1 gap-4">
+          @for (unidade of o.unidades; track unidade.unidadeId) {
+            <section class="rounded-marca border border-linha bg-papel" [attr.aria-labelledby]="'titulo-ocupacao-' + unidade.unidadeId">
+              <header class="border-b border-linha px-5 py-4">
+                <h3 [id]="'titulo-ocupacao-' + unidade.unidadeId" class="h-rotulo">{{ unidade.unidadeNome }}</h3>
+              </header>
+              <app-grafico-ocupacao [unidade]="unidade" [dias]="o.dias"></app-grafico-ocupacao>
+            </section>
+          } @empty {
+            <div class="flex flex-col items-center gap-2 rounded-marca border border-linha bg-papel px-5 py-12 text-center">
+              <mat-icon class="!h-6 !w-6 !text-[24px] text-tinta-3" svgIcon="how_to_reg"></mat-icon>
+              <p class="text-[13.5px] font-semibold text-tinta">Nenhuma unidade cadastrada</p>
+            </div>
+          }
+        </div>
+
+        <!-- ============ Motivos de acesso negado: o oposto da ocupação ============ -->
+        <h3 class="h-rotulo mt-6 mb-2">Motivos de acesso negado</h3>
+        <p class="mb-4 text-[12.5px] text-tinta-3">
+          Tentativas de acesso barradas na catraca no mesmo período, por unidade e motivo — o atrito que
+          a ocupação não mostra, porque quem foi barrado não chegou a ocupar espaço nenhum.
+        </p>
+
+        <section class="rounded-marca border border-linha bg-papel" aria-labelledby="titulo-acesso-negado">
+          <header class="border-b border-linha px-5 py-4">
+            <h3 id="titulo-acesso-negado" class="h-rotulo">Por unidade e motivo</h3>
+          </header>
+
+          @if (o.motivosNegados.length) {
+            <div class="overflow-x-auto">
+              <table class="w-full text-[12.5px]">
+                <thead>
+                  <tr class="border-b border-linha">
+                    <th scope="col" class="px-5 py-2 text-left font-semibold text-tinta-3">Unidade</th>
+                    <th scope="col" class="px-5 py-2 text-left font-semibold text-tinta-3">Motivo</th>
+                    <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Tentativas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (linha of o.motivosNegados; track linha.unidadeId + linha.motivo) {
+                    <tr class="border-b border-linha last:border-0">
+                      <td class="px-5 py-2 text-tinta">{{ linha.unidadeNome }}</td>
+                      <td class="px-5 py-2 text-tinta-2">{{ rotuloMotivoAcesso[linha.motivo] }}</td>
+                      <td class="px-5 py-2 text-right tabular-nums font-semibold text-tinta">
+                        {{ linha.quantidade }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="px-5 py-10 text-center text-[12.5px] text-tinta-3">Nenhum acesso barrado no período.</p>
+          }
+        </section>
+      }
+
+      <!-- ============ Leitura de notificações: por tipo, do pior pro melhor ============ -->
+      <h2 class="h-rotulo mt-8 mb-3">Leitura de notificações</h2>
+
+      @if (erroTaxaLeitura(); as mensagem) {
+        <div role="alert"
+             class="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+          <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+            <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+          </span>
+          <button type="button" (click)="carregarTaxaLeituraNotificacao()"
+                  class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">
+            Tentar novamente
+          </button>
+        </div>
+      } @else if (carregandoTaxaLeitura()) {
+        <div class="flex items-center gap-3 rounded-marca border border-linha bg-papel px-5 py-14 text-[13px] text-tinta-3">
+          <mat-spinner diameter="20"></mat-spinner><span>Carregando taxa de leitura…</span>
+        </div>
+      } @else {
+        <p class="mb-4 text-[12.5px] text-tinta-3">
+          Últimos 90 dias, por tipo de aviso, do pior pro melhor. O tempo médio até a leitura só
+          considera avisos com o momento de leitura registrado.
+        </p>
+
+        <section class="rounded-marca border border-linha bg-papel" aria-labelledby="titulo-taxa-leitura">
+          <header class="border-b border-linha px-5 py-4">
+            <h2 id="titulo-taxa-leitura" class="h-rotulo">Por tipo de notificação</h2>
+          </header>
+
+          @if (taxaLeituraNotificacao().length) {
+            <div class="overflow-x-auto">
+              <table class="w-full text-[12.5px]">
+                <thead>
+                  <tr class="border-b border-linha">
+                    <th scope="col" class="px-5 py-2 text-left font-semibold text-tinta-3">Tipo</th>
+                    <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Enviadas</th>
+                    <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Lidas</th>
+                    <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Taxa de leitura</th>
+                    <th scope="col" class="px-5 py-2 text-right font-semibold text-tinta-3">Tempo médio até ler</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (linha of taxaLeituraNotificacao(); track linha.tipo) {
+                    <tr class="border-b border-linha last:border-0">
+                      <td class="px-5 py-2 text-tinta">{{ rotuloTipoNotificacao[linha.tipo] }}</td>
+                      <td class="px-5 py-2 text-right tabular-nums text-tinta-2">{{ linha.total }}</td>
+                      <td class="px-5 py-2 text-right tabular-nums text-tinta-2">{{ linha.lidas }}</td>
+                      <td class="px-5 py-2 text-right tabular-nums font-semibold"
+                          [class.text-perigo-700]="linha.taxaLeitura < 50"
+                          [class.text-tinta]="linha.taxaLeitura >= 50">
+                        {{ linha.taxaLeitura.toFixed(1).replace('.', ',') }}%
+                      </td>
+                      <td class="px-5 py-2 text-right tabular-nums text-tinta-2">
+                        {{ linha.tempoMedioLeituraHoras !== null
+                          ? linha.tempoMedioLeituraHoras.toFixed(1).replace('.', ',') + 'h'
+                          : '—' }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="px-5 py-10 text-center text-[12.5px] text-tinta-3">Nenhuma notificação enviada no período.</p>
+          }
+        </section>
+      }
+    }
+
+    <!-- ============ Aniversariantes do mês ============ -->
+    <section class="mt-6 rounded-marca border border-linha bg-papel" aria-labelledby="titulo-aniversariantes">
+      <header class="border-b border-linha px-5 py-4">
+        <h2 id="titulo-aniversariantes" class="h-rotulo">Aniversariantes do mês</h2>
+        <p class="mt-1 text-[12px] text-tinta-3">Do dia mais próximo pro mais distante — pra planejar com antecedência.</p>
+      </header>
+
+      @if (carregandoAniversariantes()) {
+        <div class="flex items-center gap-3 px-5 py-8 text-[13px] text-tinta-3">
+          <mat-spinner diameter="20"></mat-spinner><span>Carregando aniversariantes…</span>
+        </div>
+      } @else if (erroAniversariantes(); as mensagem) {
+        <div role="alert" class="flex flex-wrap items-center justify-between gap-3 px-5 py-6">
+          <span class="flex items-center gap-2.5 text-[13px] text-perigo-700">
+            <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="error"></mat-icon>{{ mensagem }}
+          </span>
+          <button type="button" (click)="carregarAniversariantes()"
+                  class="text-[12.5px] font-semibold text-perigo-700 underline underline-offset-2">
+            Tentar novamente
+          </button>
+        </div>
+      } @else if (aniversariantes().length > 0) {
+        <ul class="m-0 list-none divide-y divide-linha p-0">
+          @for (a of aniversariantes(); track a.alunoId) {
+            <li class="flex items-center gap-3 px-5 py-3">
+              <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-marca
+                           bg-fundo-2 text-[11px] font-bold tracking-wide text-tinta-2">
+                {{ iniciaisAniversariante(a) }}
+              </span>
+
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-[13.5px] font-semibold text-tinta">{{ a.alunoNome }}</p>
+                @if (a.telefone) {
+                  <p class="truncate text-[12px] text-tinta-3">{{ a.telefone }}</p>
+                }
+              </div>
+
+              <p class="shrink-0 text-[12.5px] font-semibold tabular-nums text-tinta-2">
+                {{ a.dataNascimento | date: 'dd/MM' }}
+              </p>
+            </li>
+          }
+        </ul>
+      } @else {
+        <div class="flex flex-col items-center gap-2 px-5 py-12 text-center">
+          <mat-icon class="!h-6 !w-6 !text-[24px] text-tinta-3" svgIcon="group_add"></mat-icon>
+          <p class="text-[13.5px] font-semibold text-tinta">Ninguém faz aniversário este mês</p>
+        </div>
+      }
+    </section>
+  }
+</div>

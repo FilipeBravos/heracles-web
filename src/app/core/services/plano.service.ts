@@ -1,58 +1,33 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-export interface Plano {
-  id?: number;
-  nome: string;
-  duracaoMeses: number;
-  valor: number;
-}
+import { environment } from '../../../environments/environment';
+import { Pagina, Plano, PlanoForm } from '../models';
 
-export interface Assinatura {
-  id?: number;
-  usuarioId: number;
-  plano: Plano;
-  dataInicio: string;
-  dataVencimento: string;
-  status: string;
-}
-
-export interface MatriculaDTO {
-  usuarioId: number;
-  planoId: number;
-  dataInicio: string;
-}
-
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class PlanoService {
-  private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/api';
+  private readonly http = inject(HttpClient);
+  private readonly url = `${environment.apiUrl}/planos`;
 
-  //Traz os pacotes da academia
-  listarPlanos(): Observable<Plano[]> {
-    return this.http.get<Plano[]>(`${this.apiUrl}/planos`);
+  listar(pagina = 0, tamanho = 20, apenasAtivos = false): Observable<Pagina<Plano>> {
+    const params = new HttpParams()
+      .set('page', pagina)
+      .set('size', tamanho)
+      .set('apenasAtivos', apenasAtivos);
+    return this.http.get<Pagina<Plano>>(this.url, { params });
   }
 
-  //Salva um novo pacote no catálogo
-  salvarPlano(plano: Plano): Observable<Plano> {
-    return this.http.post<Plano>(`${this.apiUrl}/planos`, plano);
+  criar(plano: PlanoForm): Observable<Plano> {
+    return this.http.post<Plano>(this.url, plano);
   }
 
-  //Vincula o aluno ao plano e gera a cobrança
-  matricularAluno(dados: MatriculaDTO): Observable<Assinatura> {
-    return this.http.post<Assinatura>(`${this.apiUrl}/assinaturas/matricular`, dados);
+  atualizar(id: number, plano: PlanoForm): Observable<Plano> {
+    return this.http.put<Plano>(`${this.url}/${id}`, plano);
   }
 
-  //Atualiza o plano existente
-  atualizarPlano(id: number, plano: Plano): Observable<Plano> {
-    return this.http.put<Plano>(`${this.apiUrl}/planos/${id}`, plano);
-  }
-
-  //Remove o plano
-  deletarPlano(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/planos/${id}`);
+  /** Tirar de linha não mexe em quem já está matriculado. Reversível. */
+  alternarAtivo(id: number): Observable<Plano> {
+    return this.http.put<Plano>(`${this.url}/${id}/ativo`, {});
   }
 }

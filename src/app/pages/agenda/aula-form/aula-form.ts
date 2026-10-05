@@ -1,59 +1,106 @@
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { AulaService } from '../../../core/services/aula.service'; // Ajuste o caminho se necessário
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+
+import { AulaGrupo, Unidade, Usuario } from '../../../core/models';
+import { AgendaService } from '../../../core/services/agenda.service';
+import { UnidadeService } from '../../../core/services/unidade.service';
+import { UsuarioService } from '../../../core/services/usuario.service';
+import { mensagemDeErro } from '../../../core/services/erro-api';
 
 @Component({
   selector: 'app-aula-form',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
+    MatSelectModule,
     MatInputModule,
     MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
   ],
   templateUrl: './aula-form.html',
 })
-export class AulaFormComponent {
-  private fb = inject(FormBuilder);
-  private aulaService = inject(AulaService);
-  private dialogRef = inject(MatDialogRef<AulaFormComponent>);
-  private snackBar = inject(MatSnackBar);
+export class AulaFormComponent implements OnInit {
+  private readonly fb = inject(FormBuilder);
+  private readonly agendaService = inject(AgendaService);
+  private readonly usuarioService = inject(UsuarioService);
+  private readonly unidadeService = inject(UnidadeService);
 
-  aulaForm = this.fb.nonNullable.group({
-    titulo: ['', Validators.required],
+  readonly dialogRef = inject(MatDialogRef<AulaFormComponent>);
+
+  readonly carregando = signal(true);
+  readonly enviando = signal(false);
+  readonly erro = signal<string | null>(null);
+
+  readonly professores = signal<Usuario[]>([]);
+  readonly unidades = signal<Unidade[]>([]);
+
+  readonly form = this.fb.nonNullable.group({
+    nome: ['', [Validators.required, Validators.maxLength(100)]],
+    professorId: [null as number | null, Validators.required],
+    unidadeId: [null as number | null, Validators.required],
     dataHora: ['', Validators.required],
-    limiteVagas: [15, [Validators.required, Validators.min(1)]],
-    descricao: [''], // Novo campo opcional
+    duracaoMinutos: [50, [Validators.required, Validators.min(1)]],
+    capacidadeMaxima: [15, [Validators.required, Validators.min(1)]],
   });
 
-  salvar() {
-    if (this.aulaForm.valid) {
-      this.aulaService.criar(this.aulaForm.value).subscribe({
-        next: () => {
-          this.snackBar.open('Aula criada com sucesso!', 'Fechar', {
-            duration: 3000,
-          });
-          this.dialogRef.close(true); // Fecha o modal e avisa que salvou
+  ngOnInit(): void {
+    Promise.all([
+      new Promise<void>((ok, falha) => this.usuarioService.listar(0, 200).subscribe({
+        next: (p) => { this.professores.set(p.content.filter((u) => u.tipoPerfil === 'PROFESSOR')); ok(); },
+        error: falha,
+      })),
+      new Promise<void>((ok, falha) => this.unidadeService.listar().subscribe({
+        next: (u) => {
+          this.unidades.set(u);
+          if (u.length === 1) this.form.patchValue({ unidadeId: u[0].id });
+          ok();
         },
-        error: (err) => {
-          console.error('Erro ao criar aula', err);
-          this.snackBar.open('Erro ao criar aula.', 'Fechar', {
-            duration: 3000,
-          });
-        },
-      });
-    }
+        error: falha,
+      })),
+    ]).then(
+      () => this.carregando.set(false),
+      (erro) => {
+        this.erro.set(mensagemDeErro(erro, 'Não foi possível carregar professores e unidades.'));
+        this.carregando.set(false);
+      }
+    );
   }
 
-  cancelar() {
-    this.dialogRef.close(false);
+  salvar(): void {
+    if (this.form.invalid || this.enviando()) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    this.enviando.set(true);
+    this.erro.set(null);
+
+    const valores = this.form.getRawValue();
+    this.agendaService
+      .criarAula({
+        nome: valores.nome,
+        professorId: valores.professorId!,
+        unidadeId: valores.unidadeId!,
+        dataHora: valores.dataHora,
+        duracaoMinutos: valores.duracaoMinutos,
+        capacidadeMaxima: valores.capacidadeMaxima,
+      })
+      .subscribe({
+        next: (aula: AulaGrupo) => this.dialogRef.close(aula),
+        error: (erro) => {
+          this.enviando.set(false);
+          this.erro.set(mensagemDeErro(erro, 'Não foi possível criar a aula.'));
+        },
+      });
   }
 }

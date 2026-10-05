@@ -1,59 +1,83 @@
-# HeraclesWeb
+# heracles-web
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.0.3.
+Console administrativo do Herácles: gestão de alunos e de fichas de treino.
+Angular 20 com componentes standalone, change detection zoneless e signals.
 
-## Development server
+## Pré-requisitos
 
-To start a local development server, run:
+- Node 22 ou superior
+- A [heracles-api](../heracles-api) rodando em `http://localhost:8080`
 
-```bash
-ng serve
-```
+O frontend **não** funciona sozinho: toda a tela depende da API, e a partir da
+tela de login isso é imediato.
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Subindo o projeto
 
 ```bash
-ng generate component component-name
+npm install
+npm start
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+A aplicação sobe em `http://localhost:4200`.
 
-```bash
-ng generate --help
+Acesse por `http://localhost:4200`, não por `http://127.0.0.1:4200`: a API
+libera CORS por origem, e `127.0.0.1` é uma origem diferente de `localhost`.
+Se preferir o IP, acrescente-o a `CORS_ALLOWED_ORIGINS` na API.
+
+Para o primeiro login, use as credenciais de desenvolvimento descritas no
+README da API.
+
+## Scripts
+
+| Comando            | O que faz                                              |
+|--------------------|--------------------------------------------------------|
+| `npm start`        | Servidor de desenvolvimento em `:4200`                  |
+| `npm run build`    | Build de produção em `dist/`                            |
+| `npm test`         | Testes unitários em modo watch                          |
+| `npm run test:ci`  | Testes uma única vez, em Chrome headless                |
+| `npm run typecheck`| Verifica os tipos da aplicação **e** dos specs          |
+
+`typecheck` roda os dois `tsconfig` de propósito: os specs são compilados por
+um projeto separado, e é fácil quebrá-los sem que o build da aplicação perceba.
+
+## Configuração de ambiente
+
+A URL da API vive em `src/environments/`:
+
+- `environment.ts` — desenvolvimento, aponta para `http://localhost:8080/api`
+- `environment.prod.ts` — produção, aponta para `/api` (mesma origem, atrás de proxy reverso)
+
+O build de produção troca um pelo outro via `fileReplacements` no
+`angular.json`. Nenhum componente monta URL de API por conta própria: quem
+conhece os endpoints são os serviços em `src/app/core/services/`.
+
+## Estrutura
+
+```
+src/app/
+  core/
+    models/         interfaces que espelham os DTOs da API
+    services/       um serviço por recurso; donos das URLs
+    guards/         authGuard protege a área logada
+    interceptors/   anexa o bearer token e trata 401
+  pages/
+    login/          formulário reativo de autenticação
+    dashboard/      casca com menu lateral e barra superior
+    dashboard-home/ cartões de indicadores
+    alunos/         listagem, cadastro e vínculo de fichas
+    treinos/        listagem, edição e detalhes das fichas
 ```
 
-## Building
+## Autenticação
 
-To build the project run:
+O `AuthService` guarda o token no `localStorage` e expõe o usuário logado como
+um signal. O `authGuard` protege toda a árvore `/dashboard`, e o
+`authInterceptor` anexa o token e derruba a sessão quando a API responde 401 —
+o usuário volta ao login com aviso de sessão expirada.
 
-```bash
-ng build
-```
+## Estilo
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Angular Material (tema M3) mais utilitários Tailwind v4. O Tailwind é carregado
+por `src/tailwind.css`, listado depois de `src/styles.scss` no `angular.json`,
+para que as utilidades vençam os padrões do Material e o Sass não precise
+processar a regra `@import`.

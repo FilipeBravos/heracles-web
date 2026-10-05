@@ -1,185 +1,369 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatTableModule } from '@angular/material/table';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatTabsModule } from '@angular/material/tabs'; 
-import { HttpErrorResponse } from '@angular/common/http';
-import { AlunoForm } from './aluno-form/aluno-form';
-import { VincularTreino } from './vincular-treino/vincular-treino';
-import { AtribuirAlunoModal } from './atribuir-aluno/atribuir-aluno'; 
-import { AlunoService } from '../../core/services/aluno.service'; 
-import { AlunosPorProfessor, ProfessorService, AlunoSimples } from '../../core/services/professor.service';
-import { MatriculaVendaFormComponent } from '../planos/matricula-venda-form/matricula-venda-form';
-import { AnamneseForm } from './anamnese-form/anamnese-form';
-import { AvaliacaoFisicaForm } from './avaliacao-fisica-form/avaliacao-fisica-form';
+import { MatPaginatorIntl, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTableModule } from '@angular/material/table';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { DatePipe } from '@angular/common';
+
+import {
+  LinhaCoberturaAnamnesePorUnidade,
+  LinhaEvolucaoFisicaPorUnidade,
+  LinhaReavaliacaoVencida,
+  ResumoReavaliacaoVencida,
+  Usuario,
+} from '../../core/models';
+import { UsuarioService } from '../../core/services/usuario.service';
+import { podeExecutar } from '../../core/acesso';
+import { AuthService } from '../../core/services/auth.service';
+import { mensagemDeErro } from '../../core/services/erro-api';
+import { PaginadorIntl } from '../../core/paginador-intl';
+import { AlunoFormComponent } from './aluno-form/aluno-form';
+import { VincularTreinoComponent } from './vincular-treino/vincular-treino';
+import { AnamneseDialogComponent } from './anamnese-dialog/anamnese-dialog';
+import { FrequenciaDialogComponent } from './frequencia-dialog/frequencia-dialog';
+import { AvaliacaoFisicaDialogComponent } from './avaliacao-fisica-dialog/avaliacao-fisica-dialog';
+import { ContratoDialogComponent } from './contrato-dialog/contrato-dialog';
 
 @Component({
   selector: 'app-alunos',
   standalone: true,
   imports: [
-    CommonModule, 
-    MatTableModule, 
-    MatButtonModule, 
+    MatTableModule,
+    MatButtonModule,
     MatIconModule,
-    MatTabsModule, 
-    MatDialogModule
+    MatPaginatorModule,
+    MatProgressSpinnerModule,
+    MatTabsModule,
+    MatTooltipModule,
+    DatePipe,
   ],
-  templateUrl: './alunos.html'
+  templateUrl: './alunos.html',
+  // Rótulos do paginador em português. Providos aqui, e não na raiz:
+  // importar o paginador em app.config arrastava o módulo inteiro para
+  // o bundle inicial, que é carregado antes mesmo do login.
+  providers: [{ provide: MatPaginatorIntl, useClass: PaginadorIntl }],
 })
-export class AlunosComponent implements OnInit {
-selectedPlanoId() {
-throw new Error('Method not implemented.');
-}
-planos() {
-throw new Error('Method not implemented.');
-}
-dataInicio() {
-throw new Error('Method not implemented.');
-}
-fechar() {
-throw new Error('Method not implemented.');
-}
-confirmarVenda() {
-throw new Error('Method not implemented.');
-}
-  private professorService = inject(ProfessorService);
-  private dialog = inject(MatDialog);
-  private alunoService = inject(AlunoService);
+export class AlunosComponent implements OnInit, OnDestroy {
+  private readonly usuarioService = inject(UsuarioService);
+  private readonly auth = inject(AuthService);
 
-  public listasAlunos = signal<AlunosPorProfessor | null>(null);
-  public displayedColumns: string[] = ['id', 'nome', 'cpf', 'email', 'treino', 'status', 'acoes'];
-data: any;
+  /** A tela é alcançável por mais perfis do que esta ação. */
+  readonly podeGerenciar = computed(() =>
+    podeExecutar('gerenciar-aluno', this.auth.usuario()?.tipoPerfil)
+  );
 
-  ngOnInit() {
-    this.carregarAlunos();
+  /** Cadastrar é mais restrito que editar: só a secretaria matricula. */
+  readonly podeCadastrar = computed(() =>
+    podeExecutar('cadastrar-aluno', this.auth.usuario()?.tipoPerfil)
+  );
+
+  /** Ler e preencher a anamnese é do mesmo grupo que monta e vincula ficha. */
+  readonly podeVerAnamnese = computed(() =>
+    podeExecutar('gerenciar-anamnese', this.auth.usuario()?.tipoPerfil)
+  );
+
+  /** Contrato assinado é documento administrativo/legal — admin e secretaria, não o professor. */
+  readonly podeVerContrato = computed(() =>
+    podeExecutar('ver-contrato', this.auth.usuario()?.tipoPerfil)
+  );
+  private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
+
+  readonly displayedColumns = ['nome', 'cpf', 'treino', 'status', 'acoes'];
+
+  readonly alunos = signal<Usuario[]>([]);
+  readonly carregando = signal(true);
+  readonly erro = signal<string | null>(null);
+  readonly total = signal(0);
+  readonly pagina = signal(0);
+  readonly tamanhoPagina = signal(20);
+
+  /** Object URLs das fotos da página atual, por id de aluno. */
+  readonly fotoPorAluno = signal<Record<number, string>>({});
+
+  readonly colunasReavaliacaoVencida = ['aluno', 'contato', 'ultimaAvaliacao'];
+  readonly resumoReavaliacaoVencida = signal<ResumoReavaliacaoVencida | null>(null);
+  readonly reavaliacaoVencida = signal<LinhaReavaliacaoVencida[]>([]);
+  readonly carregandoReavaliacaoVencida = signal(false);
+  readonly erroReavaliacaoVencida = signal<string | null>(null);
+  readonly totalReavaliacaoVencida = signal(0);
+  readonly paginaReavaliacaoVencida = signal(0);
+  private reavaliacaoVencidaCarregada = false;
+
+  readonly colunasEvolucaoFisica = ['unidade', 'quantidade', 'deltaPeso', 'deltaGordura', 'deltaImc'];
+  readonly evolucaoFisica = signal<LinhaEvolucaoFisicaPorUnidade[]>([]);
+  readonly carregandoEvolucaoFisica = signal(false);
+  readonly erroEvolucaoFisica = signal<string | null>(null);
+  private evolucaoFisicaCarregada = false;
+
+  readonly colunasCoberturaAnamnese = ['unidade', 'alunos', 'comAnamnese', 'percentual'];
+  readonly coberturaAnamnese = signal<LinhaCoberturaAnamnesePorUnidade[]>([]);
+  readonly carregandoCoberturaAnamnese = signal(false);
+  readonly erroCoberturaAnamnese = signal<string | null>(null);
+  private coberturaAnamneseCarregada = false;
+
+  ngOnInit(): void {
+    this.listar();
   }
 
-  carregarAlunos() {
-    this.professorService.getAlunosPainel().subscribe({
-      next: (res) => this.listasAlunos.set(res),
-      error: (err: HttpErrorResponse) => console.error('Erro ao carregar dashboard de alunos', err)
+  /** Só busca o alerta/relatório quando a aba correspondente é aberta pela primeira vez. */
+  aoTrocarAba(indice: number): void {
+    if (indice === 1 && !this.reavaliacaoVencidaCarregada) {
+      this.listarReavaliacaoVencida();
+    }
+    if (indice === 2 && !this.evolucaoFisicaCarregada) {
+      this.carregarEvolucaoFisica();
+    }
+    if (indice === 3 && !this.coberturaAnamneseCarregada) {
+      this.carregarCoberturaAnamnese();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.liberarFotos();
+  }
+
+  listar(): void {
+    this.carregando.set(true);
+    this.erro.set(null);
+
+    this.usuarioService.listar(this.pagina(), this.tamanhoPagina()).subscribe({
+      next: (pagina) => {
+        this.alunos.set(pagina.content);
+        this.total.set(pagina.totalElements);
+        this.carregando.set(false);
+        this.carregarFotos(pagina.content);
+      },
+      error: (erro) => {
+        this.erro.set(mensagemDeErro(erro, 'Não foi possível carregar os alunos.'));
+        this.carregando.set(false);
+      },
     });
   }
 
-  abrirModalAtribuir(aluno: AlunoSimples) {
-    const dialogRef = this.dialog.open(AtribuirAlunoModal, {
-      width: '450px',
-      panelClass: '!rounded-none',
-      data: { aluno: aluno }
-    });
+  /**
+   * Busca a foto de quem tem, uma a uma.
+   *
+   * Não dá para apontar um `<img src>` direto no endpoint: ele exige o
+   * bearer token, que só o HttpClient anexa — daí o object URL.
+   */
+  private carregarFotos(alunos: Usuario[]): void {
+    this.liberarFotos();
 
-    dialogRef.afterClosed().subscribe((vinculouComSucesso: boolean) => {
-      if (vinculouComSucesso) this.carregarAlunos();
-    });
-  }
-
-  desvincularAluno(aluno: AlunoSimples) {
-    if (confirm(`Deseja realmente remover o(a) aluno(a) ${aluno.nome} da sua lista de particulares?`)) {
-      this.professorService.desvincularAluno(aluno.id).subscribe({
-        next: () => {
-          // Recarrega as listas do Signal e move o aluno de aba em tempo real
-          this.carregarAlunos(); 
+    for (const aluno of alunos) {
+      if (!aluno.temFoto) continue;
+      this.usuarioService.buscarFoto(aluno.id).subscribe({
+        next: (blob) => {
+          const url = URL.createObjectURL(blob);
+          this.fotoPorAluno.update((atual) => ({ ...atual, [aluno.id]: url }));
         },
-        error: (err: HttpErrorResponse) => console.error('Erro ao desvincular aluno', err)
+        // Sem foto na tabela não impede o resto da tela de funcionar.
+        error: () => {},
       });
     }
   }
 
- abrirModalNovoAluno() {
-    const dialogRef = this.dialog.open(AlunoForm, {
-      width: '600px',
-      panelClass: '!rounded-none'
-    });
-
-    dialogRef.afterClosed().subscribe((alunoCriado: any) => {
-      if (alunoCriado && alunoCriado.id) {
-        this.carregarAlunos();
-        this.abrirModalMatriculaPeloAluno(alunoCriado);
-      } else if (alunoCriado === true) {
-         this.carregarAlunos();
-      }
-    });
-  }
-
-  abrirModalEditarAluno(aluno: any) {
-    const dialogRef = this.dialog.open(AlunoForm, {
-      width: '600px',
-      panelClass: '!rounded-none',
-      data: { aluno: aluno }
-    });
-
-    dialogRef.afterClosed().subscribe((salvouComSucesso: boolean) => {
-      if (salvouComSucesso) this.carregarAlunos();
-    });
-  }
-
-  abrirModalVinculo(aluno: any) {
-    const dialogRef = this.dialog.open(VincularTreino, {
-      width: '500px',
-      panelClass: '!rounded-none',
-      data: { aluno: aluno }
-    });
-
-    dialogRef.afterClosed().subscribe((salvou: boolean) => {
-      if (salvou) this.carregarAlunos();
-    });
-  }
-
-  alternarStatus(aluno: any) {
-    const acao = aluno.status === 'ATIVO' ? 'inativar' : 'reativar';
-    
-    if (confirm(`Deseja realmente ${acao} o(a) aluno(a) ${aluno.nome}?`)) {
-      this.alunoService.alternarStatusAluno(aluno.id)
-        .subscribe({
-          next: () => {
-            this.carregarAlunos();
-          },
-          error: (err: HttpErrorResponse) => console.error('Erro ao alterar status', err)
-        });
+  private liberarFotos(): void {
+    for (const url of Object.values(this.fotoPorAluno())) {
+      URL.revokeObjectURL(url);
     }
+    this.fotoPorAluno.set({});
   }
 
-  abrirModalMatriculaPeloAluno(aluno: any) {
-    const dialogRef = this.dialog.open(MatriculaVendaFormComponent, {
-      width: '460px',
-      panelClass: '!rounded-2xl',
-      disableClose: true,
-      data: { alunoFixo: aluno } // Envia o aluno para travar na tela
-    });
+  mudarPagina(evento: PageEvent): void {
+    this.pagina.set(evento.pageIndex);
+    this.tamanhoPagina.set(evento.pageSize);
+    this.listar();
+  }
 
-    dialogRef.afterClosed().subscribe((vendeu) => {
-      if (vendeu) {
-        alert('Venda registrada! Fatura PENDENTE gerada no Fluxo de Caixa.');
-        // this.carregarAlunos(); // Atualiza a tabela se necessário
+  abrirModalNovoAluno(): void {
+    this.abrirFormulario(null);
+  }
+
+  abrirModalEditarAluno(aluno: Usuario): void {
+    this.abrirFormulario(aluno);
+  }
+
+  private abrirFormulario(aluno: Usuario | null): void {
+    this.dialog
+      .open(AlunoFormComponent, { width: '600px', panelClass: '!rounded-none', data: { aluno } })
+      .afterClosed()
+      .subscribe((salvou) => {
+        if (salvou) {
+          this.snackBar.open(aluno ? 'Aluno atualizado.' : 'Aluno cadastrado.', 'Fechar', { duration: 4000 });
+          this.listar();
+        }
+      });
+  }
+
+  abrirModalVinculo(aluno: Usuario): void {
+    this.dialog
+      .open(VincularTreinoComponent, { width: '500px', panelClass: '!rounded-none', data: { aluno } })
+      .afterClosed()
+      .subscribe((salvou) => {
+        if (salvou) {
+          this.snackBar.open('Fichas atualizadas.', 'Fechar', { duration: 4000 });
+          this.listar();
+        }
+      });
+  }
+
+  abrirModalAnamnese(aluno: Usuario): void {
+    this.dialog
+      .open(AnamneseDialogComponent, { width: '600px', panelClass: '!rounded-none', data: { aluno } })
+      .afterClosed()
+      .subscribe((salvou) => {
+        if (salvou) {
+          this.snackBar.open('Anamnese salva.', 'Fechar', { duration: 4000 });
+          this.listar();
+        }
+      });
+  }
+
+  abrirModalFrequencia(aluno: Usuario): void {
+    this.dialog.open(FrequenciaDialogComponent, { width: '520px', panelClass: '!rounded-none', data: { aluno } });
+  }
+
+  abrirModalAvaliacaoFisica(aluno: Usuario): void {
+    this.dialog.open(AvaliacaoFisicaDialogComponent, {
+      width: '760px',
+      maxWidth: '760px',
+      panelClass: '!rounded-none',
+      data: { aluno },
+    });
+  }
+
+  abrirModalContrato(aluno: Usuario): void {
+    this.dialog.open(ContratoDialogComponent, { width: '560px', panelClass: '!rounded-none', data: { aluno } });
+  }
+
+  alternarStatus(aluno: Usuario): void {
+    const acao = aluno.status === 'ATIVO' ? 'inativar' : 'reativar';
+    if (!confirm(`Deseja realmente ${acao} o(a) aluno(a) ${aluno.nome}?`)) {
+      return;
+    }
+
+    this.usuarioService.alternarStatus(aluno.id).subscribe({
+      next: () => {
+        this.snackBar.open(`Aluno ${acao === 'inativar' ? 'inativado' : 'reativado'}.`, 'Fechar', { duration: 4000 });
+        this.listar();
+      },
+      // Antes isso ia so para o console.error e o usuario nao via nada.
+      error: (erro) => this.snackBar.open(mensagemDeErro(erro), 'Fechar', { duration: 6000 }),
+    });
+  }
+
+  /** Iniciais para o avatar da linha. */
+  iniciais(aluno: Usuario): string {
+    const partes = aluno.nome.trim().split(/\s+/).filter(Boolean);
+    const primeira = partes[0]?.[0] ?? '?';
+    const ultima = partes.length > 1 ? partes[partes.length - 1][0] : '';
+    return (primeira + ultima).toUpperCase();
+  }
+
+  /**
+   * A API guarda o CPF só com dígitos, para que a unicidade não dependa da
+   * pontuação. Na leitura, a máscara volta: é assim que se confere um CPF.
+   */
+  cpfFormatado(aluno: Usuario): string {
+    const digitos = aluno.cpf?.replace(/\D/g, '') ?? '';
+    if (digitos.length !== 11) return aluno.cpf ?? '';
+    return `${digitos.slice(0, 3)}.${digitos.slice(3, 6)}.${digitos.slice(6, 9)}-${digitos.slice(9)}`;
+  }
+
+  // ---------------------------------------------------------------
+  // Alerta de reavaliação física vencida
+  // ---------------------------------------------------------------
+
+  listarReavaliacaoVencida(): void {
+    this.carregandoReavaliacaoVencida.set(true);
+    this.erroReavaliacaoVencida.set(null);
+
+    Promise.all([
+      new Promise<void>((ok, falha) => this.usuarioService.resumoReavaliacaoVencida().subscribe({
+        next: (resumo) => { this.resumoReavaliacaoVencida.set(resumo); ok(); },
+        error: falha,
+      })),
+      new Promise<void>((ok, falha) => this.usuarioService
+        .reavaliacaoVencida(this.paginaReavaliacaoVencida(), 20)
+        .subscribe({
+          next: (pagina) => {
+            this.reavaliacaoVencida.set(pagina.content);
+            this.totalReavaliacaoVencida.set(pagina.totalElements);
+            ok();
+          },
+          error: falha,
+        })),
+    ]).then(
+      () => {
+        this.carregandoReavaliacaoVencida.set(false);
+        this.reavaliacaoVencidaCarregada = true;
+      },
+      (erro) => {
+        this.erroReavaliacaoVencida.set(
+          mensagemDeErro(erro, 'Não foi possível carregar o alerta de reavaliação vencida.'));
+        this.carregandoReavaliacaoVencida.set(false);
       }
+    );
+  }
+
+  mudarPaginaReavaliacaoVencida(evento: PageEvent): void {
+    this.paginaReavaliacaoVencida.set(evento.pageIndex);
+    this.listarReavaliacaoVencida();
+  }
+
+  // ---------------------------------------------------------------
+  // Evolução física média por unidade
+  // ---------------------------------------------------------------
+
+  carregarEvolucaoFisica(): void {
+    this.carregandoEvolucaoFisica.set(true);
+    this.erroEvolucaoFisica.set(null);
+
+    this.usuarioService.evolucaoFisicaMediaPorUnidade().subscribe({
+      next: (linhas) => {
+        this.evolucaoFisica.set(linhas);
+        this.carregandoEvolucaoFisica.set(false);
+        this.evolucaoFisicaCarregada = true;
+      },
+      error: (erro) => {
+        this.erroEvolucaoFisica.set(mensagemDeErro(erro, 'Não foi possível carregar a evolução física.'));
+        this.carregandoEvolucaoFisica.set(false);
+      },
     });
   }
 
-  abrirModalAnamnese(aluno: any) {
-    const dialogRef = this.dialog.open(AnamneseForm, {
-      width: '950px', // 🌟 AUMENTADO (era 750px)
-      maxWidth: '95vw', // 🌟 NOVO: Impede que vaze da tela
-      panelClass: '!rounded-2xl',
-      disableClose: true,
-      data: { aluno: aluno }
-    });
-
-    dialogRef.afterClosed().subscribe((salvouComSucesso: boolean) => {
-      if (salvouComSucesso) {
-        this.carregarAlunos(); 
-      }
-    });
+  /** "+2,5 kg" ou "-1,3 kg" — o sinal fala mais rápido que a cor aqui, e funciona em texto puro. */
+  formatarDelta(valor: number | null, sufixo = ''): string {
+    if (valor === null) return '—';
+    const sinal = valor > 0 ? '+' : '';
+    return `${sinal}${valor}${sufixo}`.replace('.', ',');
   }
 
-  abrirModalAvaliacaoFisica(aluno: any) {
-    this.dialog.open(AvaliacaoFisicaForm, {
-      width: '950px',
-      maxWidth: '95vw',
-      panelClass: '!rounded-2xl',
-      disableClose: true,
-      data: { aluno: aluno }
+  // ---------------------------------------------------------------
+  // Cobertura de anamnese por unidade
+  // ---------------------------------------------------------------
+
+  carregarCoberturaAnamnese(): void {
+    this.carregandoCoberturaAnamnese.set(true);
+    this.erroCoberturaAnamnese.set(null);
+
+    this.usuarioService.coberturaAnamnesePorUnidade().subscribe({
+      next: (linhas) => {
+        this.coberturaAnamnese.set(linhas);
+        this.carregandoCoberturaAnamnese.set(false);
+        this.coberturaAnamneseCarregada = true;
+      },
+      error: (erro) => {
+        this.erroCoberturaAnamnese.set(
+          mensagemDeErro(erro, 'Não foi possível carregar a cobertura de anamnese.'));
+        this.carregandoCoberturaAnamnese.set(false);
+      },
     });
   }
 }

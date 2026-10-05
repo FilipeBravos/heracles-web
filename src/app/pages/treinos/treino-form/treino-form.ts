@@ -1,127 +1,166 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, signal } from '@angular/core';
 import {
-  ReactiveFormsModule,
-  FormBuilder,
-  Validators,
+  AbstractControl,
   FormArray,
+  FormBuilder,
   FormGroup,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
 } from '@angular/forms';
-import {
-  MatDialogRef,
-  MatDialogModule,
-  MAT_DIALOG_DATA,
-} from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
-import { MatDivider } from '@angular/material/divider';
-import { MatIcon } from '@angular/material/icon';
 
-// 1. Importe o TreinoService e remova o HttpClient
+import { ExercicioForm, Treino } from '../../../core/models';
+
+/**
+ * Espelha a validação `faixaDeRepeticoesCoerente` do DTO na API, para que o
+ * erro apareça enquanto se digita em vez de só voltar do servidor.
+ */
+function faixaDeRepeticoesCoerente(grupo: AbstractControl): ValidationErrors | null {
+  const min = grupo.get('repeticoesMin')?.value;
+  const max = grupo.get('repeticoesMax')?.value;
+
+  if (min == null || max == null || min === '' || max === '') {
+    return null; // quem reporta ausência é o Validators.required
+  }
+  return Number(max) >= Number(min) ? null : { faixaInvertida: true };
+}
 import { TreinoService } from '../../../core/services/treino.service';
+import { mensagemDeErro } from '../../../core/services/erro-api';
+
+export interface TreinoFormData {
+  treino: Treino | null;
+}
 
 @Component({
   selector: 'app-treino-form',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     MatSelectModule,
-    MatDivider,
-    MatIcon,
+    MatDividerModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
   ],
   templateUrl: './treino-form.html',
 })
-export class TreinoFormComponent implements OnInit {
-  private fb = inject(FormBuilder);
+export class TreinoFormComponent {
+  private readonly fb = inject(FormBuilder);
+  private readonly treinoService = inject(TreinoService);
 
-  // 2. Injete o serviço aqui
-  private treinoService = inject(TreinoService);
-  public dialogRef = inject(MatDialogRef<TreinoFormComponent>);
-  public data = inject(MAT_DIALOG_DATA, { optional: true });
+  readonly dialogRef = inject(MatDialogRef<TreinoFormComponent>);
+  readonly data = inject<TreinoFormData>(MAT_DIALOG_DATA);
 
-  isEditMode = false;
+  readonly treino = this.data?.treino ?? null;
+  readonly isEditMode = this.treino !== null;
+  readonly enviando = signal(false);
+  readonly erro = signal<string | null>(null);
 
-  treinoForm = this.fb.group({
-    nome: ['', Validators.required],
-    foco: ['', Validators.required],
-    nivel: ['', Validators.required],
-    exercicios: this.fb.array([]),
+  readonly form = this.fb.nonNullable.group({
+    nome: [this.treino?.nome ?? '', [Validators.required, Validators.maxLength(100)]],
+    foco: [this.treino?.foco ?? '', Validators.required],
+    nivel: [this.treino?.nivel ?? '', Validators.required],
+    exercicios: this.fb.array<FormGroup>([]),
   });
 
-  get exercicios() {
-    return this.treinoForm.get('exercicios') as FormArray;
-  }
-
-  novoExercicio(): FormGroup {
-    return this.fb.group({
-      id: [null],
-      nome: ['', Validators.required],
-      repeticoes: ['', Validators.required],
-      observacoes: [''],
-    });
-  }
-
-  adicionarExercicio() {
-    this.exercicios.push(this.novoExercicio());
-  }
-
-  removerExercicio(index: number) {
-    this.exercicios.removeAt(index);
-  }
-
-  ngOnInit() {
-    if (this.data && this.data.treino) {
-      this.isEditMode = true;
-
-  
-      this.treinoForm.patchValue({
-        nome: this.data.treino.nome,
-        foco: this.data.treino.foco,
-        nivel: this.data.treino.nivel,
-      });
-
-      if (
-        this.data.treino.exercicios &&
-        this.data.treino.exercicios.length > 0
-      ) {
-        this.data.treino.exercicios.forEach((ex: any) => {
-          const formEx = this.novoExercicio();
-          formEx.patchValue(ex);
-          this.exercicios.push(formEx);
-        });
-      }
+  constructor() {
+    if (this.treino && this.treino.exercicios.length > 0) {
+      // A API devolve os exercícios já ordenados por "ordem".
+      this.treino.exercicios.forEach((exercicio) =>
+        this.exercicios.push(this.novoExercicio(exercicio))
+      );
     } else {
       this.adicionarExercicio();
     }
   }
 
-  salvar() {
-    if (this.treinoForm.valid) {
-      const dadosParaEnviar = this.treinoForm.value;
+  get exercicios(): FormArray<FormGroup> {
+    return this.form.controls.exercicios;
+  }
 
-      if (this.isEditMode) {
-        // 3. MODO EDIÇÃO: Injeta o ID no payload e chama o atualizar()
-        const id = this.data.treino.id;
-        const payloadAtualizacao = { ...dadosParaEnviar, id: id };
+  private novoExercicio(exercicio?: Partial<ExercicioForm>): FormGroup {
+    return this.fb.group(
+      {
+        // O id viaja de volta para a API, que reconcilia por ele em vez de
+        // apagar e recriar a lista inteira a cada edição.
+        id: [exercicio?.id ?? null],
+        nome: [exercicio?.nome ?? '', [Validators.required, Validators.maxLength(100)]],
+        series: [
+          exercicio?.series ?? 3,
+          [Validators.required, Validators.min(1), Validators.max(20)],
+        ],
+        repeticoesMin: [
+          exercicio?.repeticoesMin ?? 10,
+          [Validators.required, Validators.min(1), Validators.max(500)],
+        ],
+        repeticoesMax: [
+          exercicio?.repeticoesMax ?? 10,
+          [Validators.required, Validators.min(1), Validators.max(500)],
+        ],
+        carga: [exercicio?.carga ?? ''],
+        observacoes: [exercicio?.observacoes ?? ''],
+      },
+      { validators: faixaDeRepeticoesCoerente }
+    );
+  }
 
-        this.treinoService.atualizar(id, payloadAtualizacao).subscribe({
-          next: () => this.dialogRef.close(true),
-          error: (err) => console.error('Erro ao atualizar treino', err),
-        });
-      } else {
-        // 4. MODO CRIAÇÃO: Chama o cadastrar() direto
-        this.treinoService.cadastrar(dadosParaEnviar).subscribe({
-          next: () => this.dialogRef.close(true),
-          error: (err) => console.error('Erro ao salvar treino', err),
-        });
-      }
+  adicionarExercicio(): void {
+    this.exercicios.push(this.novoExercicio());
+  }
+
+  removerExercicio(indice: number): void {
+    this.exercicios.removeAt(indice);
+  }
+
+  salvar(): void {
+    if (this.form.invalid || this.exercicios.length === 0 || this.enviando()) {
+      this.form.markAllAsTouched();
+      return;
     }
+
+    this.enviando.set(true);
+    this.erro.set(null);
+
+    const valores = this.form.getRawValue();
+    const payload = {
+      nome: valores.nome,
+      foco: valores.foco,
+      nivel: valores.nivel,
+      exercicios: this.exercicios.controls.map((controle) => {
+        const exercicio = controle.getRawValue() as ExercicioForm;
+        return {
+          id: exercicio.id ?? null,
+          nome: exercicio.nome,
+          series: Number(exercicio.series),
+          repeticoesMin: Number(exercicio.repeticoesMin),
+          repeticoesMax: Number(exercicio.repeticoesMax),
+          carga: exercicio.carga?.trim() || null,
+          observacoes: exercicio.observacoes?.trim() || null,
+        };
+      }),
+    };
+
+    const requisicao = this.treino
+      ? this.treinoService.atualizar(this.treino.id, payload)
+      : this.treinoService.criar(payload);
+
+    requisicao.subscribe({
+      next: () => this.dialogRef.close(true),
+      error: (erro) => {
+        this.enviando.set(false);
+        this.erro.set(mensagemDeErro(erro, 'Não foi possível salvar a ficha.'));
+      },
+    });
   }
 }

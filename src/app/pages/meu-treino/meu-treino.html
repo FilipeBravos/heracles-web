@@ -1,89 +1,161 @@
-<div class="p-6 max-w-4xl mx-auto">
-  <h2 class="text-3xl font-bold mb-6 text-gray-800">Minha Ficha</h2>
-
-  @if (treinos().length === 0) {
-  <div
-    class="text-center py-16 bg-white rounded-2xl shadow-sm border border-gray-100"
-  >
-    <mat-icon class="text-gray-300 text-6xl h-16 w-16 mb-4"
-      >assignment_late</mat-icon
-    >
-    <h3 class="text-xl text-gray-600 font-medium">Nenhum treino atribuído</h3>
-    <p class="text-gray-500 mt-2">
-      Fale com seu professor para ele montar sua ficha!
-    </p>
-  </div>
-  } @else {
-  <mat-tab-group
-    backgroundColor="primary"
-    class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
-  >
-    @for (treino of treinos(); track treino.id) {
-    <mat-tab [label]="treino.nome + ' (' + treino.foco + ')'">
-      <div class="p-6 md:p-8 bg-gray-50 min-h-[500px]">
-        <h3
-          class="text-xl font-bold text-gray-700 mb-6 flex items-center gap-2"
-        >
-          <mat-icon class="text-blue-600">fitness_center</mat-icon>
-          Lista de Exercícios
-        </h3>
-
-        @if (!treino.exercicios || treino.exercicios.length === 0) {
-        <div
-          class="p-8 text-center text-gray-500 border border-dashed border-gray-300 bg-white rounded-xl"
-        >
-          <mat-icon class="!w-12 !h-12 text-4xl mb-2 text-gray-300"
-            >inventory_2</mat-icon
-          >
-          <p>O professor não detalhou os exercícios desta ficha.</p>
-        </div>
+<div class="mx-auto max-w-[840px] px-4 py-6 sm:px-6 lg:py-8">
+  <header class="h-cabecalho">
+    <div>
+      <h1>Meu treino</h1>
+      <p>
+        @if (primeiroNome()) {
+          Olá, {{ primeiroNome() }}. Sua ficha, como o professor prescreveu.
         } @else {
-        <div class="flex flex-col gap-3">
-          @for (exercicio of treino.exercicios; track exercicio.id) {
+          Sua ficha, como o professor prescreveu.
+        }
+      </p>
+    </div>
+  </header>
 
-          <mat-card
-            class="!shadow-sm border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer bg-white"
-          >
-            <mat-card-content class="!p-1">
-              <mat-checkbox
-                color="primary"
-                class="w-full p-3 font-medium text-gray-700"
-                [checked]="exercicio.concluidoHoje"
-                (change)="toggleExercicio(exercicio)"
-              >
-                <div class="flex flex-col ml-2">
-                  <span
-                    class="text-lg font-bold leading-tight"
-                    [class.line-through]="exercicio.concluidoHoje"
-                    [class.text-gray-400]="exercicio.concluidoHoje"
-                    [class.text-gray-800]="!exercicio.concluidoHoje"
-                  >
-                    {{ exercicio.nome }}
-                  </span>
+  @if (erro(); as mensagem) {
+    <div role="alert"
+         class="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-marca border border-perigo-200 bg-perigo-50 px-5 py-4">
+      <span class="flex items-center gap-2.5 text-[13.5px] font-medium text-perigo-700">
+        <mat-icon class="!h-5 !w-5 !text-[20px]" svgIcon="error"></mat-icon>{{ mensagem }}
+      </span>
+      <button type="button" (click)="carregar()"
+              class="text-[13px] font-semibold text-perigo-700 underline underline-offset-2">Tentar novamente</button>
+    </div>
+  }
 
-                  <div class="flex items-center gap-2 mt-1">
-                    <span
-                      class="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded"
-                    >
-                      {{ exercicio.repeticoes }}
-                    </span>
-                    @if (exercicio.observacoes) {
-                    <span class="text-sm text-gray-500 italic">
-                      — {{ exercicio.observacoes }}
-                    </span>
-                    }
-                  </div>
-                </div>
-              </mat-checkbox>
-            </mat-card-content>
-          </mat-card>
-
-          }
-        </div>
+  @if (carregando()) {
+    <div class="flex items-center gap-3 rounded-marca border border-linha bg-papel px-6 py-10 text-[13px] text-tinta-3">
+      <mat-spinner diameter="20"></mat-spinner><span>Carregando sua ficha…</span>
+    </div>
+  } @else if (fichas().length === 0 && !erro()) {
+    <div class="flex flex-col items-center gap-3 rounded-marca border border-linha bg-papel px-6 py-16 text-center">
+      <mat-icon class="!h-7 !w-7 !text-[28px] text-tinta-3" svgIcon="fitness_center"></mat-icon>
+      <p class="text-[14px] font-semibold text-tinta">Nenhuma ficha vinculada ainda</p>
+      <!-- Não ter ficha é estado normal de quem acabou de se matricular:
+           a tela diz o que fazer, não sugere que algo falhou. -->
+      <p class="max-w-sm text-[13px] text-tinta-3">
+        Seu professor ainda não montou sua ficha. Procure a equipe técnica da sua unidade.
+      </p>
+    </div>
+  } @else {
+    <!-- Seletor só quando há mais de uma ficha: com uma, não há escolha. -->
+    @if (fichas().length > 1) {
+      <div class="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Suas fichas">
+        @for (ficha of fichas(); track ficha.id; let i = $index) {
+          <button type="button" role="tab" [attr.aria-selected]="selecionada() === i"
+                  (click)="selecionada.set(i)"
+                  class="rounded-marca border px-4 py-2 text-[13px] font-semibold transition-colors"
+                  [class]="selecionada() === i
+                    ? 'border-bronze-600 bg-bronze-600 text-white'
+                    : 'border-linha-forte bg-papel text-tinta-2 hover:border-bronze-200 hover:text-tinta'">
+            {{ ficha.nome }}
+          </button>
         }
       </div>
-    </mat-tab>
     }
-  </mat-tab-group>
+
+    @if (fichaAberta(); as ficha) {
+      <section class="rounded-marca border border-linha bg-papel">
+        <header class="border-b border-linha px-5 py-4 sm:px-6">
+          <h2 class="font-display text-[21px] font-bold leading-tight text-tinta">{{ ficha.nome }}</h2>
+          <p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px] text-tinta-3">
+            <span>{{ ficha.foco }}</span>
+            <span aria-hidden="true">·</span>
+            <span>{{ ficha.nivel }}</span>
+            @if (mostraVolume(ficha)) {
+              <span aria-hidden="true">·</span>
+              <span class="tabular-nums">{{ ficha.volumePrescritoMinimo }} repetições no mínimo</span>
+            }
+          </p>
+        </header>
+
+        @if (ficha.exercicios.length === 0) {
+          <p class="px-5 py-10 text-center text-[13px] text-tinta-3 sm:px-6">
+            Esta ficha ainda não tem exercícios.
+          </p>
+        } @else {
+          <ol class="m-0 list-none divide-y divide-linha p-0">
+            @for (exercicio of ficha.exercicios; track exercicio.id; let i = $index) {
+              <li class="flex items-start gap-4 px-5 py-4 sm:px-6">
+                <!-- A ordem é a do professor; numerar deixa claro que há
+                     uma sequência, e não uma lista solta. -->
+                <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-marca
+                             bg-fundo-2 text-[12px] font-bold tabular-nums text-tinta-2">{{ i + 1 }}</span>
+
+                <div class="min-w-0 flex-1">
+                  <p class="text-[15px] font-semibold leading-snug text-tinta">{{ exercicio.nome }}</p>
+                  @for (detalhe of detalhes(exercicio); track detalhe) {
+                    <p class="mt-1 text-[12.5px] leading-snug text-tinta-3">{{ detalhe }}</p>
+                  }
+                </div>
+
+                <!-- A prescrição é o que se lê entre uma série e outra:
+                     fica grande e à direita, onde o polegar não cobre. -->
+                <div class="flex shrink-0 flex-col items-end gap-1.5">
+                  <span class="h-etiqueta h-etiqueta--prescricao !text-[13px]">
+                    {{ prescricao(exercicio) }}
+                  </span>
+                  <button mat-button type="button" class="!h-7 !min-w-0 !px-2 !text-[12px] !text-tinta-3"
+                          (click)="registrarExecucao(exercicio)" aria-label="Registrar execução">
+                    <mat-icon class="!h-4 !w-4 !text-[16px]" svgIcon="trending_up"></mat-icon>
+                    Registrar
+                  </button>
+                </div>
+              </li>
+            }
+          </ol>
+        }
+      </section>
+    }
+  }
+
+  @if (!carregando()) {
+    <!-- Abaixo da ficha de hoje, e fechado por padrão: é informação para
+         consultar de vez em quando, não a que traz quem abre a tela no
+         meio de uma série. -->
+    <div class="mt-5 rounded-marca border border-linha bg-papel">
+      <button type="button" (click)="alternarHistorico()"
+              class="flex w-full items-center justify-between gap-3 px-5 py-4 text-left sm:px-6"
+              [attr.aria-expanded]="historicoAberto()">
+        <span class="text-[13px] font-semibold text-tinta">Treinos anteriores</span>
+        <mat-icon class="!h-5 !w-5 !text-[20px] text-tinta-3"
+                  [svgIcon]="historicoAberto() ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"></mat-icon>
+      </button>
+
+      @if (historicoAberto()) {
+        <div class="border-t border-linha px-5 py-4 sm:px-6">
+          @if (erroHistorico(); as mensagem) {
+            <div role="alert" class="flex flex-wrap items-center justify-between gap-3">
+              <span class="flex items-center gap-2 text-[13px] text-perigo-700">
+                <mat-icon class="!h-[18px] !w-[18px] !text-[18px]" svgIcon="error"></mat-icon>{{ mensagem }}
+              </span>
+              <button type="button" (click)="recarregarHistorico()"
+                      class="text-[12.5px] font-semibold text-perigo-700 underline underline-offset-2">
+                Tentar novamente
+              </button>
+            </div>
+          } @else if (carregandoHistorico()) {
+            <div class="flex items-center gap-3 py-2 text-[13px] text-tinta-3">
+              <mat-spinner diameter="18"></mat-spinner><span>Carregando histórico…</span>
+            </div>
+          } @else if (historico().length === 0) {
+            <!-- Estado normal para quem nunca trocou de ficha, não falha. -->
+            <p class="py-2 text-[13px] text-tinta-3">Nenhuma ficha anterior ainda.</p>
+          } @else {
+            <ol class="m-0 list-none space-y-2 p-0">
+              @for (item of historico(); track item.nome + item.vinculadoEm) {
+                <li class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 rounded-marca bg-fundo-2 px-4 py-3">
+                  <div class="min-w-0">
+                    <p class="text-[13.5px] font-semibold leading-snug text-tinta">{{ item.nome }}</p>
+                    <p class="mt-0.5 text-[12px] text-tinta-3">{{ item.foco }} · {{ item.nivel }}</p>
+                  </div>
+                  <span class="shrink-0 text-[12px] tabular-nums text-tinta-3">{{ periodo(item) }}</span>
+                </li>
+              }
+            </ol>
+          }
+        </div>
+      }
+    </div>
   }
 </div>

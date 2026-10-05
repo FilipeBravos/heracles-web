@@ -1,88 +1,97 @@
 import { Routes } from '@angular/router';
-import { DashboardComponent } from './pages/dashboard/dashboard';
-import { AlunosComponent } from './pages/alunos/alunos';
-import { TreinosComponent } from './pages/treinos/treinos';
-import { AgendaComponent } from './pages/agenda/agenda';
 
-import { authGuard } from './core/guards/auth.guard';
-import { roleGuard } from './core/guards/role-guard';
-import { Financeiro } from './pages/financeiro/financeiro';
-import { EquipamentoComponent } from './pages/equipamento/equipamento';
-import { SuplementosComponent } from './pages/suplementos/suplementos';
-import { PlanosComponent } from './pages/planos/planos';
-import { ConfiguracoesComponent } from './pages/configuracoes/configuracoes';
+import { authGuard, visitanteGuard } from './core/guards/auth.guard';
+import { perfilGuard } from './core/guards/perfil.guard';
 
 export const routes: Routes = [
-  // 1. Área Pública
   {
     path: 'login',
-    loadComponent: () => import('./pages/login/login').then(m => m.LoginComponent)
+    canActivate: [visitanteGuard],
+    loadComponent: () => import('./pages/login/login').then((m) => m.LoginComponent),
   },
-
-  // 2. Área Protegida (Dashboard, Alunos, Treinos, Agenda)
   {
     path: 'dashboard',
-    component: DashboardComponent,
-    canActivate: [authGuard]
+    // A area logada inteira exige autenticacao. Antes, /dashboard abria
+    // para qualquer visitante que digitasse a URL.
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.DashboardComponent),
+    children: [
+      {
+        path: '',
+        canActivate: [perfilGuard],
+        loadComponent: () =>
+          import('./pages/dashboard-home/dashboard-home').then((m) => m.DashboardHomeComponent),
+      },
+      {
+        path: 'alunos',
+        canActivate: [perfilGuard],
+        loadComponent: () => import('./pages/alunos/alunos').then((m) => m.AlunosComponent),
+      },
+      {
+        path: 'treinos',
+        canActivate: [perfilGuard],
+        loadComponent: () => import('./pages/treinos/treinos').then((m) => m.TreinosComponent),
+      },
+      {
+        path: 'matriculas',
+        canActivate: [perfilGuard],
+        loadComponent: () =>
+          import('./pages/matriculas/matriculas').then((m) => m.MatriculasComponent),
+      },
+      {
+        path: 'loja',
+        canActivate: [perfilGuard],
+        loadComponent: () => import('./pages/loja/loja').then((m) => m.LojaComponent),
+      },
+      {
+        path: 'equipamentos',
+        canActivate: [perfilGuard],
+        loadComponent: () =>
+          import('./pages/equipamentos/equipamentos').then((m) => m.EquipamentosComponent),
+      },
+      {
+        path: 'agenda',
+        canActivate: [perfilGuard],
+        loadComponent: () => import('./pages/agenda/agenda').then((m) => m.AgendaComponent),
+      },
+      {
+        path: 'meu-treino',
+        canActivate: [perfilGuard],
+        loadComponent: () =>
+          import('./pages/meu-treino/meu-treino').then((m) => m.MeuTreinoComponent),
+      },
+      {
+        path: 'minha-matricula',
+        canActivate: [perfilGuard],
+        loadComponent: () =>
+          import('./pages/minha-matricula/minha-matricula').then((m) => m.MinhaMatriculaComponent),
+      },
+      {
+        path: 'minhas-aulas',
+        canActivate: [perfilGuard],
+        loadComponent: () =>
+          import('./pages/minhas-aulas/minhas-aulas').then((m) => m.MinhasAulasComponent),
+      },
+      {
+        path: 'minha-evolucao-fisica',
+        canActivate: [perfilGuard],
+        loadComponent: () =>
+          import('./pages/minha-evolucao-fisica/minha-evolucao-fisica').then(
+            (m) => m.MinhaEvolucaoFisicaComponent),
+      },
+      {
+        path: 'unidades',
+        canActivate: [perfilGuard],
+        loadComponent: () => import('./pages/unidades/unidades').then((m) => m.UnidadesComponent),
+      },
+      {
+        path: 'configuracoes',
+        canActivate: [perfilGuard],
+        loadComponent: () =>
+          import('./pages/configuracoes/configuracoes').then((m) => m.ConfiguracoesComponent),
+      },
+    ],
   },
-  {
-    path: 'alunos',
-    component: AlunosComponent,
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['PROFESSOR', 'ADMIN'] }
-  },
-  {
-    path: 'treinos',
-    component: TreinosComponent,
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['PROFESSOR', 'ADMIN'] }
-  },
-  {
-    path: 'agenda',
-    component: AgendaComponent,
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['ALUNO', 'PROFESSOR', 'ADMIN'] } 
-  },
-
-  {
-    path: 'meu-treino',
-    loadComponent: () => import('./pages/meu-treino/meu-treino').then(m => m.MeuTreinoComponent),
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['ALUNO', 'PROFESSOR', 'ADMIN'] } 
-  },
-
-  {
-    path: 'financeiro',
-    component: Financeiro,
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['PROFESSOR', 'ADMIN'] } 
-  },
-
-  {
-    path: 'equipamento',
-    component: EquipamentoComponent,
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['PROFESSOR', 'ADMIN'] } 
-  },
-  {
-    path: 'suplementos',
-    component: SuplementosComponent,
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['ALUNO', 'PROFESSOR', 'ADMIN'] } 
-  },
-
-{
-    path: 'planos',
-    component: PlanosComponent,
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['PROFESSOR', 'ADMIN'] } 
-  },
-
-  {
-    path: 'confiuguracoes',
-    component: ConfiguracoesComponent,
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['ADMIN', 'SECRETARIA', 'RECEPCAO'] } 
-  },
-
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  { path: '**', redirectTo: 'dashboard' },
 ];

@@ -1,56 +1,66 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-export interface Treino {
-  id?: number;
-  nome: string;
-  foco: string;
-  nivel: string;
-  status?: string;
-  exercicios?: any[]; 
-}
-@Injectable({
-  providedIn: 'root'
-})
+import { environment } from '../../../environments/environment';
+import {
+  LinhaAdesaoTreino,
+  LinhaAlunoSemFicha,
+  LinhaPermanenciaPorNivel,
+  Pagina,
+  ResumoAlunosSemFicha,
+  Treino,
+  TreinoForm,
+} from '../models';
 
+@Injectable({ providedIn: 'root' })
 export class TreinoService {
-  
-  private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/api/treinos';
+  private readonly http = inject(HttpClient);
+  private readonly url = `${environment.apiUrl}/treinos`;
+  /** Visão de gestão sobre execuções de exercício, distinta do autoatendimento em /api/eu. */
+  private readonly urlExecucoes = `${environment.apiUrl}/execucoes-exercicio`;
 
-  constructor() { }
-
-  // 1. LISTAR TODOS OS TREINOS
-  listar(): Observable<any[]> {
-    return this.http.get<any[]>(this.apiUrl);
+  listar(pagina = 0, tamanho = 20): Observable<Pagina<Treino>> {
+    const params = new HttpParams().set('page', pagina).set('size', tamanho);
+    return this.http.get<Pagina<Treino>>(this.url, { params });
   }
 
-  // 2. BUSCAR UM TREINO ESPECÍFICO (Para carregar no form de edição ou na tela de detalhes)
-  buscarPorId(id: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${id}`);
+  buscarPorId(id: number): Observable<Treino> {
+    return this.http.get<Treino>(`${this.url}/${id}`);
   }
 
-  // 3. CADASTRAR NOVO TREINO
-  cadastrar(dados: any): Observable<any> {
-    return this.http.post<any>(this.apiUrl, dados);
+  criar(treino: TreinoForm): Observable<Treino> {
+    return this.http.post<Treino>(this.url, treino);
   }
 
-  // 4. ATUALIZAR TREINO
-  atualizar(id: number, dados: any): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/${id}`, dados);
+  atualizar(id: number, treino: TreinoForm): Observable<Treino> {
+    return this.http.put<Treino>(`${this.url}/${id}`, treino);
   }
 
-  // 5. EXCLUIR / INATIVAR TREINO
-  excluir(id: number): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/${id}`);
+  deletar(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.url}/${id}`);
   }
 
-  listarMeusTreinos(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/meus-treinos`);
+  /** Cabeçalho do alerta: quantos alunos com matrícula ativa nunca receberam ficha de treino. */
+  resumoAlunosSemFicha(): Observable<ResumoAlunosSemFicha> {
+    return this.http.get<ResumoAlunosSemFicha>(`${this.url}/alunos-sem-ficha/resumo`);
   }
 
-  toggleExercicioConcluido(exercicioId: number): Observable<boolean> {
-    return this.http.post<boolean>(`${this.apiUrl}/exercicios/${exercicioId}/toggle`, {});
+  /** O alerta em si: alunos com matrícula ativa que nunca receberam uma ficha de treino. */
+  alunosSemFicha(pagina = 0, tamanho = 20): Observable<Pagina<LinhaAlunoSemFicha>> {
+    const params = new HttpParams().set('page', pagina).set('size', tamanho);
+    return this.http.get<Pagina<LinhaAlunoSemFicha>>(`${this.url}/alunos-sem-ficha`, { params });
+  }
+
+  /** Adesão ao treino por aluno, do pior pro melhor. */
+  relatorioAdesao(dias = 90, quantidadeMinima = 4): Observable<LinhaAdesaoTreino[]> {
+    const params = new HttpParams().set('dias', dias).set('quantidadeMinima', quantidadeMinima);
+    return this.http.get<LinhaAdesaoTreino[]>(`${this.urlExecucoes}/relatorio/adesao`, { params });
+  }
+
+  /** Tempo médio de permanência numa ficha antes da troca, por nível, do mais tempo pro menos. */
+  relatorioPermanencia(dias = 365): Observable<LinhaPermanenciaPorNivel[]> {
+    const params = new HttpParams().set('dias', dias);
+    return this.http.get<LinhaPermanenciaPorNivel[]>(`${this.url}/relatorio/permanencia`, { params });
   }
 }
